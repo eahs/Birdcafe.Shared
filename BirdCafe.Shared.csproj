@@ -1,0 +1,24 @@
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>BirdCafe.Shared</RootNamespace>
+    <LangVersion>9.0</LangVersion>
+	<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<!-- IMPORTANT: Include all scripts in the Runtime folder -->
+		<Compile Include="Runtime\**\*.cs" />
+	</ItemGroup>
+	
+  <ItemGroup>
+    <!-- If developing inside a Unity project structure, exclude .meta files -->
+    <None Remove="**/*.meta" />
+  </ItemGroup>
+
+</Project>
