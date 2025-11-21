@@ -4,9 +4,13 @@ using System.Linq;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Meta;
 
 namespace BirdCafe.Shared.Engine.Managers
 {
+    /// <summary>
+    /// Handles interactions with birds during the Evening Loop (Feeding, Vet, etc.).
+    /// </summary>
     public class CareManager
     {
         private readonly BirdCafeController _controller;
@@ -16,6 +20,9 @@ namespace BirdCafe.Shared.Engine.Managers
             _controller = controller;
         }
 
+        /// <summary>
+        /// Executes a care action (e.g. "Feed") on a specific bird.
+        /// </summary>
         public EngineResult PerformCareAction(string birdId, string actionId)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -24,33 +31,34 @@ namespace BirdCafe.Shared.Engine.Managers
             var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
             if (bird == null) return EngineResult.Failure("BirdNotFound", "Bird ID not found.");
 
-            // Simplified lookup - in real app, use a config dictionary
+            // 1. Get Template (Refactored to use Constants)
             var template = GetTemplate(actionId, _controller.CurrentState.Config);
             if (template == null) return EngineResult.Failure("InvalidAction", "Unknown care action.");
 
+            // 2. Check Funds
             if (_controller.CurrentState.Economy.CurrentBalance < template.MoneyCost)
                 return EngineResult.Failure("InsufficientFunds", "Not enough money.");
 
-            // Execute
+            // 3. Deduct Money
             _controller.CurrentState.Economy.CurrentBalance -= template.MoneyCost;
             _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
             {
                 Amount = -template.MoneyCost,
                 Reason = template.DisplayName,
                 Timestamp = DateTime.Now,
-                Category = ExpenseCategory.FoodAndSupplies, // simplified
+                Category = ExpenseCategory.FoodAndSupplies,
                 RelatedBirdId = bird.Id
             });
 
-            // Apply Stats
-            bird.Hunger = Math.Min(100, bird.Hunger + template.HungerChange);
-            bird.Mood = Math.Min(100, bird.Mood + template.MoodChange);
-            bird.Health = Math.Min(100, bird.Health + template.HealthChange);
-            bird.Energy = Math.Min(100, bird.Energy + template.EnergyChange);
+            // 4. Apply Stats (Refactored: Moved logic to Bird class for safety)
+            bird.ApplyCareEffect(template);
 
             return EngineResult.Success(bird);
         }
 
+        /// <summary>
+        /// Toggles whether a bird is flagged to rest (take a day off) tomorrow.
+        /// </summary>
         public EngineResult ToggleRest(string birdId)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -63,11 +71,32 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success(bird);
         }
 
-        private CareActionTemplate GetTemplate(string id, Models.Meta.GameConfiguration config)
+        /// <summary>
+        /// Look up the details/costs for an action ID.
+        /// </summary>
+        private CareActionTemplate GetTemplate(string id, GameConfiguration config)
         {
-            // Hardcoded for engine example, ideally loaded from config
-            if (id == "Feed") return new CareActionTemplate { ActionId="Feed", DisplayName="Feed", MoneyCost=config.BaselineBirdFoodCost, HungerChange=30, MoodChange=5 };
-            if (id == "Vet") return new CareActionTemplate { ActionId="Vet", DisplayName="Vet Visit", MoneyCost=config.BaselineVetCost, HealthChange=50, StressChange=-20 };
+            // Refactor: Use Constants instead of Magic Strings
+            if (id == CareActionIds.Feed) 
+                return new CareActionTemplate 
+                { 
+                    ActionId = CareActionIds.Feed, 
+                    DisplayName = "Feed", 
+                    MoneyCost = config.BaselineBirdFoodCost, 
+                    HungerChange = 30, 
+                    MoodChange = 5 
+                };
+            
+            if (id == CareActionIds.Vet) 
+                return new CareActionTemplate 
+                { 
+                    ActionId = CareActionIds.Vet, 
+                    DisplayName = "Vet Visit", 
+                    MoneyCost = config.BaselineVetCost, 
+                    HealthChange = 50, 
+                    StressChange = -20 
+                };
+                
             return null;
         }
     }

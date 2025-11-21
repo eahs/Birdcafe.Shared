@@ -7,6 +7,7 @@ namespace BirdCafe.Shared.Models.Birds
 {
     /// <summary>
     /// Represents a single bird entity, including its stats, customization, and state.
+    /// Contains logic for safely updating its own stats.
     /// </summary>
     [Serializable]
     public class Bird
@@ -49,7 +50,6 @@ namespace BirdCafe.Shared.Models.Birds
 
         /// <summary>
         /// Current emotional state. 1 = Depressed/Angry, 100 = Ecstatic.
-        /// Influenced by care, stress, and hunger.
         /// </summary>
         public float Mood { get; set; } = 50f;
 
@@ -65,13 +65,11 @@ namespace BirdCafe.Shared.Models.Birds
 
         /// <summary>
         /// Stamina level. 1 = Exhausted, 100 = Fully rested.
-        /// Decreases as the bird works.
         /// </summary>
         public float Energy { get; set; } = 100f;
 
         /// <summary>
         /// Mental pressure. 1 = Calm, 100 = Panic/High Stress.
-        /// High stress negatively impacts Mood and Reliability.
         /// </summary>
         public float Stress { get; set; } = 0f;
 
@@ -120,47 +118,74 @@ namespace BirdCafe.Shared.Models.Birds
 
         #endregion
 
-        #region Customization
-
+        #region Customization & Items
+        
         /// <summary>
         /// Hex code for the primary feather color.
         /// </summary>
         public string PrimaryColorHex { get; set; }
 
         /// <summary>
-        /// Hex code for the secondary feather color.
-        /// </summary>
-        public string SecondaryColorHex { get; set; }
-
-        /// <summary>
-        /// Hex code for the beak color.
-        /// </summary>
-        public string BeakColorHex { get; set; }
-
-        /// <summary>
-        /// Identifier for the currently worn costume.
-        /// </summary>
-        public string CostumeId { get; set; }
-
-        /// <summary>
-        /// List of identifiers for equipped accessories (glasses, hats, etc.).
-        /// </summary>
-        public List<string> AccessoryIds { get; set; } = new List<string>();
-
-        #endregion
-
-        #region Traits & Equipment
-
-        /// <summary>
         /// List of permanent traits affecting the bird's behavior.
         /// </summary>
         public List<BirdTrait> Traits { get; set; } = new List<BirdTrait>();
 
-        /// <summary>
-        /// List of functional items currently equipped to the bird.
-        /// </summary>
-        public List<EquippedItem> EquippedItems { get; set; } = new List<EquippedItem>();
+        #endregion
 
+        #region Domain Logic
+
+        /// <summary>
+        /// Applies a care template to this bird.
+        /// Handles all stat clamping logic (0-100) internally to prevent bugs.
+        /// </summary>
+        /// <param name="template">The care action effects to apply.</param>
+        public void ApplyCareEffect(CareActionTemplate template)
+        {
+            if (template == null) return;
+
+            // Hunger (Add, clamp to 100)
+            Hunger = Math.Min(100, Hunger + template.HungerChange);
+
+            // Mood (Add, clamp to 100)
+            Mood = Math.Min(100, Mood + template.MoodChange);
+
+            // Health (Add, clamp to 100)
+            Health = Math.Min(100, Health + template.HealthChange);
+
+            // Energy (Add, clamp to 100)
+            Energy = Math.Min(100, Energy + template.EnergyChange);
+
+            // Stress (Add [usually negative], clamp to 0 minimum)
+            Stress = Math.Max(0, Stress + template.StressChange);
+        }
+
+        /// <summary>
+        /// Consumes energy for performing a task.
+        /// </summary>
+        /// <param name="amount">Amount of energy to reduce.</param>
+        public void ConsumeEnergy(float amount)
+        {
+            Energy = Math.Max(0, Energy - amount);
+        }
+
+        /// <summary>
+        /// Applies daily decay stats (Hunger, Mood).
+        /// </summary>
+        public void ApplyDailyDecay(float hungerDecay, float moodDecay)
+        {
+            Hunger = Math.Max(0, Hunger - hungerDecay);
+            Mood = Math.Max(0, Mood - moodDecay);
+        }
+
+        /// <summary>
+        /// Recovers energy during a rest day.
+        /// </summary>
+        public void RecoverEnergy(float amount)
+        {
+            Energy = Math.Min(100, Energy + amount);
+            Stress = Math.Max(0, Stress - 30); // Hardcoded stress relief for resting
+        }
+        
         #endregion
     }
 }

@@ -3,6 +3,9 @@ using System;
 
 namespace BirdCafe.Shared.Enums
 {
+    /// <summary>
+    /// Defines the types of products the cafe sells.
+    /// </summary>
     [Serializable]
     public enum ProductType
     {
@@ -11,6 +14,9 @@ namespace BirdCafe.Shared.Enums
         ThemedMerch = 2
     }
 
+    /// <summary>
+    /// Represents the life stage of a bird.
+    /// </summary>
     [Serializable]
     public enum BirdAgeStage
     {
@@ -20,6 +26,9 @@ namespace BirdCafe.Shared.Enums
         Elder = 3
     }
 
+    /// <summary>
+    /// Categories for financial tracking in the Ledger.
+    /// </summary>
     [Serializable]
     public enum ExpenseCategory
     {
@@ -33,6 +42,9 @@ namespace BirdCafe.Shared.Enums
         Miscellaneous = 7
     }
 
+    /// <summary>
+    /// Defines generic types of care actions.
+    /// </summary>
     [Serializable]
     public enum CareActionType
     {
@@ -42,43 +54,20 @@ namespace BirdCafe.Shared.Enums
         VetVisit = 3
     }
 
-    [Serializable]
-    public enum EventType
-    {
-        // General Meta events
-        DayStarted,
-        DayEnded,
-        BirdSick,
-        BirdRecovered,
-        ProductSold,
-        ProductWasted,
-        CustomerServed,
-        PopularityChanged,
-        GameOver,
-        StoryTriggered
-    }
-
     /// <summary>
-    /// Represents the distinct states of the engine state machine.
+    /// Constants for Care Action IDs to avoid "Magic Strings" in the codebase.
     /// </summary>
-    [Serializable]
-    public enum GamePhase
+    public static class CareActionIds
     {
-        Meta,            // Main Menu / Loading
-        DayLoop,         // Ready to run simulation or currently simulating
-        EveningLoop,     // Care, Summary, Planning
-        Reporting        // Weekly Summary or Game Over
-    }
-
-    /// <summary>
-    /// Possible outcomes for a customer interaction.
-    /// </summary>
-    [Serializable]
-    public enum CustomerOutcome
-    {
-        Served,
-        LeftUnhappy,      // Low patience or bad service
-        LeftNoStock       // Product unavailable
+        /// <summary>
+        /// ID for the Feed action.
+        /// </summary>
+        public const string Feed = "Feed";
+        
+        /// <summary>
+        /// ID for the Veterinary Visit action.
+        /// </summary>
+        public const string Vet = "Vet";
     }
 
     /// <summary>
@@ -91,8 +80,31 @@ namespace BirdCafe.Shared.Enums
         CustomerQueued,
         ServiceStarted,
         ServiceCompleted,
-        ServiceFailed,       // Includes LeftUnhappy, LeftNoStock
+        ServiceFailed,       
         ItemPerishedAtEndOfDay,
-        BirdStateChanged     // E.g. exhaustion
+        BirdStateChanged    
+    }
+
+    /// <summary>
+    /// Represents the distinct states of the engine state machine.
+    /// </summary>
+    [Serializable]
+    public enum GamePhase
+    {
+        Meta,            
+        DayLoop,         
+        EveningLoop,     
+        Reporting        
+    }
+
+    /// <summary>
+    /// Possible outcomes for a customer interaction.
+    /// </summary>
+    [Serializable]
+    public enum CustomerOutcome
+    {
+        Served,
+        LeftUnhappy,      
+        LeftNoStock       
     }
 }

@@ -6,10 +6,14 @@ namespace BirdCafe.Shared.Models.Meta
 {
     /// <summary>
     /// Contains global configuration and balancing constants.
+    /// Junior Dev Note: Tweak these values to balance the game. 
+    /// Do not hardcode numbers in Managers!
     /// </summary>
     [Serializable]
     public class GameConfiguration
     {
+        // --- Customer Flow ---
+
         /// <summary>
         /// Baseline customers per day at neutral popularity.
         /// </summary>
@@ -19,12 +23,43 @@ namespace BirdCafe.Shared.Models.Meta
         /// Multiplier determining how much Popularity affects customer count.
         /// </summary>
         public float PopularityToCustomerFactor { get; set; } = 0.5f;
-        
+
+        // --- Simulation Settings ---
+
         /// <summary>
-        /// Initial coffee stock provided on Day 1.
+        /// How long a game day lasts in simulation seconds.
         /// </summary>
-        public int DefaultDay1Coffee { get; set; } = 20;
+        public float DayDurationSeconds { get; set; } = 120f;
+
+        /// <summary>
+        /// How long a customer waits (in seconds) before leaving angry.
+        /// </summary>
+        public float CustomerPatienceSeconds { get; set; } = 5.0f;
+
+        // --- Bird Stats & Decay ---
+
+        /// <summary>
+        /// Amount of Hunger lost automatically at end of day.
+        /// </summary>
+        public float DailyHungerDecay { get; set; } = 30f;
+
+        /// <summary>
+        /// Amount of Mood lost automatically at end of day due to stress/boredom.
+        /// </summary>
+        public float DailyMoodDecay { get; set; } = 10f;
+
+        /// <summary>
+        /// Amount of Energy recovered if a bird rests (does not work).
+        /// </summary>
+        public float RestEnergyRecovery { get; set; } = 50f;
+
+        /// <summary>
+        /// Amount of Energy lost per customer served.
+        /// </summary>
+        public float EnergyCostPerService { get; set; } = 2f;
         
+        // --- Sickness ---
+
         /// <summary>
         /// Base probability (0.0 to 1.0) of a bird getting sick.
         /// </summary>
@@ -40,6 +75,13 @@ namespace BirdCafe.Shared.Models.Meta
         /// </summary>
         public float LowEnergySicknessMultiplier { get; set; } = 1.5f;
         
+        // --- Economy ---
+
+        /// <summary>
+        /// Initial coffee stock provided on Day 1.
+        /// </summary>
+        public int DefaultDay1Coffee { get; set; } = 20;
+
         /// <summary>
         /// Standard sale price for a unit of Coffee.
         /// </summary>
@@ -55,6 +97,8 @@ namespace BirdCafe.Shared.Models.Meta
         /// </summary>
         public decimal BasePriceThemedMerch { get; set; } = 15.00m;
         
+        // --- Care Costs ---
+
         /// <summary>
         /// Standard cost for a single "Feed" action.
         /// </summary>
