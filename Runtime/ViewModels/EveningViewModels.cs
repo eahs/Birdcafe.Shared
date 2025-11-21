@@ -10,11 +10,24 @@ namespace BirdCafe.Shared.ViewModels
     public class DailyReportViewModel
     {
         public int DayNumber { get; set; }
-        public int CurrentPopularity { get; set; } // Added for visibility
+        public int CurrentPopularity { get; set; } 
         public int CustomersServed { get; set; }
         public int CustomersLost { get; set; }
+        
+        // Detailed Loss Breakdown
+        public int LostWaitTooLong { get; set; }
+        public int LostNoStock { get; set; }
+
         public decimal TotalRevenue { get; set; }
         public decimal NetProfit { get; set; }
+        
+        // Sales Breakdown
+        public int CoffeeSold { get; set; }
+        public int BakedSold { get; set; }
+        public int MerchSold { get; set; }
+
+        public string PopularityNarrative { get; set; }
+
         public List<BirdPerformanceModel> Birds { get; set; } = new List<BirdPerformanceModel>();
     }
 
@@ -33,7 +46,7 @@ namespace BirdCafe.Shared.ViewModels
     public class CareDashboardViewModel
     {
         public decimal CurrentMoney { get; set; }
-        public int CurrentPopularity { get; set; } // Added for visibility
+        public int CurrentPopularity { get; set; } 
         public List<BirdCareViewModel> Birds { get; set; } = new List<BirdCareViewModel>();
     }
 
@@ -67,7 +80,7 @@ namespace BirdCafe.Shared.ViewModels
     public class PlanningDashboardViewModel
     {
         public decimal CurrentMoney { get; set; }
-        public int CurrentPopularity { get; set; } // Critical for estimating customer count
+        public int CurrentPopularity { get; set; } 
         public decimal ProjectedCost { get; set; }
         
         // New: History for decision making
@@ -110,7 +123,7 @@ namespace BirdCafe.Shared.ViewModels
         public string BirdId { get; set; }
         public string Name { get; set; }
         public bool IsWorking { get; set; }
-        public string StatusText { get; set; } // "Ready", "Resting", "Sick"
+        public string StatusText { get; set; } 
         public bool CanWork { get; set; }
     }
 }

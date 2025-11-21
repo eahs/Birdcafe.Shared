@@ -68,6 +68,11 @@ namespace BirdCafe.Shared.Enums
         /// ID for the Veterinary Visit action.
         /// </summary>
         public const string Vet = "Vet";
+
+        /// <summary>
+        /// ID for playing with the bird (New Feature).
+        /// </summary>
+        public const string Play = "Play";
     }
 
     /// <summary>

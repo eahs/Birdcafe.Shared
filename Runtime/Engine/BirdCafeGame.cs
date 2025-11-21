@@ -85,6 +85,7 @@ namespace BirdCafe.Shared
             {
                 DayNumber = state.CurrentDayNumber,
                 DayName = state.CurrentDayName.ToString(),
+                CafeName = state.Cafe.CafeName, // Populate CafeName
                 Popularity = (int)state.Cafe.Popularity,
                 Message = $"Welcome to Day {state.CurrentDayNumber}! Good luck."
             };
@@ -115,8 +116,23 @@ namespace BirdCafe.Shared
         {
             if (_cachedSimResult == null) return new List<UiTimelineEvent>();
 
+            // Junior Dev Note: 
+            // The simulation uses seconds (0 to 120), but we want to show 
+            // friendly times like "07:30 AM". 
+            // We map 0s -> 7:00 AM and 120s -> 3:00 PM (15:00).
+            
+            float simDuration = _controller.CurrentState.Config.DayDurationSeconds;
+            TimeSpan startOfDay = TimeSpan.FromHours(7); // 7:00 AM
+            double realHoursOpen = 8.0; // Open 8 hours
+
             return _cachedSimResult.Timeline.Select(t => 
             {
+                // Calculate percentage of day complete
+                double pct = t.TimeSeconds / simDuration;
+                // Add that percentage of 8 hours to 7:00 AM
+                TimeSpan eventTime = startOfDay.Add(TimeSpan.FromHours(realHoursOpen * pct));
+                string timeString = DateTime.Today.Add(eventTime).ToString("hh:mm tt");
+
                 var birdName = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == t.BirdId)?.Name ?? "Unknown";
                 string desc = t.ReasonCode;
                 
@@ -132,6 +148,7 @@ namespace BirdCafe.Shared
                 return new UiTimelineEvent
                 {
                     TimeSeconds = t.TimeSeconds,
+                    FormattedTime = timeString, // Populate formatted string
                     EventType = t.EventType.ToString(),
                     Description = desc,
                     BirdName = birdName,
@@ -157,12 +174,26 @@ namespace BirdCafe.Shared
         {
             if (_cachedSimResult == null) return new DailyReportViewModel();
 
+            var popDelta = _cachedSimResult.Popularity.PopularityDelta;
+            string narrative = "Popularity remained stable.";
+            if (popDelta > 2) narrative = "Word is spreading! Popularity is rising.";
+            else if (popDelta < -2) narrative = "We disappointed some folks. Popularity is dropping.";
+
             var vm = new DailyReportViewModel
             {
                 DayNumber = _cachedSimResult.DayNumber,
                 CurrentPopularity = (int)_controller.CurrentState.Cafe.Popularity,
                 CustomersServed = _cachedSimResult.Customers.CustomersServed,
                 CustomersLost = _cachedSimResult.Customers.CustomersLeftUnhappy + _cachedSimResult.Customers.CustomersLeftNoStock,
+                
+                // Detailed Breakdown
+                LostWaitTooLong = _cachedSimResult.Customers.CustomersLeftUnhappy,
+                LostNoStock = _cachedSimResult.Customers.CustomersLeftNoStock,
+                CoffeeSold = _cachedSimResult.Customers.CoffeeSold,
+                BakedSold = _cachedSimResult.Customers.BakedGoodsSold,
+                MerchSold = _cachedSimResult.Customers.MerchSold,
+                PopularityNarrative = narrative,
+
                 TotalRevenue = _cachedSimResult.Economy.TotalRevenue,
                 NetProfit = _cachedSimResult.Economy.NetProfit
             };
@@ -216,6 +247,7 @@ namespace BirdCafe.Shared
             var actions = new List<CareActionViewModel>
             {
                 new CareActionViewModel { ActionId = CareActionIds.Feed, Label = "Feed Snack", Cost = config.BaselineBirdFoodCost },
+                new CareActionViewModel { ActionId = CareActionIds.Play, Label = "Play (Mood)", Cost = config.BaselinePlayCost }, // New Option
                 new CareActionViewModel { ActionId = CareActionIds.Vet, Label = "Vet Visit", Cost = config.BaselineVetCost }
             };
 
@@ -282,17 +314,49 @@ namespace BirdCafe.Shared
             };
 
             // --- HISTORY ---
-            // (Snippet shortened for brevity, logic remains similar to original)
-            if (state.PastDayResults.Count > 0) { /* ... populate history ... */ }
+            // Populate history for context (Restored per requirements)
+            var recentDays = state.PastDayResults
+                .OrderByDescending(d => d.DayNumber)
+                .Take(7)
+                .OrderBy(d => d.DayNumber)
+                .ToList();
+
+            foreach(var day in recentDays)
+            {
+                vm.RecentHistory.Add(new DailySalesHistoryModel
+                {
+                    DayNumber = day.DayNumber,
+                    CustomersArrived = day.Customers.CustomersArrived,
+                    CoffeeSold = day.Customers.CoffeeSold,
+                    CoffeeWasted = day.Customers.CoffeeWasted,
+                    BakedSold = day.Customers.BakedGoodsSold,
+                    BakedWasted = day.Customers.BakedGoodsWasted,
+                    MerchSold = day.Customers.MerchSold
+                });
+            }
 
             // --- INVENTORY ---
+            // Explicitly adding all types so they show up in the UI list
             vm.Inventory.Add(new InventoryItemModel 
             { 
                 Type = ProductType.Coffee, Name = "Coffee Beans", 
                 CurrentQuantity = state.Cafe.Inventory.Coffee.QuantityOnHand,
                 PlannedPurchase = plan.PlannedCoffeePurchase, UnitCost = 1.0m, TotalCost = costCoffee
             });
-            // ... add others ...
+
+            vm.Inventory.Add(new InventoryItemModel 
+            { 
+                Type = ProductType.BakedGoods, Name = "Baked Goods", 
+                CurrentQuantity = state.Cafe.Inventory.BakedGoods.QuantityOnHand,
+                PlannedPurchase = plan.PlannedBakedGoodsPurchase, UnitCost = 2.0m, TotalCost = costBaked
+            });
+
+            vm.Inventory.Add(new InventoryItemModel 
+            { 
+                Type = ProductType.ThemedMerch, Name = "Merch", 
+                CurrentQuantity = state.Cafe.Inventory.ThemedMerch.QuantityOnHand,
+                PlannedPurchase = plan.PlannedThemedMerchPurchase, UnitCost = 8.0m, TotalCost = costMerch
+            });
             
             // --- ROSTER ---
             foreach(var b in state.Birds)

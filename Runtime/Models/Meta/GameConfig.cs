@@ -49,9 +49,15 @@ namespace BirdCafe.Shared.Models.Meta
         public float DailyMoodDecay { get; set; } = 10f;
 
         /// <summary>
-        /// Amount of Energy recovered if a bird rests (does not work).
+        /// Base amount of Energy EVERY bird recovers overnight by sleeping.
         /// </summary>
-        public float RestEnergyRecovery { get; set; } = 50f;
+        public float BaseNightlyEnergyRecovery { get; set; } = 15f;
+
+        /// <summary>
+        /// ADDITIONAL amount of Energy recovered if a bird is assigned a Rest Day.
+        /// Total recovery = BaseNightlyEnergyRecovery + RestDayEnergyBonus.
+        /// </summary>
+        public float RestDayEnergyBonus { get; set; } = 40f;
 
         /// <summary>
         /// Amount of Energy lost per customer served.
@@ -108,5 +114,10 @@ namespace BirdCafe.Shared.Models.Meta
         /// Standard cost for a single "Vet Visit".
         /// </summary>
         public decimal BaselineVetCost { get; set; } = 50.00m;
+        
+        /// <summary>
+        /// Standard cost for playing with a bird (Toys, etc).
+        /// </summary>
+        public decimal BaselinePlayCost { get; set; } = 0.00m;
     }
 }

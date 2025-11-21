@@ -19,9 +19,23 @@ namespace BirdCafe.ConsoleApp.Screens
 
             Console.WriteLine("=== EVENING REPORT ===");
             Console.WriteLine($"Day: {vm.DayNumber} | Popularity: {vm.CurrentPopularity}/100");
+            Console.WriteLine($"{vm.PopularityNarrative}");
             Console.WriteLine($"Revenue:   ${vm.TotalRevenue:F2}");
             Console.WriteLine($"Net Profit: ${vm.NetProfit:F2}");
-            Console.WriteLine($"Served: {vm.CustomersServed} | Lost: {vm.CustomersLost}");
+            
+            // Detailed breakdown of customers
+            Console.WriteLine($"\nTraffice: Served: {vm.CustomersServed} customers | Lost: {vm.CustomersLost} customers");
+            if (vm.CustomersLost > 0)
+            {
+                Console.WriteLine($"  -> Walked out (Wait): {vm.LostWaitTooLong}");
+                Console.WriteLine($"  -> Walked out (Stock): {vm.LostNoStock}");
+            }
+
+            // Breakdown of sales
+            Console.WriteLine("\n-- Sales Breakdown --");
+            Console.WriteLine($"Coffee: {vm.CoffeeSold}");
+            Console.WriteLine($"Baked Goods: {vm.BakedSold}");
+            Console.WriteLine($"Merch: {vm.MerchSold}");
             
             Console.WriteLine("\n-- Bird Performance --");
             foreach(var b in vm.Birds)
@@ -145,6 +159,22 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 foreach(var w in vm.Warnings) Console.WriteLine($"Warning: {w}");
                 Console.ResetColor();
+            }
+
+            // --- HISTORY TABLE (Added back per requirements) ---
+            if (vm.RecentHistory.Count > 0)
+            {
+                Console.WriteLine("\n--- RECENT SALES HISTORY ---");
+                Console.WriteLine("Day | Traff | Coffee (S/W) | Baked (S/W) | Merch");
+                Console.WriteLine("----|-------|--------------|-------------|------");
+                foreach(var h in vm.RecentHistory)
+                {
+                    Console.WriteLine($"{h.DayNumber,3} | {h.CustomersArrived,5} | {h.CoffeeSold,3} / {h.CoffeeWasted,3}    | {h.BakedSold,3} / {h.BakedWasted,3}   | {h.MerchSold,4}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("\n(No history available yet)");
             }
 
             // Render Inventory Table

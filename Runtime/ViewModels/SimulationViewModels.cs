@@ -9,6 +9,7 @@ namespace BirdCafe.Shared.ViewModels
     {
         public int DayNumber { get; set; }
         public string DayName { get; set; }
+        public string CafeName { get; set; } // Added per requirements
         public int Popularity { get; set; }
         public string Message { get; set; }
     }
@@ -17,6 +18,7 @@ namespace BirdCafe.Shared.ViewModels
     public class UiTimelineEvent
     {
         public float TimeSeconds { get; set; }
+        public string FormattedTime { get; set; } // e.g. "08:30 AM"
         public string EventType { get; set; } // "Arrived", "Served", "LeftAngry"
         public string Description { get; set; }
         public string BirdName { get; set; }

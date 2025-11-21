@@ -40,15 +40,18 @@ namespace BirdCafe.Shared.Engine.Managers
                 return EngineResult.Failure("InsufficientFunds", "Not enough money.");
 
             // 3. Deduct Money
-            _controller.CurrentState.Economy.CurrentBalance -= template.MoneyCost;
-            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+            if (template.MoneyCost > 0)
             {
-                Amount = -template.MoneyCost,
-                Reason = template.DisplayName,
-                Timestamp = DateTime.Now,
-                Category = ExpenseCategory.FoodAndSupplies,
-                RelatedBirdId = bird.Id
-            });
+                _controller.CurrentState.Economy.CurrentBalance -= template.MoneyCost;
+                _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+                {
+                    Amount = -template.MoneyCost,
+                    Reason = template.DisplayName,
+                    Timestamp = DateTime.Now,
+                    Category = ExpenseCategory.FoodAndSupplies,
+                    RelatedBirdId = bird.Id
+                });
+            }
 
             // 4. Apply Stats (Refactored: Moved logic to Bird class for safety)
             bird.ApplyCareEffect(template);
@@ -95,6 +98,17 @@ namespace BirdCafe.Shared.Engine.Managers
                     MoneyCost = config.BaselineVetCost, 
                     HealthChange = 50, 
                     StressChange = -20 
+                };
+
+            if (id == CareActionIds.Play)
+                return new CareActionTemplate
+                {
+                    ActionId = CareActionIds.Play,
+                    DisplayName = "Play Time",
+                    MoneyCost = config.BaselinePlayCost,
+                    MoodChange = 20, // Play improves mood significantly
+                    EnergyChange = -5, // Play tires them out a little
+                    StressChange = -10
                 };
                 
             return null;

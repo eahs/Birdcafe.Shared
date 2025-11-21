@@ -306,10 +306,13 @@ namespace BirdCafe.Shared.Engine.Managers
                 // Apply generic daily decay
                 bird.ApplyDailyDecay(config.DailyHungerDecay, config.DailyMoodDecay);
 
-                // Recovery if resting
+                // Overnight Sleep Recovery (Applies to ALL birds, even those who worked)
+                bird.RecoverEnergy(config.BaseNightlyEnergyRecovery);
+
+                // Additional Recovery if explicitly resting
                 if (!summary.WorkedToday)
                 {
-                    bird.RecoverEnergy(config.RestEnergyRecovery);
+                    bird.RecoverEnergy(config.RestDayEnergyBonus);
                 }
 
                 // Sickness Roll

@@ -14,6 +14,8 @@ namespace BirdCafe.ConsoleApp.Screens
 
             Console.WriteLine("#########################################");
             Console.WriteLine($"   START OF DAY {vm.DayNumber}: {vm.DayName}");
+            // Junior Dev Note: Added Cafe Name per UI request
+            Console.WriteLine($"   {vm.CafeName.ToUpper()}"); 
             Console.WriteLine("#########################################");
             Console.WriteLine($"Popularity: {vm.Popularity}");
             Console.WriteLine($"Message: {vm.Message}");
@@ -35,9 +37,8 @@ namespace BirdCafe.ConsoleApp.Screens
             // In console, we just print the log with small delays to simulate time
             foreach (var evt in timeline)
             {
-                // Formatting
-                var timeStr = TimeSpan.FromSeconds(evt.TimeSeconds).ToString(@"mm\:ss");
-                Console.Write($"[{timeStr}] ");
+                // Updated to use the Formatted Time string (e.g. 7:30 AM) instead of raw seconds
+                Console.Write($"[{evt.FormattedTime}] ");
                 
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write($"{evt.EventType.PadRight(20)} ");
