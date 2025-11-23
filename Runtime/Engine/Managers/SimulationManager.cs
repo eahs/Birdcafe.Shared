@@ -147,8 +147,9 @@ namespace BirdCafe.Shared.Engine.Managers
         private ProductType RollForProduct(Random rng)
         {
             var prodRoll = rng.NextDouble();
-            if (prodRoll > 0.7) return ProductType.BakedGoods;
-            else if (prodRoll > 0.9) return ProductType.ThemedMerch;
+            // FIX: Check highest threshold first!
+            if (prodRoll > 0.9) return ProductType.ThemedMerch;
+            else if (prodRoll > 0.7) return ProductType.BakedGoods;
             return ProductType.Coffee;
         }
 
