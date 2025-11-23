@@ -24,7 +24,7 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.WriteLine($"Net Profit: ${vm.NetProfit:F2}");
             
             // Detailed breakdown of customers
-            Console.WriteLine($"\nTraffice: Served: {vm.CustomersServed} customers | Lost: {vm.CustomersLost} customers");
+            Console.WriteLine($"\nTraffic: Served: {vm.CustomersServed} customers | Lost: {vm.CustomersLost} customers");
             if (vm.CustomersLost > 0)
             {
                 Console.WriteLine($"  -> Walked out (Wait): {vm.LostWaitTooLong}");

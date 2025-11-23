@@ -1,0 +1,1 @@
+repomix --instruction-file-path "README.MD" -o birdcafe-shared.xml
