@@ -121,22 +121,35 @@ namespace BirdCafe.Shared.Engine.Managers
             
             for(int i = 0; i < count; i++)
             {
-                // Determine Product Preference
-                var prodRoll = rng.NextDouble();
-                ProductType pref = ProductType.Coffee;
-                if (prodRoll > 0.7) pref = ProductType.BakedGoods;
-                else if (prodRoll > 0.9) pref = ProductType.ThemedMerch;
-
-                customers.Add(new CustomerTransactionRecord
+                var newCustomer = new CustomerTransactionRecord
                 {
                     CustomerId = i,
                     // Spread customers out over the day duration
                     ArrivalTimeSeconds = (float)rng.NextDouble() * config.DayDurationSeconds,
-                    DesiredProduct = pref
-                });
+                    DesiredProducts = new List<ProductType>()
+                };
+
+                // Add Primary Item
+                newCustomer.DesiredProducts.Add(RollForProduct(rng));
+
+                // Chance for Secondary Item (Multi-purchase logic)
+                if (rng.NextDouble() < config.ChanceForSecondaryItem)
+                {
+                    newCustomer.DesiredProducts.Add(RollForProduct(rng));
+                }
+
+                customers.Add(newCustomer);
             }
             
             return customers.OrderBy(c => c.ArrivalTimeSeconds).ToList();
+        }
+
+        private ProductType RollForProduct(Random rng)
+        {
+            var prodRoll = rng.NextDouble();
+            if (prodRoll > 0.7) return ProductType.BakedGoods;
+            else if (prodRoll > 0.9) return ProductType.ThemedMerch;
+            return ProductType.Coffee;
         }
 
         private void ProcessCustomerInteraction(
@@ -146,13 +159,13 @@ namespace BirdCafe.Shared.Engine.Managers
             Dictionary<string, float> birdAvailability, 
             DaySimulationResult result)
         {
-            // Log Arrival
+            // Log Arrival (We use the first item as the icon/description key)
             result.Timeline.Add(new SimulationTimelineEvent
             {
                 TimeSeconds = cust.ArrivalTimeSeconds,
                 EventType = SimulationTimelineEventType.CustomerArrived,
                 CustomerId = cust.CustomerId,
-                Product = cust.DesiredProduct
+                Product = cust.DesiredProducts.FirstOrDefault()
             });
 
             // 1. Find a bird who is free soon enough (Patience Check)
@@ -172,22 +185,33 @@ namespace BirdCafe.Shared.Engine.Managers
                 return;
             }
 
-            // 2. Check Inventory
-            bool hasStock = CheckAndConsumeInventory(state, cust.DesiredProduct);
-            if (!hasStock)
+            // 2. Check Inventory (Iterate all items)
+            var fulfillableItems = new List<ProductType>();
+            var unfulfillableItems = new List<ProductType>();
+
+            foreach(var desired in cust.DesiredProducts)
             {
-                // Outcome: No Stock
+                bool hasStock = CheckAndConsumeInventory(state, desired);
+                if (hasStock) fulfillableItems.Add(desired);
+                else unfulfillableItems.Add(desired);
+            }
+
+            // 3. Resolve Outcome
+            if (fulfillableItems.Count == 0)
+            {
+                // Outcome: No Stock for ANY item
                 float failTime = Math.Max(cust.ArrivalTimeSeconds, birdAvailability[candidate.Id]) + 1.0f;
                 RecordFailedService(cust, result, "NoStock", -2, failTime, candidate.Id);
                 result.Customers.CustomersLeftNoStock++;
                 
                 // Bird still wasted time checking stock
                 birdAvailability[candidate.Id] = failTime;
-                return;
             }
-
-            // 3. Success: Serve Customer
-            RecordSuccessfulService(state, cust, result, candidate, birdAvailability);
+            else
+            {
+                // Outcome: Success (At least partially)
+                RecordSuccessfulService(state, cust, result, candidate, birdAvailability, fulfillableItems);
+            }
         }
 
         private void RecordFailedService(CustomerTransactionRecord cust, DaySimulationResult result, string reason, int popHit, float time, string birdId = null)
@@ -211,17 +235,18 @@ namespace BirdCafe.Shared.Engine.Managers
             CustomerTransactionRecord cust, 
             DaySimulationResult result, 
             Bird bird, 
-            Dictionary<string, float> birdAvailability)
+            Dictionary<string, float> birdAvailability,
+            List<ProductType> servedItems)
         {
             cust.Outcome = CustomerOutcome.Served;
             cust.ServingBirdId = bird.Id;
             
-            // Pricing
-            decimal price = GetProductPrice(state, cust.DesiredProduct);
-            cust.Revenue = price;
-            
             // Time Calculation
-            float duration = 100f / bird.Productivity; 
+            // We assume serving multiple items takes slightly longer, but keeping it simple for now:
+            float duration = (100f / bird.Productivity); 
+            // Slight penalty for multi-items? Let's add 20% duration per extra item.
+            duration += duration * 0.2f * (servedItems.Count - 1);
+
             float startTime = Math.Max(cust.ArrivalTimeSeconds, birdAvailability[bird.Id]);
             float endTime = startTime + duration;
 
@@ -230,15 +255,8 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // Update Bird Availability
             birdAvailability[bird.Id] = endTime;
-            
-            // Reduce Bird Energy (Using Domain Method)
-            bird.ConsumeEnergy(state.Config.EnergyCostPerService);
-            
-            // Stats
-            result.Customers.CustomersServed++;
-            UpdateProductSales(result.Customers, cust.DesiredProduct);
-            
-            // Timeline: Start
+
+            // Timeline: Start (Only one start event)
             result.Timeline.Add(new SimulationTimelineEvent
             {
                 TimeSeconds = startTime,
@@ -247,18 +265,43 @@ namespace BirdCafe.Shared.Engine.Managers
                 BirdId = bird.Id
             });
 
-            // Timeline: End
-            result.Timeline.Add(new SimulationTimelineEvent
+            // Process Each Item (Revenue, Energy, Stats)
+            decimal totalRevenue = 0;
+            foreach(var item in servedItems)
             {
-                TimeSeconds = endTime,
-                EventType = SimulationTimelineEventType.ServiceCompleted,
-                CustomerId = cust.CustomerId,
-                BirdId = bird.Id,
-                MoneyDelta = price,
-                PopularityDelta = 1
-            });
+                decimal price = GetProductPrice(state, item);
+                totalRevenue += price;
+                
+                // Consume Energy per item (Work is physical!)
+                bird.ConsumeEnergy(state.Config.EnergyCostPerService);
 
-            cust.PopularityDelta = 1;
+                // Update Stats
+                UpdateProductSales(result.Customers, item);
+
+                // Add "Service Completed" Event for EACH item so UI shows multiple popups
+                // We use endTime for all of them so they appear at once
+                result.Timeline.Add(new SimulationTimelineEvent
+                {
+                    TimeSeconds = endTime,
+                    EventType = SimulationTimelineEventType.ServiceCompleted,
+                    CustomerId = cust.CustomerId,
+                    BirdId = bird.Id,
+                    Product = item,
+                    MoneyDelta = price,
+                    PopularityDelta = 1f / servedItems.Count // Split pop gain or give full per item? 
+                    // Let's give 1 full pop point for the interaction, logged on the last item?
+                    // Or keep it simple: 1 pop point per interaction regardless of size.
+                });
+            }
+
+            cust.Revenue = totalRevenue;
+            cust.PopularityDelta = 1; // Flat bonus for successful service
+            result.Customers.CustomersServed++;
+            
+            // Assign stats to Bird Summary
+            // We increment specific bird stats later in FinalizeDayStats, but we can do simple ones here?
+            // Actually Finalize counts transactions. Let's leave that logic as is.
+
             result.CustomerTransactions.Add(cust);
         }
 

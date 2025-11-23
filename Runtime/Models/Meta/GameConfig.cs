@@ -24,6 +24,11 @@ namespace BirdCafe.Shared.Models.Meta
         /// </summary>
         public float PopularityToCustomerFactor { get; set; } = 0.5f;
 
+        /// <summary>
+        /// Chance (0.0 to 1.0) that a customer will order a second item.
+        /// </summary>
+        public float ChanceForSecondaryItem { get; set; } = 0.3f;
+
         // --- Simulation Settings ---
 
         /// <summary>

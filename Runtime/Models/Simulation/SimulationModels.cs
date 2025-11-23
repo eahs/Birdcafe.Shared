@@ -104,7 +104,10 @@ namespace BirdCafe.Shared.Models.Simulation
         public int CustomerId { get; set; }             
         public float ArrivalTimeSeconds { get; set; }   
 
-        public ProductType DesiredProduct { get; set; } 
+        /// <summary>
+        /// List of items the customer wants to buy.
+        /// </summary>
+        public List<ProductType> DesiredProducts { get; set; } = new List<ProductType>(); 
 
         public float? ServiceStartTimeSeconds { get; set; }
         public float? ServiceEndTimeSeconds { get; set; }
