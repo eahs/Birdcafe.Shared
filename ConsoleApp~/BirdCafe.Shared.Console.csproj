@@ -1,0 +1,15 @@
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>BirdCafe.ConsoleApp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference the Shared Library -->
+    <ProjectReference Include="..\BirdCafe.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
