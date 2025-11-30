@@ -11,6 +11,9 @@
 *.sln.docstates
 *.env
 
+# Never ignore Asset meta data
+![Aa]ssets/**/*.meta
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -98,7 +101,6 @@ StyleCopReport.xml
 *_p.c
 *_h.h
 *.ilk
-*.meta
 *.obj
 *.idb
 *.iobj
