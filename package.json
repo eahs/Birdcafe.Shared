@@ -1,10 +1,10 @@
 
 {
   "name": "com.birdcafe.shared",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "Bird Cafe Shared Library",
   "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
-  "unity": "2021.3",
+  "unity": "2022.3",
   "keywords": [
     "birdcafe",
     "shared",
@@ -12,7 +12,7 @@
   ],
   "author": {
     "name": "Bird Cafe Team",
-    "url": "https://github.com/yourusername/BirdCafe.Shared"
+    "url": "https://github.com/eahs/BirdCafe.Shared"
   },
   "dependencies": {}
 }
