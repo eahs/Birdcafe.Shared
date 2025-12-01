@@ -28,6 +28,11 @@ namespace BirdCafe.Shared
         private DaySimulationResult _cachedSimResult;
 
         /// <summary>
+        /// Current screen/phase of the game
+        /// </summary>
+        public GameScreen CurrentScreen => _currentScreen;
+
+        /// <summary>
         /// Event fired when the game changes phase/screens (e.g., Simulation -> Evening).
         /// </summary>
         public event Action<GameScreen> OnScreenChanged;

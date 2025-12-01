@@ -144,345 +144,6 @@ fileFormatVersion: 2
 guid: 6f63eb53870e547499771e159f348266
 </file>
 
-<file path="BirdCafe.Shared.csproj.meta">
-fileFormatVersion: 2
-guid: 62f45f7dd9123a14e826ec7a879f0ed7
-</file>
-
-<file path="BirdCafe.Shared.sln.meta">
-fileFormatVersion: 2
-guid: c6604bd8edb54934fa2f16cbf0241d89
-</file>
-
-<file path="build-llm.bat.meta">
-fileFormatVersion: 2
-guid: 911342232acb80445adee6ade8a7ae81
-</file>
-
-<file path="package.json.meta">
-fileFormatVersion: 2
-guid: e8783cbc33972104fa73d24319e7e75a
-</file>
-
-<file path="README.md.meta">
-fileFormatVersion: 2
-guid: e34da79d2c160ae45ad0d06e07e3ec68
-</file>
-
-<file path="Runtime/BirdCafe.Shared.asmdef.meta">
-fileFormatVersion: 2
-guid: 2e2ede89ab5779d4fb72d6fc7ae94d09
-AssemblyDefinitionImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine.meta">
-fileFormatVersion: 2
-guid: ef22e418c07b40340a860e5165e34813
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine/BirdCafeController.cs.meta">
-fileFormatVersion: 2
-guid: 85593eb8327ad7940b8eefd459f7ca9c
-</file>
-
-<file path="Runtime/Engine/BirdCafeGame.cs.meta">
-fileFormatVersion: 2
-guid: b8e16bc1b63ed91429b74258646e56ce
-</file>
-
-<file path="Runtime/Engine/EngineResult.cs.meta">
-fileFormatVersion: 2
-guid: a95de792fae91a84f852503c4d647be7
-</file>
-
-<file path="Runtime/Engine/Managers.meta">
-fileFormatVersion: 2
-guid: c9390947241afed40951b59eb4b6b1cc
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine/Managers/CareManager.cs.meta">
-fileFormatVersion: 2
-guid: d673d68b85f5b104fbbaf80e00acc59b
-</file>
-
-<file path="Runtime/Engine/Managers/MetaManager.cs.meta">
-fileFormatVersion: 2
-guid: 8f346519650f1de4aa7cf5dcb3b1723b
-</file>
-
-<file path="Runtime/Engine/Managers/PlanningManager.cs.meta">
-fileFormatVersion: 2
-guid: 8d1bff1eb6af0e94a8ae8d7755375a69
-</file>
-
-<file path="Runtime/Engine/Managers/ReportingManager.cs.meta">
-fileFormatVersion: 2
-guid: 27ec8f6044cd6f848a7ca4dd7c6383a3
-</file>
-
-<file path="Runtime/Engine/Managers/SimulationManager.cs.meta">
-fileFormatVersion: 2
-guid: 14f94a940557a11478ab209825ce128f
-</file>
-
-<file path="Runtime/Engine/Utils.meta">
-fileFormatVersion: 2
-guid: 6bdeec41fb147e14fb12e1cb1c68588c
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine/Utils/BirdFactory.cs.meta">
-fileFormatVersion: 2
-guid: 932011d9014e16049bb7a3e2e569bcfd
-</file>
-
-<file path="Runtime/Engine/Utils/EconomyHelper.cs.meta">
-fileFormatVersion: 2
-guid: f71fd8af99e773a408e990d1cefce1b1
-</file>
-
-<file path="Runtime/Enums.meta">
-fileFormatVersion: 2
-guid: 8488d5a9bed8dfd4bb1cad4cce648829
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Enums/GameEnums.cs.meta">
-fileFormatVersion: 2
-guid: 841310f38e7c2b645987c145f5cc698d
-</file>
-
-<file path="Runtime/GameSave.cs.meta">
-fileFormatVersion: 2
-guid: 1ab43a6c4d858734bbb798ec6c10cac7
-</file>
-
-<file path="Runtime/Models.meta">
-fileFormatVersion: 2
-guid: 955b866bc7197ea4bb9572c68769a7f3
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Birds.meta">
-fileFormatVersion: 2
-guid: 52fb0763dc226e8409de4ea96cc1199d
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Birds/Bird.cs.meta">
-fileFormatVersion: 2
-guid: 41adfaeeaa374b74e82c9ad71987e1ef
-</file>
-
-<file path="Runtime/Models/Birds/BirdComponents.cs.meta">
-fileFormatVersion: 2
-guid: 3b00b3cc6e946c742b3654a35d2208c3
-</file>
-
-<file path="Runtime/Models/Cafe.meta">
-fileFormatVersion: 2
-guid: b0a729f1e24d8e844abd4acd5a9efa62
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Cafe/CafeState.cs.meta">
-fileFormatVersion: 2
-guid: 29dc592297a61594d9c4c1fa635d3546
-</file>
-
-<file path="Runtime/Models/Economy.meta">
-fileFormatVersion: 2
-guid: 878d22a1f20c43945b99d89e2e3b3d60
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Economy/Finance.cs.meta">
-fileFormatVersion: 2
-guid: bf78d875123205b458e7a3a92c9e5640
-</file>
-
-<file path="Runtime/Models/Economy/Inventory.cs.meta">
-fileFormatVersion: 2
-guid: d3ba7ac08885ea94c8b1cf9f5e821652
-</file>
-
-<file path="Runtime/Models/Meta.meta">
-fileFormatVersion: 2
-guid: 80e36b6943d59b44db6e904eb78ff93b
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Meta/GameConfig.cs.meta">
-fileFormatVersion: 2
-guid: fdf1e07d12e30004a8a802c5165ed396
-</file>
-
-<file path="Runtime/Models/Meta/Player.cs.meta">
-fileFormatVersion: 2
-guid: c87810ac12fc40647adf46f1ac9bfe30
-</file>
-
-<file path="Runtime/Models/Simulation.meta">
-fileFormatVersion: 2
-guid: 8c58645a43dde1944ae2a8d92e104c9a
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Simulation/DayCycle.cs.meta">
-fileFormatVersion: 2
-guid: cf015fe16fd44fa4f86215ba3fe14660
-</file>
-
-<file path="Runtime/Models/Simulation/SimulationModels.cs.meta">
-fileFormatVersion: 2
-guid: de35170492f419e4b9b0a400b01a42ba
-</file>
-
-<file path="Runtime/Models/Simulation/Summaries.cs.meta">
-fileFormatVersion: 2
-guid: 8e06e4384f8a3ea4db7de6614d61b45f
-</file>
-
-<file path="Runtime/ViewModels.meta">
-fileFormatVersion: 2
-guid: 705bac6ac213e20449146319630257fc
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/ViewModels/EveningViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 17f5767ff6039d64fa0f6b7a6ce0071a
-</file>
-
-<file path="Runtime/ViewModels/GeneralViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 4e5a921b09e118349b0fdfa507f14dcb
-</file>
-
-<file path="Runtime/ViewModels/ReportViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 5eac0cbb4e59af346bf907b157b7a717
-</file>
-
-<file path="Runtime/ViewModels/SimulationViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 07a0e9a2fefdf724b89ec69b53be1815
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests.meta">
-fileFormatVersion: 2
-guid: 50f7dca3059f1d44e97aa913cd5c972d
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests/bin.meta">
-fileFormatVersion: 2
-guid: cd4ae631052cf48408ee6f3c336a4f99
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef.meta">
-fileFormatVersion: 2
-guid: ecd6d41297ad7b4419018d54682c2980
-AssemblyDefinitionImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj.meta">
-fileFormatVersion: 2
-guid: bd0f2a8d34802a646b33df6ab018855b
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests/obj.meta">
-fileFormatVersion: 2
-guid: 0fd370b6b48d1094596ca85825c4eca3
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests/SimulationTests.cs.meta">
-fileFormatVersion: 2
-guid: 4eae16f8a2e8b1a4fbf5fbab30927d7e
-</file>
-
 <file path="BirdCafe.Shared.csproj">
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -509,8 +170,23 @@ guid: 4eae16f8a2e8b1a4fbf5fbab30927d7e
 </Project>
 </file>
 
+<file path="BirdCafe.Shared.csproj.meta">
+fileFormatVersion: 2
+guid: 62f45f7dd9123a14e826ec7a879f0ed7
+</file>
+
+<file path="BirdCafe.Shared.sln.meta">
+fileFormatVersion: 2
+guid: c6604bd8edb54934fa2f16cbf0241d89
+</file>
+
 <file path="build-llm.bat">
 repomix --instruction-file-path "README.MD" -o birdcafe-shared.xml
+</file>
+
+<file path="build-llm.bat.meta">
+fileFormatVersion: 2
+guid: 911342232acb80445adee6ade8a7ae81
 </file>
 
 <file path="ConsoleApp~/BirdCafe.Shared.Console.csproj">
@@ -1035,6 +711,37 @@ namespace BirdCafe.ConsoleApp.Screens
 }
 </file>
 
+<file path="package.json.meta">
+fileFormatVersion: 2
+guid: e8783cbc33972104fa73d24319e7e75a
+</file>
+
+<file path="README.md.meta">
+fileFormatVersion: 2
+guid: e34da79d2c160ae45ad0d06e07e3ec68
+</file>
+
+<file path="Runtime/BirdCafe.Shared.asmdef.meta">
+fileFormatVersion: 2
+guid: 2e2ede89ab5779d4fb72d6fc7ae94d09
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Engine.meta">
+fileFormatVersion: 2
+guid: ef22e418c07b40340a860e5165e34813
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="Runtime/Engine/BirdCafeController.cs">
 using System;
 using BirdCafe.Shared.Enums;
@@ -1081,6 +788,16 @@ namespace BirdCafe.Shared.Engine
 }
 </file>
 
+<file path="Runtime/Engine/BirdCafeController.cs.meta">
+fileFormatVersion: 2
+guid: 85593eb8327ad7940b8eefd459f7ca9c
+</file>
+
+<file path="Runtime/Engine/BirdCafeGame.cs.meta">
+fileFormatVersion: 2
+guid: b8e16bc1b63ed91429b74258646e56ce
+</file>
+
 <file path="Runtime/Engine/EngineResult.cs">
 using System;
 
@@ -1107,6 +824,37 @@ namespace BirdCafe.Shared.Engine
         }
     }
 }
+</file>
+
+<file path="Runtime/Engine/EngineResult.cs.meta">
+fileFormatVersion: 2
+guid: a95de792fae91a84f852503c4d647be7
+</file>
+
+<file path="Runtime/Engine/Managers.meta">
+fileFormatVersion: 2
+guid: c9390947241afed40951b59eb4b6b1cc
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Engine/Managers/CareManager.cs.meta">
+fileFormatVersion: 2
+guid: d673d68b85f5b104fbbaf80e00acc59b
+</file>
+
+<file path="Runtime/Engine/Managers/MetaManager.cs.meta">
+fileFormatVersion: 2
+guid: 8f346519650f1de4aa7cf5dcb3b1723b
+</file>
+
+<file path="Runtime/Engine/Managers/PlanningManager.cs.meta">
+fileFormatVersion: 2
+guid: 8d1bff1eb6af0e94a8ae8d7755375a69
 </file>
 
 <file path="Runtime/Engine/Managers/ReportingManager.cs">
@@ -1221,6 +969,27 @@ namespace BirdCafe.Shared.Engine.Managers
 }
 </file>
 
+<file path="Runtime/Engine/Managers/ReportingManager.cs.meta">
+fileFormatVersion: 2
+guid: 27ec8f6044cd6f848a7ca4dd7c6383a3
+</file>
+
+<file path="Runtime/Engine/Managers/SimulationManager.cs.meta">
+fileFormatVersion: 2
+guid: 14f94a940557a11478ab209825ce128f
+</file>
+
+<file path="Runtime/Engine/Utils.meta">
+fileFormatVersion: 2
+guid: 6bdeec41fb147e14fb12e1cb1c68588c
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="Runtime/Engine/Utils/BirdFactory.cs">
 using System;
 using BirdCafe.Shared.Models.Birds;
@@ -1254,6 +1023,11 @@ namespace BirdCafe.Shared.Engine.Utils
         }
     }
 }
+</file>
+
+<file path="Runtime/Engine/Utils/BirdFactory.cs.meta">
+fileFormatVersion: 2
+guid: 932011d9014e16049bb7a3e2e569bcfd
 </file>
 
 <file path="Runtime/Engine/Utils/EconomyHelper.cs">
@@ -1305,6 +1079,27 @@ namespace BirdCafe.Shared.Engine.Utils
 }
 </file>
 
+<file path="Runtime/Engine/Utils/EconomyHelper.cs.meta">
+fileFormatVersion: 2
+guid: f71fd8af99e773a408e990d1cefce1b1
+</file>
+
+<file path="Runtime/Enums.meta">
+fileFormatVersion: 2
+guid: 8488d5a9bed8dfd4bb1cad4cce648829
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Enums/GameEnums.cs.meta">
+fileFormatVersion: 2
+guid: 841310f38e7c2b645987c145f5cc698d
+</file>
+
 <file path="Runtime/GameSave.cs">
 using System;
 using System.Collections.Generic;
@@ -1351,6 +1146,38 @@ namespace BirdCafe.Shared
         public DayState CurrentDayState { get; set; } = new DayState();
     }
 }
+</file>
+
+<file path="Runtime/GameSave.cs.meta">
+fileFormatVersion: 2
+guid: 1ab43a6c4d858734bbb798ec6c10cac7
+</file>
+
+<file path="Runtime/Models.meta">
+fileFormatVersion: 2
+guid: 955b866bc7197ea4bb9572c68769a7f3
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Birds.meta">
+fileFormatVersion: 2
+guid: 52fb0763dc226e8409de4ea96cc1199d
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Birds/Bird.cs.meta">
+fileFormatVersion: 2
+guid: 41adfaeeaa374b74e82c9ad71987e1ef
 </file>
 
 <file path="Runtime/Models/Birds/BirdComponents.cs">
@@ -1481,6 +1308,22 @@ namespace BirdCafe.Shared.Models.Birds
 }
 </file>
 
+<file path="Runtime/Models/Birds/BirdComponents.cs.meta">
+fileFormatVersion: 2
+guid: 3b00b3cc6e946c742b3654a35d2208c3
+</file>
+
+<file path="Runtime/Models/Cafe.meta">
+fileFormatVersion: 2
+guid: b0a729f1e24d8e844abd4acd5a9efa62
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="Runtime/Models/Cafe/CafeState.cs">
 using System;
 using System.Collections.Generic;
@@ -1520,6 +1363,22 @@ namespace BirdCafe.Shared.Models.Cafe
         public List<string> UnlockedDecorationIds { get; set; } = new List<string>();
     }
 }
+</file>
+
+<file path="Runtime/Models/Cafe/CafeState.cs.meta">
+fileFormatVersion: 2
+guid: 29dc592297a61594d9c4c1fa635d3546
+</file>
+
+<file path="Runtime/Models/Economy.meta">
+fileFormatVersion: 2
+guid: 878d22a1f20c43945b99d89e2e3b3d60
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
 </file>
 
 <file path="Runtime/Models/Economy/Finance.cs">
@@ -1595,6 +1454,11 @@ namespace BirdCafe.Shared.Models.Economy
 }
 </file>
 
+<file path="Runtime/Models/Economy/Finance.cs.meta">
+fileFormatVersion: 2
+guid: bf78d875123205b458e7a3a92c9e5640
+</file>
+
 <file path="Runtime/Models/Economy/Inventory.cs">
 using System;
 using System.Collections.Generic;
@@ -1668,6 +1532,27 @@ namespace BirdCafe.Shared.Models.Economy
 }
 </file>
 
+<file path="Runtime/Models/Economy/Inventory.cs.meta">
+fileFormatVersion: 2
+guid: d3ba7ac08885ea94c8b1cf9f5e821652
+</file>
+
+<file path="Runtime/Models/Meta.meta">
+fileFormatVersion: 2
+guid: 80e36b6943d59b44db6e904eb78ff93b
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Meta/GameConfig.cs.meta">
+fileFormatVersion: 2
+guid: fdf1e07d12e30004a8a802c5165ed396
+</file>
+
 <file path="Runtime/Models/Meta/Player.cs">
 using System;
 
@@ -1735,6 +1620,22 @@ namespace BirdCafe.Shared.Models.Meta
 }
 </file>
 
+<file path="Runtime/Models/Meta/Player.cs.meta">
+fileFormatVersion: 2
+guid: c87810ac12fc40647adf46f1ac9bfe30
+</file>
+
+<file path="Runtime/Models/Simulation.meta">
+fileFormatVersion: 2
+guid: 8c58645a43dde1944ae2a8d92e104c9a
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="Runtime/Models/Simulation/DayCycle.cs">
 using System;
 using System.Collections.Generic;
@@ -1777,6 +1678,16 @@ namespace BirdCafe.Shared.Models.Simulation
         public string Notes { get; set; }
     }
 }
+</file>
+
+<file path="Runtime/Models/Simulation/DayCycle.cs.meta">
+fileFormatVersion: 2
+guid: cf015fe16fd44fa4f86215ba3fe14660
+</file>
+
+<file path="Runtime/Models/Simulation/SimulationModels.cs.meta">
+fileFormatVersion: 2
+guid: de35170492f419e4b9b0a400b01a42ba
 </file>
 
 <file path="Runtime/Models/Simulation/Summaries.cs">
@@ -1846,6 +1757,27 @@ namespace BirdCafe.Shared.Models.Simulation
 }
 </file>
 
+<file path="Runtime/Models/Simulation/Summaries.cs.meta">
+fileFormatVersion: 2
+guid: 8e06e4384f8a3ea4db7de6614d61b45f
+</file>
+
+<file path="Runtime/ViewModels.meta">
+fileFormatVersion: 2
+guid: 705bac6ac213e20449146319630257fc
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/ViewModels/EveningViewModels.cs.meta">
+fileFormatVersion: 2
+guid: 17f5767ff6039d64fa0f6b7a6ce0071a
+</file>
+
 <file path="Runtime/ViewModels/GeneralViewModels.cs">
 using System;
 using System.Collections.Generic;
@@ -1876,6 +1808,11 @@ namespace BirdCafe.Shared.ViewModels
 }
 </file>
 
+<file path="Runtime/ViewModels/GeneralViewModels.cs.meta">
+fileFormatVersion: 2
+guid: 4e5a921b09e118349b0fdfa507f14dcb
+</file>
+
 <file path="Runtime/ViewModels/ReportViewModels.cs">
 using System;
 
@@ -1898,6 +1835,38 @@ namespace BirdCafe.Shared.ViewModels
         public decimal FinalScore { get; set; }
     }
 }
+</file>
+
+<file path="Runtime/ViewModels/ReportViewModels.cs.meta">
+fileFormatVersion: 2
+guid: 5eac0cbb4e59af346bf907b157b7a717
+</file>
+
+<file path="Runtime/ViewModels/SimulationViewModels.cs.meta">
+fileFormatVersion: 2
+guid: 07a0e9a2fefdf724b89ec69b53be1815
+</file>
+
+<file path="Tests/BirdCafe.Shared.Tests.meta">
+fileFormatVersion: 2
+guid: 50f7dca3059f1d44e97aa913cd5c972d
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Tests/BirdCafe.Shared.Tests/bin.meta">
+fileFormatVersion: 2
+guid: cd4ae631052cf48408ee6f3c336a4f99
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
 </file>
 
 <file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef">
@@ -1925,6 +1894,16 @@ namespace BirdCafe.Shared.ViewModels
 }
 </file>
 
+<file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef.meta">
+fileFormatVersion: 2
+guid: ecd6d41297ad7b4419018d54682c2980
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj">
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -1944,6 +1923,22 @@ namespace BirdCafe.Shared.ViewModels
 	</ItemGroup>
 
 </Project>
+</file>
+
+<file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj.meta">
+fileFormatVersion: 2
+guid: bd0f2a8d34802a646b33df6ab018855b
+</file>
+
+<file path="Tests/BirdCafe.Shared.Tests/obj.meta">
+fileFormatVersion: 2
+guid: 0fd370b6b48d1094596ca85825c4eca3
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
 </file>
 
 <file path="Tests/BirdCafe.Shared.Tests/SimulationTests.cs">
@@ -2044,6 +2039,11 @@ namespace BirdCafe.Shared.Tests
         }
     }
 }
+</file>
+
+<file path="Tests/BirdCafe.Shared.Tests/SimulationTests.cs.meta">
+fileFormatVersion: 2
+guid: 4eae16f8a2e8b1a4fbf5fbab30927d7e
 </file>
 
 <file path="BirdCafe.Shared.sln">
@@ -3337,449 +3337,6 @@ namespace BirdCafe.Shared.ViewModels
 }
 </file>
 
-<file path=".gitignore">
-## Ignore Visual Studio temporary files, build results, and
-## files generated by popular Visual Studio add-ons.
-##
-## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
-
-# User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-*.env
-
-# Never ignore Asset meta data
-![Aa]ssets/**/*.meta
-
-# User-specific files (MonoDevelop/Xamarin Studio)
-*.userprefs
-
-# Mono auto generated files
-mono_crash.*
-
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-
-[Dd]ebug/x64/
-[Dd]ebugPublic/x64/
-[Rr]elease/x64/
-[Rr]eleases/x64/
-bin/x64/
-obj/x64/
-
-[Dd]ebug/x86/
-[Dd]ebugPublic/x86/
-[Rr]elease/x86/
-[Rr]eleases/x86/
-bin/x86/
-obj/x86/
-
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-[Aa][Rr][Mm]64[Ee][Cc]/
-bld/
-[Oo]bj/
-[Oo]ut/
-[Ll]og/
-[Ll]ogs/
-
-# Build results on 'Bin' directories
-**/[Bb]in/*
-# Uncomment if you have tasks that rely on *.refresh files to move binaries
-# (https://github.com/github/gitignore/pull/3736)
-#!**/[Bb]in/*.refresh
-
-# Visual Studio 2015/2017 cache/options directory
-.vs/
-# Uncomment if you have tasks that create the project's static files in wwwroot
-#wwwroot/
-
-# Visual Studio 2017 auto generated files
-Generated\ Files/
-
-# MSTest test Results
-[Tt]est[Rr]esult*/
-[Bb]uild[Ll]og.*
-*.trx
-
-# NUnit
-*.VisualState.xml
-TestResult.xml
-nunit-*.xml
-
-# Approval Tests result files
-*.received.*
-
-# Build Results of an ATL Project
-[Dd]ebugPS/
-[Rr]eleasePS/
-dlldata.c
-
-# Benchmark Results
-BenchmarkDotNet.Artifacts/
-
-# .NET Core
-project.lock.json
-project.fragment.lock.json
-artifacts/
-
-# ASP.NET Scaffolding
-ScaffoldingReadMe.txt
-
-# StyleCop
-StyleCopReport.xml
-
-# Files built by Visual Studio
-*_i.c
-*_p.c
-*_h.h
-*.ilk
-*.obj
-*.idb
-*.iobj
-*.pch
-*.pdb
-*.ipdb
-*.pgc
-*.pgd
-*.rsp
-# but not Directory.Build.rsp, as it configures directory-level build defaults
-!Directory.Build.rsp
-*.sbr
-*.tlb
-*.tli
-*.tlh
-*.tmp
-*.tmp_proj
-*_wpftmp.csproj
-*.log
-*.tlog
-*.vspscc
-*.vssscc
-.builds
-*.pidb
-*.svclog
-*.scc
-
-# Chutzpah Test files
-_Chutzpah*
-
-# Visual C++ cache files
-ipch/
-*.aps
-*.ncb
-*.opendb
-*.opensdf
-*.sdf
-*.cachefile
-*.VC.db
-*.VC.VC.opendb
-
-# Visual Studio profiler
-*.psess
-*.vsp
-*.vspx
-*.sap
-
-# Visual Studio Trace Files
-*.e2e
-
-# TFS 2012 Local Workspace
-$tf/
-
-# Guidance Automation Toolkit
-*.gpState
-
-# ReSharper is a .NET coding add-in
-_ReSharper*/
-*.[Rr]e[Ss]harper
-*.DotSettings.user
-
-# TeamCity is a build add-in
-_TeamCity*
-
-# DotCover is a Code Coverage Tool
-*.dotCover
-
-# AxoCover is a Code Coverage Tool
-.axoCover/*
-!.axoCover/settings.json
-
-# Coverlet is a free, cross platform Code Coverage Tool
-coverage*.json
-coverage*.xml
-coverage*.info
-
-# Visual Studio code coverage results
-*.coverage
-*.coveragexml
-
-# NCrunch
-_NCrunch_*
-.NCrunch_*
-.*crunch*.local.xml
-nCrunchTemp_*
-
-# MightyMoose
-*.mm.*
-AutoTest.Net/
-
-# Web workbench (sass)
-.sass-cache/
-
-# Installshield output folder
-[Ee]xpress/
-
-# DocProject is a documentation generator add-in
-DocProject/buildhelp/
-DocProject/Help/*.HxT
-DocProject/Help/*.HxC
-DocProject/Help/*.hhc
-DocProject/Help/*.hhk
-DocProject/Help/*.hhp
-DocProject/Help/Html2
-DocProject/Help/html
-
-# Click-Once directory
-publish/
-
-# Publish Web Output
-*.[Pp]ublish.xml
-*.azurePubxml
-# Note: Comment the next line if you want to checkin your web deploy settings,
-# but database connection strings (with potential passwords) will be unencrypted
-*.pubxml
-*.publishproj
-
-# Microsoft Azure Web App publish settings. Comment the next line if you want to
-# checkin your Azure Web App publish settings, but sensitive information contained
-# in these scripts will be unencrypted
-PublishScripts/
-
-# NuGet Packages
-*.nupkg
-# NuGet Symbol Packages
-*.snupkg
-# The packages folder can be ignored because of Package Restore
-**/[Pp]ackages/*
-# except build/, which is used as an MSBuild target.
-!**/[Pp]ackages/build/
-# Uncomment if necessary however generally it will be regenerated when needed
-#!**/[Pp]ackages/repositories.config
-# NuGet v3's project.json files produces more ignorable files
-*.nuget.props
-*.nuget.targets
-
-# Microsoft Azure Build Output
-csx/
-*.build.csdef
-
-# Microsoft Azure Emulator
-ecf/
-rcf/
-
-# Windows Store app package directories and files
-AppPackages/
-BundleArtifacts/
-Package.StoreAssociation.xml
-_pkginfo.txt
-*.appx
-*.appxbundle
-*.appxupload
-
-# Visual Studio cache files
-# files ending in .cache can be ignored
-*.[Cc]ache
-# but keep track of directories ending in .cache
-!?*.[Cc]ache/
-
-# Others
-ClientBin/
-~$*
-*.dbmdl
-*.dbproj.schemaview
-*.jfm
-*.pfx
-*.publishsettings
-orleans.codegen.cs
-
-# Including strong name files can present a security risk
-# (https://github.com/github/gitignore/pull/2483#issue-259490424)
-#*.snk
-
-# Since there are multiple workflows, uncomment next line to ignore bower_components
-# (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
-#bower_components/
-
-# RIA/Silverlight projects
-Generated_Code/
-
-# Backup & report files from converting an old project file
-# to a newer Visual Studio version. Backup files are not needed,
-# because we have git ;-)
-_UpgradeReport_Files/
-Backup*/
-UpgradeLog*.XML
-UpgradeLog*.htm
-ServiceFabricBackup/
-*.rptproj.bak
-
-# SQL Server files
-*.mdf
-*.ldf
-*.ndf
-
-# Business Intelligence projects
-*.rdl.data
-*.bim.layout
-*.bim_*.settings
-*.rptproj.rsuser
-*- [Bb]ackup.rdl
-*- [Bb]ackup ([0-9]).rdl
-*- [Bb]ackup ([0-9][0-9]).rdl
-
-# Microsoft Fakes
-FakesAssemblies/
-
-# GhostDoc plugin setting file
-*.GhostDoc.xml
-
-# Node.js Tools for Visual Studio
-.ntvs_analysis.dat
-node_modules/
-
-# Visual Studio 6 build log
-*.plg
-
-# Visual Studio 6 workspace options file
-*.opt
-
-# Visual Studio 6 auto-generated workspace file (contains which files were open etc.)
-*.vbw
-
-# Visual Studio 6 workspace and project file (working project files containing files to include in project)
-*.dsw
-*.dsp
-
-# Visual Studio 6 technical files
-*.ncb
-*.aps
-
-# Visual Studio LightSwitch build output
-**/*.HTMLClient/GeneratedArtifacts
-**/*.DesktopClient/GeneratedArtifacts
-**/*.DesktopClient/ModelManifest.xml
-**/*.Server/GeneratedArtifacts
-**/*.Server/ModelManifest.xml
-_Pvt_Extensions
-
-# Paket dependency manager
-**/.paket/paket.exe
-paket-files/
-
-# FAKE - F# Make
-**/.fake/
-
-# CodeRush personal settings
-**/.cr/personal
-
-# Python Tools for Visual Studio (PTVS)
-**/__pycache__/
-*.pyc
-
-# Cake - Uncomment if you are using it
-#tools/**
-#!tools/packages.config
-
-# Tabs Studio
-*.tss
-
-# Telerik's JustMock configuration file
-*.jmconfig
-
-# BizTalk build output
-*.btp.cs
-*.btm.cs
-*.odx.cs
-*.xsd.cs
-
-# OpenCover UI analysis results
-OpenCover/
-
-# Azure Stream Analytics local run output
-ASALocalRun/
-
-# MSBuild Binary and Structured Log
-*.binlog
-MSBuild_Logs/
-
-# AWS SAM Build and Temporary Artifacts folder
-.aws-sam
-
-# NVidia Nsight GPU debugger configuration file
-*.nvuser
-
-# MFractors (Xamarin productivity tool) working folder
-**/.mfractor/
-
-# Local History for Visual Studio
-**/.localhistory/
-
-# Visual Studio History (VSHistory) files
-.vshistory/
-
-# BeatPulse healthcheck temp database
-healthchecksdb
-
-# Backup folder for Package Reference Convert tool in Visual Studio 2017
-MigrationBackup/
-
-# Ionide (cross platform F# VS Code tools) working folder
-**/.ionide/
-
-# Fody - auto-generated XML schema
-FodyWeavers.xsd
-
-# VS Code files for those working on multiple tools
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
-
-# Local History for Visual Studio Code
-.history/
-
-# Built Visual Studio Code Extensions
-*.vsix
-
-# Windows Installer files from build outputs
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-
-/[Ll]ibrary/
-/[Tt]emp/
-/[Oo]bj/
-/[Bb]uild/
-/[Bb]uilds/
-/[Ll]ogs/
-/[Uu]ser[Ss]ettings/
-
-# MemoryCaptures
-/[Mm]emoryCaptures/
-</file>
-
 <file path="README.md">
 ## 1. Output-file syntax (mandatory for new or replacement files)
 
@@ -4956,24 +4513,447 @@ namespace BirdCafe.Shared.Enums
 }
 </file>
 
-<file path="package.json">
-{
-  "name": "com.birdcafe.shared",
-  "version": "0.1.3",
-  "displayName": "Bird Cafe Shared Library",
-  "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
-  "unity": "2022.3",
-  "keywords": [
-    "birdcafe",
-    "shared",
-    "model"
-  ],
-  "author": {
-    "name": "Bird Cafe Team",
-    "url": "https://github.com/eahs/BirdCafe.Shared"
-  },
-  "dependencies": {}
-}
+<file path=".gitignore">
+## Ignore Visual Studio temporary files, build results, and
+## files generated by popular Visual Studio add-ons.
+##
+## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.env
+
+# Never ignore Asset meta data
+![Aa]ssets/**/*.meta
+
+# User-specific files (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+
+[Dd]ebug/x64/
+[Dd]ebugPublic/x64/
+[Rr]elease/x64/
+[Rr]eleases/x64/
+bin/x64/
+obj/x64/
+
+[Dd]ebug/x86/
+[Dd]ebugPublic/x86/
+[Rr]elease/x86/
+[Rr]eleases/x86/
+bin/x86/
+obj/x86/
+
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+[Aa][Rr][Mm]64[Ee][Cc]/
+bld/
+[Oo]bj/
+[Oo]ut/
+[Ll]og/
+[Ll]ogs/
+
+# Build results on 'Bin' directories
+**/[Bb]in/*
+# Uncomment if you have tasks that rely on *.refresh files to move binaries
+# (https://github.com/github/gitignore/pull/3736)
+#!**/[Bb]in/*.refresh
+
+# Visual Studio 2015/2017 cache/options directory
+.vs/
+# Uncomment if you have tasks that create the project's static files in wwwroot
+#wwwroot/
+
+# Visual Studio 2017 auto generated files
+Generated\ Files/
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# Approval Tests result files
+*.received.*
+
+# Build Results of an ATL Project
+[Dd]ebugPS/
+[Rr]eleasePS/
+dlldata.c
+
+# Benchmark Results
+BenchmarkDotNet.Artifacts/
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# StyleCop
+StyleCopReport.xml
+
+# Files built by Visual Studio
+*_i.c
+*_p.c
+*_h.h
+*.ilk
+*.obj
+*.idb
+*.iobj
+*.pch
+*.pdb
+*.ipdb
+*.pgc
+*.pgd
+*.rsp
+# but not Directory.Build.rsp, as it configures directory-level build defaults
+!Directory.Build.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*_wpftmp.csproj
+*.log
+*.tlog
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+
+# Chutzpah Test files
+_Chutzpah*
+
+# Visual C++ cache files
+ipch/
+*.aps
+*.ncb
+*.opendb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# Visual Studio Trace Files
+*.e2e
+
+# TFS 2012 Local Workspace
+$tf/
+
+# Guidance Automation Toolkit
+*.gpState
+
+# ReSharper is a .NET coding add-in
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# TeamCity is a build add-in
+_TeamCity*
+
+# DotCover is a Code Coverage Tool
+*.dotCover
+
+# AxoCover is a Code Coverage Tool
+.axoCover/*
+!.axoCover/settings.json
+
+# Coverlet is a free, cross platform Code Coverage Tool
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Visual Studio code coverage results
+*.coverage
+*.coveragexml
+
+# NCrunch
+_NCrunch_*
+.NCrunch_*
+.*crunch*.local.xml
+nCrunchTemp_*
+
+# MightyMoose
+*.mm.*
+AutoTest.Net/
+
+# Web workbench (sass)
+.sass-cache/
+
+# Installshield output folder
+[Ee]xpress/
+
+# DocProject is a documentation generator add-in
+DocProject/buildhelp/
+DocProject/Help/*.HxT
+DocProject/Help/*.HxC
+DocProject/Help/*.hhc
+DocProject/Help/*.hhk
+DocProject/Help/*.hhp
+DocProject/Help/Html2
+DocProject/Help/html
+
+# Click-Once directory
+publish/
+
+# Publish Web Output
+*.[Pp]ublish.xml
+*.azurePubxml
+# Note: Comment the next line if you want to checkin your web deploy settings,
+# but database connection strings (with potential passwords) will be unencrypted
+*.pubxml
+*.publishproj
+
+# Microsoft Azure Web App publish settings. Comment the next line if you want to
+# checkin your Azure Web App publish settings, but sensitive information contained
+# in these scripts will be unencrypted
+PublishScripts/
+
+# NuGet Packages
+*.nupkg
+# NuGet Symbol Packages
+*.snupkg
+# The packages folder can be ignored because of Package Restore
+**/[Pp]ackages/*
+# except build/, which is used as an MSBuild target.
+!**/[Pp]ackages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+#!**/[Pp]ackages/repositories.config
+# NuGet v3's project.json files produces more ignorable files
+*.nuget.props
+*.nuget.targets
+
+# Microsoft Azure Build Output
+csx/
+*.build.csdef
+
+# Microsoft Azure Emulator
+ecf/
+rcf/
+
+# Windows Store app package directories and files
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_pkginfo.txt
+*.appx
+*.appxbundle
+*.appxupload
+
+# Visual Studio cache files
+# files ending in .cache can be ignored
+*.[Cc]ache
+# but keep track of directories ending in .cache
+!?*.[Cc]ache/
+
+# Others
+ClientBin/
+~$*
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+*.pfx
+*.publishsettings
+orleans.codegen.cs
+
+# Including strong name files can present a security risk
+# (https://github.com/github/gitignore/pull/2483#issue-259490424)
+#*.snk
+
+# Since there are multiple workflows, uncomment next line to ignore bower_components
+# (https://github.com/github/gitignore/pull/1529#issuecomment-104372622)
+#bower_components/
+
+# RIA/Silverlight projects
+Generated_Code/
+
+# Backup & report files from converting an old project file
+# to a newer Visual Studio version. Backup files are not needed,
+# because we have git ;-)
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+UpgradeLog*.htm
+ServiceFabricBackup/
+*.rptproj.bak
+
+# SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# Business Intelligence projects
+*.rdl.data
+*.bim.layout
+*.bim_*.settings
+*.rptproj.rsuser
+*- [Bb]ackup.rdl
+*- [Bb]ackup ([0-9]).rdl
+*- [Bb]ackup ([0-9][0-9]).rdl
+
+# Microsoft Fakes
+FakesAssemblies/
+
+# GhostDoc plugin setting file
+*.GhostDoc.xml
+
+# Node.js Tools for Visual Studio
+.ntvs_analysis.dat
+node_modules/
+
+# Visual Studio 6 build log
+*.plg
+
+# Visual Studio 6 workspace options file
+*.opt
+
+# Visual Studio 6 auto-generated workspace file (contains which files were open etc.)
+*.vbw
+
+# Visual Studio 6 workspace and project file (working project files containing files to include in project)
+*.dsw
+*.dsp
+
+# Visual Studio 6 technical files
+*.ncb
+*.aps
+
+# Visual Studio LightSwitch build output
+**/*.HTMLClient/GeneratedArtifacts
+**/*.DesktopClient/GeneratedArtifacts
+**/*.DesktopClient/ModelManifest.xml
+**/*.Server/GeneratedArtifacts
+**/*.Server/ModelManifest.xml
+_Pvt_Extensions
+
+# Paket dependency manager
+**/.paket/paket.exe
+paket-files/
+
+# FAKE - F# Make
+**/.fake/
+
+# CodeRush personal settings
+**/.cr/personal
+
+# Python Tools for Visual Studio (PTVS)
+**/__pycache__/
+*.pyc
+
+# Cake - Uncomment if you are using it
+#tools/**
+#!tools/packages.config
+
+# Tabs Studio
+*.tss
+
+# Telerik's JustMock configuration file
+*.jmconfig
+
+# BizTalk build output
+*.btp.cs
+*.btm.cs
+*.odx.cs
+*.xsd.cs
+
+# OpenCover UI analysis results
+OpenCover/
+
+# Azure Stream Analytics local run output
+ASALocalRun/
+
+# MSBuild Binary and Structured Log
+*.binlog
+MSBuild_Logs/
+
+# AWS SAM Build and Temporary Artifacts folder
+.aws-sam
+
+# NVidia Nsight GPU debugger configuration file
+*.nvuser
+
+# MFractors (Xamarin productivity tool) working folder
+**/.mfractor/
+
+# Local History for Visual Studio
+**/.localhistory/
+
+# Visual Studio History (VSHistory) files
+.vshistory/
+
+# BeatPulse healthcheck temp database
+healthchecksdb
+
+# Backup folder for Package Reference Convert tool in Visual Studio 2017
+MigrationBackup/
+
+# Ionide (cross platform F# VS Code tools) working folder
+**/.ionide/
+
+# Fody - auto-generated XML schema
+FodyWeavers.xsd
+
+# VS Code files for those working on multiple tools
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# Windows Installer files from build outputs
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# MemoryCaptures
+/[Mm]emoryCaptures/
 </file>
 
 <file path="Runtime/Models/Meta/GameConfig.cs">
@@ -5103,6 +5083,26 @@ namespace BirdCafe.Shared.Models.Meta
         /// </summary>
         public decimal BaselinePlayCost { get; set; } = 0.00m;
     }
+}
+</file>
+
+<file path="package.json">
+{
+  "name": "com.birdcafe.shared",
+  "version": "0.1.4",
+  "displayName": "Bird Cafe Shared Library",
+  "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
+  "unity": "2022.3",
+  "keywords": [
+    "birdcafe",
+    "shared",
+    "model"
+  ],
+  "author": {
+    "name": "Bird Cafe Team",
+    "url": "https://github.com/eahs/BirdCafe.Shared"
+  },
+  "dependencies": {}
 }
 </file>
 
