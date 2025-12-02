@@ -92,7 +92,7 @@ namespace BirdCafe.Shared
                 DayName = state.CurrentDayName.ToString(),
                 CafeName = state.Cafe.CafeName, // Populate CafeName
                 Popularity = (int)state.Cafe.Popularity,
-                Message = $"Welcome to Day {state.CurrentDayNumber}! Good luck."
+                Message = $"Good morning <#008DD4>{state.Profile.DisplayName}</color>! Today is {state.CurrentDayName}, day <#6c18a3>{state.CurrentDayNumber}</color>. Let's make it a great day at {state.Cafe.CafeName}. Good luck!"
             };
         }
 
