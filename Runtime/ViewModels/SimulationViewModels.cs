@@ -23,5 +23,7 @@ namespace BirdCafe.Shared.ViewModels
         public string Description { get; set; }
         public string BirdName { get; set; }
         public string IconId { get; set; } // e.g. "Coffee"
+        public decimal MoneyDelta { get; set; }
+        public float PopularityDelta { get; set; }
     }
 }

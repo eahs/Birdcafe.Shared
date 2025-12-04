@@ -1,7 +1,7 @@
 
 {
   "name": "com.birdcafe.shared",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "displayName": "Bird Cafe Shared Library",
   "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
   "unity": "2022.3",

@@ -28,6 +28,11 @@ namespace BirdCafe.Shared
         private DaySimulationResult _cachedSimResult;
 
         /// <summary>
+        /// Provides direct controller access, if needed.
+        /// </summary>
+        public BirdCafeController Controller => _controller;
+
+        /// <summary>
         /// Current screen/phase of the game
         /// </summary>
         public GameScreen CurrentScreen => _currentScreen;
@@ -157,7 +162,9 @@ namespace BirdCafe.Shared
                     EventType = t.EventType.ToString(),
                     Description = desc,
                     BirdName = birdName,
-                    IconId = t.Product.HasValue ? t.Product.Value.ToString() : null
+                    IconId = t.Product.HasValue ? t.Product.Value.ToString() : null,
+                    MoneyDelta = t.MoneyDelta,
+                    PopularityDelta = t.PopularityDelta
                 };
             }).ToList();
         }
