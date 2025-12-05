@@ -186,31 +186,43 @@ namespace BirdCafe.Shared
         {
             if (_cachedSimResult == null) return new DailyReportViewModel();
 
-            var popDelta = _cachedSimResult.Popularity.PopularityDelta;
-            string narrative = "Popularity remained stable.";
-            if (popDelta > 2) narrative = "Word is spreading! Popularity is rising.";
-            else if (popDelta < -2) narrative = "We disappointed some folks. Popularity is dropping.";
+            var stats = _cachedSimResult.Customers;
+            var eco = _cachedSimResult.Economy;
 
             var vm = new DailyReportViewModel
             {
                 DayNumber = _cachedSimResult.DayNumber,
+                DayName = _cachedSimResult.DayName,
                 CurrentPopularity = (int)_controller.CurrentState.Cafe.Popularity,
-                CustomersServed = _cachedSimResult.Customers.CustomersServed,
-                CustomersLost = _cachedSimResult.Customers.CustomersLeftUnhappy + _cachedSimResult.Customers.CustomersLeftNoStock,
-                
-                // Detailed Breakdown
-                LostWaitTooLong = _cachedSimResult.Customers.CustomersLeftUnhappy,
-                LostNoStock = _cachedSimResult.Customers.CustomersLeftNoStock,
-                CoffeeSold = _cachedSimResult.Customers.CoffeeSold,
-                BakedSold = _cachedSimResult.Customers.BakedGoodsSold,
-                MerchSold = _cachedSimResult.Customers.MerchSold,
-                PopularityNarrative = narrative,
+                CurrentMoney = _controller.CurrentState.Economy.CurrentBalance,
 
-                TotalRevenue = _cachedSimResult.Economy.TotalRevenue,
-                NetProfit = _cachedSimResult.Economy.NetProfit
+                CustomersServed = stats.CustomersServed,
+                CustomersLost = stats.CustomersLeftUnhappy + stats.CustomersLeftNoStock,
+                LostWaitTooLong = stats.CustomersLeftUnhappy,
+                LostNoStock = stats.CustomersLeftNoStock,
+
+                TotalRevenue = eco.TotalRevenue,
+                NetProfit = eco.NetProfit,
+
+                CoffeeSold = stats.CoffeeSold,
+                BakedSold = stats.BakedGoodsSold,
+                MerchSold = stats.MerchSold,
+
+                // Calculate Totals for progress bars (Sold + Wasted = Total Stock available that day)
+                // Note: Merch doesn't waste, so we assume sold is the progress against current stock? 
+                // Actually, for Merch, let's just show Sold vs (Sold + Remaining).
+                CoffeeTotal = stats.CoffeeSold + stats.CoffeeWasted,
+                BakedTotal = stats.BakedGoodsSold + stats.BakedGoodsWasted,
+                MerchTotal = stats.MerchSold + _controller.CurrentState.Cafe.Inventory.ThemedMerch.QuantityOnHand
             };
 
-            foreach(var b in _cachedSimResult.BirdSummaries)
+            // Simple Narrative Logic
+            float popDelta = _cachedSimResult.Popularity.PopularityDelta;
+            if (popDelta > 2) vm.PopularityNarrative = "Popularity is rising! People love the cafe.";
+            else if (popDelta < -2) vm.PopularityNarrative = "Popularity is dropping. Customers are unhappy.";
+            else vm.PopularityNarrative = "Popularity is stable.";
+
+            foreach (var b in _cachedSimResult.BirdSummaries)
             {
                 vm.Birds.Add(new BirdPerformanceModel
                 {

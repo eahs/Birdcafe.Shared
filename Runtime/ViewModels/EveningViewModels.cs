@@ -10,6 +10,7 @@ namespace BirdCafe.Shared.ViewModels
     public class DailyReportViewModel
     {
         public int DayNumber { get; set; }
+        public string DayName { get; set; } // Added for "Day 1 - Monday"
         public int CurrentPopularity { get; set; } 
         public int CustomersServed { get; set; }
         public int CustomersLost { get; set; }
@@ -20,11 +21,17 @@ namespace BirdCafe.Shared.ViewModels
 
         public decimal TotalRevenue { get; set; }
         public decimal NetProfit { get; set; }
-        
+        public decimal CurrentMoney { get; set; }
+
         // Sales Breakdown
         public int CoffeeSold { get; set; }
         public int BakedSold { get; set; }
         public int MerchSold { get; set; }
+
+        // Inventory Context (for progress bars)
+        public int CoffeeTotal { get; set; }
+        public int BakedTotal { get; set; }
+        public int MerchTotal { get; set; }
 
         public string PopularityNarrative { get; set; }
 
