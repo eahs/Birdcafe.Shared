@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Managers;
 using BirdCafe.Shared.Engine.Utils;
@@ -38,6 +39,11 @@ namespace BirdCafe.Shared
         public GameScreen CurrentScreen => _currentScreen;
 
         /// <summary>
+        /// The active chat history for the current session.
+        /// </summary>
+        public List<ChatMessage> ChatHistory { get; private set; } = new List<ChatMessage>();
+
+        /// <summary>
         /// Event fired when the game changes phase/screens (e.g., Simulation -> Evening).
         /// </summary>
         public event Action<GameScreen> OnScreenChanged;
@@ -51,6 +57,26 @@ namespace BirdCafe.Shared
         /// Event fired whenever the player's money balance changes.
         /// </summary>
         public event Action<decimal> OnMoneyChanged;
+
+        /// <summary>
+        /// Event fired when the user requests Help.
+        /// </summary>
+        public event Action<string> OnHelpPopup;
+
+        /// <summary>
+        /// Event fired when the user requests Chat.
+        /// </summary>
+        public event Action OnChatPopup;
+
+        /// <summary>
+        /// Event fired when the user sends a chat message.
+        /// </summary>
+        public event Action<ChatMessage> OnChatUserMessage;
+
+        /// <summary>
+        /// Event fired when the system/AI responds to a chat message.
+        /// </summary>
+        public event Action<ChatMessage> OnChatSystemMessage;
 
         private BirdCafeGame()
         {
@@ -75,7 +101,8 @@ namespace BirdCafe.Shared
                 return;
             }
 
-            TransitionTo(GameScreen.DayIntro);
+            // Show Tutorial first for new games
+            TransitionTo(GameScreen.Tutorial);
         }
 
         public void LoadGame(string saveId)
@@ -84,8 +111,93 @@ namespace BirdCafe.Shared
             TransitionTo(GameScreen.DayIntro);
         }
 
+        public void FireHelpPopup(string context = "General")
+        {
+            OnHelpPopup?.Invoke(context);
+        }
+
+        /// <summary>
+        /// Opens the chat window, clears previous history, and sets the greeting.
+        /// </summary>
+        public void FireChatPopup()
+        {
+            ChatHistory.Clear();
+
+            var greeting = new ChatMessage
+            {
+                Sender = "System",
+                Content = "I'm happy to help you out with your business and bird care. What can I do for you today?",
+                Timestamp = DateTime.Now,
+                IsUser = false
+            };
+            
+            ChatHistory.Add(greeting);
+            
+            // Notify UI that chat opened
+            OnChatPopup?.Invoke();
+
+            // Notify UI of the greeting message so it renders
+            OnChatSystemMessage?.Invoke(greeting);
+        }
+
+        /// <summary>
+        /// Sends a message from the user to the game's chat system (e.g. LLM).
+        /// </summary>
+        public async Task SendChatMessage(string message)
+        {
+            // 1. Fire User Message Event immediately
+            var userMsg = new ChatMessage 
+            { 
+                Sender = "You", 
+                Content = message, 
+                Timestamp = DateTime.Now, 
+                IsUser = true 
+            };
+            
+            ChatHistory.Add(userMsg);
+            OnChatUserMessage?.Invoke(userMsg);
+
+            // 2. Simulate processing delay (Mock LLM)
+            await Task.Delay(2000);
+
+            // 3. Fire System Response
+            var sysMsg = new ChatMessage 
+            { 
+                Sender = "System", 
+                Content = "Thanks for chatting with me!", 
+                Timestamp = DateTime.Now, 
+                IsUser = false 
+            };
+            
+            ChatHistory.Add(sysMsg);
+            OnChatSystemMessage?.Invoke(sysMsg);
+        }
+
         // =================================================================================
-        // 2. DAY SIMULATION
+        // 2. TUTORIAL
+        // =================================================================================
+
+        public TutorialViewModel GetTutorialContent()
+        {
+            return new TutorialViewModel
+            {
+                Title = "Your First Day at the Bird Cafe",
+                Steps = new List<TutorialStep>
+                {
+                    new TutorialStep { Title = "Step 1: Plan inventory", Description = "We gave you starter coffee. Choose how much to sell for each day after." },
+                    new TutorialStep { Title = "Step 2: Start the work day", Description = "Open the cafe and let your birds serve customers." },
+                    new TutorialStep { Title = "Step 3: Take care of your birds at night", Description = "Feed, rest, and heal birds so they are ready for tomorrow." }
+                }
+            };
+        }
+
+        public void CompleteTutorial()
+        {
+            TransitionTo(GameScreen.DayIntro);
+        }
+
+        // =================================================================================
+        // 3. DAY SIMULATION
         // =================================================================================
 
         public DayIntroViewModel GetDayIntro()
@@ -126,11 +238,6 @@ namespace BirdCafe.Shared
         {
             if (_cachedSimResult == null) return new List<UiTimelineEvent>();
 
-            // Junior Dev Note: 
-            // The simulation uses seconds (0 to 120), but we want to show 
-            // friendly times like "07:30 AM". 
-            // We map 0s -> 7:00 AM and 120s -> 3:00 PM (15:00).
-            
             float simDuration = _controller.CurrentState.Config.DayDurationSeconds;
             TimeSpan startOfDay = TimeSpan.FromHours(7); // 7:00 AM
             double realHoursOpen = 8.0; // Open 8 hours
@@ -179,7 +286,7 @@ namespace BirdCafe.Shared
         }
 
         // =================================================================================
-        // 3. EVENING SUMMARY
+        // 4. EVENING SUMMARY
         // =================================================================================
 
         public DailyReportViewModel GetDailyReport()
@@ -208,15 +315,11 @@ namespace BirdCafe.Shared
                 BakedSold = stats.BakedGoodsSold,
                 MerchSold = stats.MerchSold,
 
-                // Calculate Totals for progress bars (Sold + Wasted = Total Stock available that day)
-                // Note: Merch doesn't waste, so we assume sold is the progress against current stock? 
-                // Actually, for Merch, let's just show Sold vs (Sold + Remaining).
                 CoffeeTotal = stats.CoffeeSold + stats.CoffeeWasted,
                 BakedTotal = stats.BakedGoodsSold + stats.BakedGoodsWasted,
                 MerchTotal = stats.MerchSold + _controller.CurrentState.Cafe.Inventory.ThemedMerch.QuantityOnHand
             };
 
-            // Simple Narrative Logic
             float popDelta = _cachedSimResult.Popularity.PopularityDelta;
             if (popDelta > 2) vm.PopularityNarrative = "Popularity is rising! People love the cafe.";
             else if (popDelta < -2) vm.PopularityNarrative = "Popularity is dropping. Customers are unhappy.";
@@ -243,7 +346,7 @@ namespace BirdCafe.Shared
         }
 
         // =================================================================================
-        // 4. EVENING CARE
+        // 5. EVENING CARE
         // =================================================================================
 
         public CareDashboardViewModel GetCareDashboard()
@@ -267,11 +370,10 @@ namespace BirdCafe.Shared
             var config = _controller.CurrentState.Config;
             var money = _controller.CurrentState.Economy.CurrentBalance;
 
-            // Refactored to use Constants
             var actions = new List<CareActionViewModel>
             {
                 new CareActionViewModel { ActionId = CareActionIds.Feed, Label = "Feed Snack", Cost = config.BaselineBirdFoodCost },
-                new CareActionViewModel { ActionId = CareActionIds.Play, Label = "Play (Mood)", Cost = config.BaselinePlayCost }, // New Option
+                new CareActionViewModel { ActionId = CareActionIds.Play, Label = "Play (Mood)", Cost = config.BaselinePlayCost },
                 new CareActionViewModel { ActionId = CareActionIds.Vet, Label = "Vet Visit", Cost = config.BaselineVetCost }
             };
 
@@ -313,18 +415,14 @@ namespace BirdCafe.Shared
         }
 
         // =================================================================================
-        // 5. EVENING PLANNING
+        // 6. EVENING PLANNING
         // =================================================================================
 
-        /// <summary>
-        /// Generates the view model for the planning screen.
-        /// </summary>
         public PlanningDashboardViewModel GetPlanningDashboard()
         {
             var state = _controller.CurrentState;
             var plan = state.CurrentDayState.CurrentPlan;
             
-            // Refactored: Use Shared Helper so UI math matches Engine math
             decimal costCoffee = EconomyHelper.CalculateRestockCost(ProductType.Coffee, plan.PlannedCoffeePurchase);
             decimal costBaked = EconomyHelper.CalculateRestockCost(ProductType.BakedGoods, plan.PlannedBakedGoodsPurchase);
             decimal costMerch = EconomyHelper.CalculateRestockCost(ProductType.ThemedMerch, plan.PlannedThemedMerchPurchase);
@@ -337,8 +435,6 @@ namespace BirdCafe.Shared
                 ProjectedCost = totalCost
             };
 
-            // --- HISTORY ---
-            // Populate history for context (Restored per requirements)
             var recentDays = state.PastDayResults
                 .OrderByDescending(d => d.DayNumber)
                 .Take(7)
@@ -359,8 +455,6 @@ namespace BirdCafe.Shared
                 });
             }
 
-            // --- INVENTORY ---
-            // Explicitly adding all types so they show up in the UI list
             vm.Inventory.Add(new InventoryItemModel 
             { 
                 Type = ProductType.Coffee, Name = "Coffee Beans", 
@@ -382,7 +476,6 @@ namespace BirdCafe.Shared
                 PlannedPurchase = plan.PlannedThemedMerchPurchase, UnitCost = 8.0m, TotalCost = costMerch
             });
             
-            // --- ROSTER ---
             foreach(var b in state.Birds)
             {
                 bool isWorking = plan.BirdIdsWorking.Contains(b.Id);
@@ -439,7 +532,7 @@ namespace BirdCafe.Shared
         }
 
         // =================================================================================
-        // 6. WEEKLY & GAME OVER
+        // 7. WEEKLY & GAME OVER
         // =================================================================================
 
         public WeeklyReportViewModel GetWeeklyReport()

@@ -17,6 +17,7 @@ namespace BirdCafe.ConsoleApp
             
             // 1. Setup Hooks
             BirdCafeGame.Instance.OnScreenChanged += HandleScreenChange;
+            
             BirdCafeGame.Instance.OnToastMessage += (msg) => 
             {
                 var oldColor = Console.ForegroundColor;
@@ -26,6 +27,27 @@ namespace BirdCafe.ConsoleApp
                 Console.WriteLine("(Press any key to continue...)");
                 Console.ReadKey();
             };
+
+            BirdCafeGame.Instance.OnHelpPopup += (msg) =>
+            {
+                var oldColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n>>> HELP: {msg} <<<\n");
+                Console.ForegroundColor = oldColor;
+                Console.WriteLine("(Press any key to close help...)");
+                Console.ReadKey();
+            };
+
+            BirdCafeGame.Instance.OnChatPopup += () =>
+            {
+                var oldColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine($"\n>>> CHAT: (Placeholder for Chat UI) <<<\n");
+                Console.ForegroundColor = oldColor;
+                Console.WriteLine("(Press any key to close chat...)");
+                Console.ReadKey();
+            };
+
             BirdCafeGame.Instance.OnMoneyChanged += (amount) =>
             {
                 // In a console app, we can't easily update a header in real-time 
@@ -66,6 +88,9 @@ namespace BirdCafe.ConsoleApp
                     break;
                 case GameScreen.LoadGame:
                     Screens.MetaScreens.ShowLoadGame();
+                    break;
+                case GameScreen.Tutorial:
+                    Screens.TutorialScreens.ShowTutorial();
                     break;
                 case GameScreen.DayIntro:
                     Screens.SimulationScreens.ShowDayIntro();

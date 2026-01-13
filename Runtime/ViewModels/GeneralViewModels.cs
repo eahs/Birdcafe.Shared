@@ -8,6 +8,7 @@ namespace BirdCafe.Shared.ViewModels
     {
         MainMenu,
         LoadGame,
+        Tutorial,          // New Screen
         DayIntro,          // "Day 1 - Monday" Banner
         DaySimulation,     // The active workday view
         EveningSummary,    // "You made $50 today"

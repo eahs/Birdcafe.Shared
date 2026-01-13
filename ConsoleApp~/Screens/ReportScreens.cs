@@ -8,18 +8,38 @@ namespace BirdCafe.ConsoleApp.Screens
     {
         public static void ShowWeeklyReport()
         {
-            Console.Clear();
-            var vm = BirdCafeGame.Instance.GetWeeklyReport();
+            // Simple loop to allow help/chat support without progressing
+            while(true)
+            {
+                Console.Clear();
+                var vm = BirdCafeGame.Instance.GetWeeklyReport();
 
-            Console.WriteLine("===============================");
-            Console.WriteLine($"   WEEKLY REPORT: WEEK {vm.WeekNumber}");
-            Console.WriteLine("===============================");
-            Console.WriteLine($"Narrative: {vm.Narrative}");
-            Console.WriteLine($"Total Profit: ${vm.TotalProfit:F2}");
-            Console.WriteLine($"Avg Flock Health: {vm.AvgBirdHealth}/100");
+                Console.WriteLine("===============================");
+                Console.WriteLine($"   WEEKLY REPORT: WEEK {vm.WeekNumber}");
+                Console.WriteLine("===============================");
+                Console.WriteLine($"Narrative: {vm.Narrative}");
+                Console.WriteLine($"Total Profit: ${vm.TotalProfit:F2}");
+                Console.WriteLine($"Avg Flock Health: {vm.AvgBirdHealth}/100");
 
-            Console.WriteLine("\nPress [ENTER] to start next week.");
-            Console.ReadLine();
+                Console.WriteLine("\nPress [ENTER] to start next week.");
+                Console.WriteLine("[H] Help  [C] Chat");
+                
+                string input = Console.ReadLine();
+                if (input?.ToUpper() == "H") 
+                { 
+                    BirdCafeGame.Instance.FireHelpPopup("Weekly Report"); 
+                    continue; 
+                }
+                if (input?.ToUpper() == "C") 
+                { 
+                    BirdCafeGame.Instance.FireChatPopup(); 
+                    continue; 
+                }
+
+                // Any other input (usually empty Enter) proceeds
+                break;
+            }
+            
             BirdCafeGame.Instance.CompleteWeek();
         }
 
@@ -38,7 +58,15 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.WriteLine($"Final Score: ${vm.FinalScore:F2}");
 
             Console.WriteLine("\nPress [ENTER] to return to menu.");
-            Console.ReadLine();
+            Console.WriteLine("[H] Help");
+
+            var input = Console.ReadLine();
+             if (input?.ToUpper() == "H") 
+            { 
+                BirdCafeGame.Instance.FireHelpPopup("Game Over"); 
+                // Don't need loop here, user will likely just hit enter again or see menu next
+            }
+
             BirdCafeGame.Instance.ReturnToMainMenu();
         }
     }

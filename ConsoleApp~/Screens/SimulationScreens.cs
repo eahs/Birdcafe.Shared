@@ -19,9 +19,14 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.WriteLine("#########################################");
             Console.WriteLine($"Popularity: {vm.Popularity}");
             Console.WriteLine($"Message: {vm.Message}");
-            Console.WriteLine("\nPress [ENTER] to open the Cafe.");
+            Console.WriteLine("\nPress [ENTER] to open the Cafe. ([H] Help)");
 
-            Console.ReadLine();
+            var input = Console.ReadLine();
+            if (input?.ToUpper() == "H") 
+            { 
+                BirdCafeGame.Instance.FireHelpPopup("Day Intro");
+                // Just proceed after help
+            }
             
             // Triggers engine to calculate day
             BirdCafeGame.Instance.StartSimulationPlayback();
@@ -31,12 +36,23 @@ namespace BirdCafe.ConsoleApp.Screens
         {
             Console.Clear();
             Console.WriteLine("--- SIMULATION RUNNING ---");
+            Console.WriteLine("(Press 'H' to pause for Help)");
             
             var timeline = BirdCafeGame.Instance.GetDayTimeline();
 
             // In console, we just print the log with small delays to simulate time
             foreach (var evt in timeline)
             {
+                // Check for interruption
+                if (Console.KeyAvailable)
+                {
+                    var k = Console.ReadKey(true);
+                    if (char.ToUpper(k.KeyChar) == 'H')
+                        BirdCafeGame.Instance.FireHelpPopup("Simulation Paused");
+                    if (char.ToUpper(k.KeyChar) == 'C')
+                        BirdCafeGame.Instance.FireChatPopup();
+                }
+
                 // Updated to use the Formatted Time string (e.g. 7:30 AM) instead of raw seconds
                 Console.Write($"[{evt.FormattedTime}] ");
                 

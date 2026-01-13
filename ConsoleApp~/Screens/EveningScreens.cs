@@ -43,8 +43,16 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.WriteLine($"- {b.Name}: Served {b.CustomersServed} {(b.BecameSick ? "[GOT SICK!]" : "")}");
             }
 
-            Console.WriteLine("\nPress any key to continue to Care...");
-            Console.ReadKey();
+            Console.WriteLine("\nPress any key to continue to Care... ([H] Help, [C] Chat)");
+            
+            while(true)
+            {
+                var k = Console.ReadKey(true);
+                if (char.ToUpper(k.KeyChar) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Daily Summary"); return; } // Returns to main loop, which redraws screen. Good.
+                if (char.ToUpper(k.KeyChar) == 'C') { BirdCafeGame.Instance.FireChatPopup(); return; }
+                break; // Any other key continues
+            }
+            
             BirdCafeGame.Instance.AcknowledgeSummary();
         }
 
@@ -81,12 +89,17 @@ namespace BirdCafe.ConsoleApp.Screens
 
             Console.WriteLine("\n[N] Next Phase (Planning)");
             Console.WriteLine("[Enter ID] to interact with a bird");
+            Console.WriteLine("[H] Help  [C] Chat");
             Console.Write("> ");
         }
 
         private static bool HandleCareInput()
         {
             string input = Console.ReadLine().Trim();
+            
+            if (input.ToUpper() == "H") { BirdCafeGame.Instance.FireHelpPopup("Bird Care"); return true; }
+            if (input.ToUpper() == "C") { BirdCafeGame.Instance.FireChatPopup(); return true; }
+
             if (input.ToUpper() == "N")
             {
                 BirdCafeGame.Instance.GoToPlanning();
@@ -115,7 +128,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.WriteLine($"{i+1}. {a.Label} (${a.Cost}) {costColor}");
             }
             Console.WriteLine("R. Toggle Rest Next Day");
-            Console.WriteLine("C. Cancel");
+            Console.WriteLine("C. Cancel (Or global Chat via main menu)");
 
             var key = Console.ReadKey();
             if (key.Key == ConsoleKey.R) 
@@ -195,12 +208,17 @@ namespace BirdCafe.ConsoleApp.Screens
             }
 
             Console.WriteLine("\n[S] START DAY");
+            Console.WriteLine("[H] Help  [C] Chat");
             Console.Write("> ");
         }
 
         private static bool HandlePlanningInput()
         {
             var key = Console.ReadKey().KeyChar;
+            
+            if (char.ToUpper(key) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Planning"); return true; }
+            if (char.ToUpper(key) == 'C') { BirdCafeGame.Instance.FireChatPopup(); return true; }
+
             if (key == 's' || key == 'S')
             {
                 return !BirdCafeGame.Instance.FinalizeDay(); // If success, return false (exit loop)
