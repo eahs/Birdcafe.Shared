@@ -61,12 +61,12 @@ namespace BirdCafe.Shared.Engine.Managers
             
             decimal approxProfit = totalRevenue - days.Sum(d => d.Economy.WasteCost + d.Economy.InventoryCost);
 
-            // 3. Bird Welfare
+            // Bird Welfare
             float avgHealth = 0;
             if (state.Birds.Count > 0)
                 avgHealth = state.Birds.Average(b => b.Health);
 
-            // 4. Narrative Generation
+            // Narrative Generation
             string narrative = "The cafe ran smoothly.";
             if (approxProfit < 0) narrative = "We lost money this week. We need to cut costs.";
             else if (avgHealth < 40) narrative = "Profits are okay, but the birds are exhausted.";
