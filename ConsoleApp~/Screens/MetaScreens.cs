@@ -1,6 +1,6 @@
 
-using System;
 using BirdCafe.Shared;
+using System;
 
 namespace BirdCafe.ConsoleApp.Screens
 {
@@ -19,7 +19,7 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.Write("\nSelect Option: ");
 
             var key = Console.ReadKey();
-            
+
             switch (char.ToUpper(key.KeyChar))
             {
                 case '1':
@@ -30,7 +30,7 @@ namespace BirdCafe.ConsoleApp.Screens
                     BirdCafeGame.Instance.StartNewGame(pName, cName);
                     break;
                 case '2':
-                    BirdCafeGame.Instance.LoadGame("dummy_id"); 
+                    BirdCafeGame.Instance.LoadGame("dummy_id");
                     break;
                 case '3':
                     Environment.Exit(0);
@@ -51,7 +51,7 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.WriteLine("[H] Help  [C] Chat");
 
             var slots = BirdCafeGame.Instance.GetSaveSlots();
-            
+
             if (slots.Count == 0)
             {
                 Console.WriteLine("No save files found (Mock). Starting new game instead...");
@@ -59,7 +59,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 BirdCafeGame.Instance.StartNewGame("ConsoleUser", "ConsoleCafe");
                 return;
             }
-            
+
             // Just basic support for global keys here before logic
             var key = Console.ReadKey(true);
             if (char.ToUpper(key.KeyChar) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Load Game Help"); return; }

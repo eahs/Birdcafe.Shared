@@ -1,136 +1,359 @@
 
+using BirdCafe.Shared.Enums;
 using System;
 using System.Collections.Generic;
-using BirdCafe.Shared.Enums;
 
 namespace BirdCafe.Shared.Models.Simulation
 {
+    /// <summary>
+    /// Holds the complete outcome of a day's simulation run.
+    /// </summary>
     [Serializable]
     public class DaySimulationResult
     {
         // Identity
+
+        /// <summary>
+        /// The day number.
+        /// </summary>
         public int DayNumber { get; set; }
+
+        /// <summary>
+        /// Name of the day (e.g. Monday).
+        /// </summary>
         public string DayName { get; set; }
+
+        /// <summary>
+        /// The week number.
+        /// </summary>
         public int WeekNumber { get; set; }
 
         // Aggregates
+
+        /// <summary>
+        /// Financial summary.
+        /// </summary>
         public DayEconomySummary Economy { get; set; } = new DayEconomySummary();
+
+        /// <summary>
+        /// Customer stats.
+        /// </summary>
         public DayCustomerSummary Customers { get; set; } = new DayCustomerSummary();
+
+        /// <summary>
+        /// Popularity stats.
+        /// </summary>
         public DayPopularitySummary Popularity { get; set; } = new DayPopularitySummary();
+
+        /// <summary>
+        /// Stats per bird.
+        /// </summary>
         public List<DayBirdSummary> BirdSummaries { get; set; } = new List<DayBirdSummary>();
 
         // Detailed records
+
+        /// <summary>
+        /// Record of every customer interaction.
+        /// </summary>
         public List<CustomerTransactionRecord> CustomerTransactions { get; set; } = new List<CustomerTransactionRecord>();
 
         // For animation
+
+        /// <summary>
+        /// Ordered list of events for UI playback.
+        /// </summary>
         public List<SimulationTimelineEvent> Timeline { get; set; } = new List<SimulationTimelineEvent>();
     }
 
+    /// <summary>
+    /// Financial totals for the day.
+    /// </summary>
     [Serializable]
     public class DayEconomySummary
     {
+        /// <summary>
+        /// Balance before the day started.
+        /// </summary>
         public decimal StartingMoney { get; set; }
+
+        /// <summary>
+        /// Balance after the day ended.
+        /// </summary>
         public decimal EndingMoney { get; set; }
 
-        public decimal TotalRevenue { get; set; }          
+        /// <summary>
+        /// Gross income from sales.
+        /// </summary>
+        public decimal TotalRevenue { get; set; }
+
+        /// <summary>
+        /// Tips earned (not currently used).
+        /// </summary>
         public decimal TotalTips { get; set; }
-        
+
         /// <summary>
         /// Cost of items successfully sold (COGS).
         /// </summary>
-        public decimal InventoryCost { get; set; }         
-        
+        public decimal InventoryCost { get; set; }
+
         /// <summary>
         /// Cost of items that perished.
         /// </summary>
-        public decimal WasteCost { get; set; }             
-        
+        public decimal WasteCost { get; set; }
+
         /// <summary>
         /// Operational Profit: Revenue - (InventoryCost + WasteCost).
         /// </summary>
         public decimal NetProfit { get; set; }
     }
 
+    /// <summary>
+    /// Aggregate customer metrics.
+    /// </summary>
     [Serializable]
     public class DayCustomerSummary
     {
+        /// <summary>
+        /// Total customers who spawned.
+        /// </summary>
         public int CustomersArrived { get; set; }
+
+        /// <summary>
+        /// Total successfully served.
+        /// </summary>
         public int CustomersServed { get; set; }
+
+        /// <summary>
+        /// Total left due to wait times.
+        /// </summary>
         public int CustomersLeftUnhappy { get; set; }
+
+        /// <summary>
+        /// Total left due to no stock.
+        /// </summary>
         public int CustomersLeftNoStock { get; set; }
 
+        /// <summary>
+        /// Coffee units sold.
+        /// </summary>
         public int CoffeeSold { get; set; }
+
+        /// <summary>
+        /// Coffee units wasted.
+        /// </summary>
         public int CoffeeWasted { get; set; }
+
+        /// <summary>
+        /// Baked goods sold.
+        /// </summary>
         public int BakedGoodsSold { get; set; }
+
+        /// <summary>
+        /// Baked goods wasted.
+        /// </summary>
         public int BakedGoodsWasted { get; set; }
+
+        /// <summary>
+        /// Merch sold.
+        /// </summary>
         public int MerchSold { get; set; }
     }
 
+    /// <summary>
+    /// Popularity change summary.
+    /// </summary>
     [Serializable]
     public class DayPopularitySummary
     {
+        /// <summary>
+        /// Pop at start.
+        /// </summary>
         public float PopularityAtStart { get; set; }
+
+        /// <summary>
+        /// Pop at end.
+        /// </summary>
         public float PopularityAtEnd { get; set; }
+
+        /// <summary>
+        /// Difference.
+        /// </summary>
         public float PopularityDelta => PopularityAtEnd - PopularityAtStart;
     }
 
+    /// <summary>
+    /// Performance summary for a single bird.
+    /// </summary>
     [Serializable]
     public class DayBirdSummary
     {
+        /// <summary>
+        /// ID of bird.
+        /// </summary>
         public string BirdId { get; set; }
+
+        /// <summary>
+        /// Name of bird.
+        /// </summary>
         public string BirdName { get; set; }
 
+        /// <summary>
+        /// Did they work today?
+        /// </summary>
         public bool WorkedToday { get; set; }
 
-        public int CustomersServed { get; set; }   
-        public int ItemsServed { get; set; }       
+        /// <summary>
+        /// Customers they helped.
+        /// </summary>
+        public int CustomersServed { get; set; }
 
+        /// <summary>
+        /// Items they served.
+        /// </summary>
+        public int ItemsServed { get; set; }
+
+        /// <summary>
+        /// Mood at start.
+        /// </summary>
         public float MoodAtStart { get; set; }
+
+        /// <summary>
+        /// Mood at end.
+        /// </summary>
         public float MoodAtEnd { get; set; }
 
+        /// <summary>
+        /// Health at start.
+        /// </summary>
         public float HealthAtStart { get; set; }
+
+        /// <summary>
+        /// Health at end.
+        /// </summary>
         public float HealthAtEnd { get; set; }
 
+        /// <summary>
+        /// Energy at start.
+        /// </summary>
         public float EnergyAtStart { get; set; }
+
+        /// <summary>
+        /// Energy at end.
+        /// </summary>
         public float EnergyAtEnd { get; set; }
 
+        /// <summary>
+        /// Did they fall ill?
+        /// </summary>
         public bool BecameSick { get; set; }
+
+        /// <summary>
+        /// Did they get better?
+        /// </summary>
         public bool RecoveredFromSickness { get; set; }
     }
 
+    /// <summary>
+    /// Detailed record of a customer interaction.
+    /// </summary>
     [Serializable]
     public class CustomerTransactionRecord
     {
-        public int CustomerId { get; set; }             
-        public float ArrivalTimeSeconds { get; set; }   
+        /// <summary>
+        /// Customer ID.
+        /// </summary>
+        public int CustomerId { get; set; }
+
+        /// <summary>
+        /// Arrival time in simulation seconds.
+        /// </summary>
+        public float ArrivalTimeSeconds { get; set; }
 
         /// <summary>
         /// List of items the customer wants to buy.
         /// </summary>
-        public List<ProductType> DesiredProducts { get; set; } = new List<ProductType>(); 
+        public List<ProductType> DesiredProducts { get; set; } = new List<ProductType>();
 
+        /// <summary>
+        /// When service started.
+        /// </summary>
         public float? ServiceStartTimeSeconds { get; set; }
+
+        /// <summary>
+        /// When service ended.
+        /// </summary>
         public float? ServiceEndTimeSeconds { get; set; }
+
+        /// <summary>
+        /// Bird who served them.
+        /// </summary>
         public string ServingBirdId { get; set; }
 
+        /// <summary>
+        /// Outcome (served, left).
+        /// </summary>
         public CustomerOutcome Outcome { get; set; }
 
-        public decimal Revenue { get; set; }   
+        /// <summary>
+        /// Money paid.
+        /// </summary>
+        public decimal Revenue { get; set; }
+
+        /// <summary>
+        /// Tip paid.
+        /// </summary>
         public decimal Tip { get; set; }
 
-        public float PopularityDelta { get; set; } 
+        /// <summary>
+        /// Popularity impact.
+        /// </summary>
+        public float PopularityDelta { get; set; }
     }
 
+    /// <summary>
+    /// Event for UI playback.
+    /// </summary>
     [Serializable]
     public class SimulationTimelineEvent
     {
-        public float TimeSeconds { get; set; }             
+        /// <summary>
+        /// Time in seconds.
+        /// </summary>
+        public float TimeSeconds { get; set; }
+
+        /// <summary>
+        /// Type of event.
+        /// </summary>
         public SimulationTimelineEventType EventType { get; set; }
+
+        /// <summary>
+        /// Customer ID if applicable.
+        /// </summary>
         public int? CustomerId { get; set; }
+
+        /// <summary>
+        /// Bird ID if applicable.
+        /// </summary>
         public string BirdId { get; set; }
+
+        /// <summary>
+        /// Product if applicable.
+        /// </summary>
         public ProductType? Product { get; set; }
-        public decimal MoneyDelta { get; set; }            
-        public float PopularityDelta { get; set; }           
-        public string ReasonCode { get; set; }            
+
+        /// <summary>
+        /// Money change.
+        /// </summary>
+        public decimal MoneyDelta { get; set; }
+
+        /// <summary>
+        /// Popularity change.
+        /// </summary>
+        public float PopularityDelta { get; set; }
+
+        /// <summary>
+        /// Text code for reason.
+        /// </summary>
+        public string ReasonCode { get; set; }
     }
 }

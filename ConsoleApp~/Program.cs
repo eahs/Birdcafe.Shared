@@ -1,7 +1,7 @@
 
-using System;
 using BirdCafe.Shared;
 using BirdCafe.Shared.ViewModels;
+using System;
 
 namespace BirdCafe.ConsoleApp
 {
@@ -14,11 +14,11 @@ namespace BirdCafe.ConsoleApp
         static void Main(string[] args)
         {
             Console.Title = "Bird Cafe - Console Edition";
-            
+
             // 1. Setup Hooks
             BirdCafeGame.Instance.OnScreenChanged += HandleScreenChange;
-            
-            BirdCafeGame.Instance.OnToastMessage += (msg) => 
+
+            BirdCafeGame.Instance.OnToastMessage += (msg) =>
             {
                 var oldColor = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Yellow;

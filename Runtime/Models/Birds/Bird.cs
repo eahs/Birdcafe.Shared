@@ -1,7 +1,7 @@
 
+using BirdCafe.Shared.Enums;
 using System;
 using System.Collections.Generic;
-using BirdCafe.Shared.Enums;
 
 namespace BirdCafe.Shared.Models.Birds
 {
@@ -119,7 +119,7 @@ namespace BirdCafe.Shared.Models.Birds
         #endregion
 
         #region Customization & Items
-        
+
         /// <summary>
         /// Hex code for the primary feather color.
         /// </summary>
@@ -143,6 +143,8 @@ namespace BirdCafe.Shared.Models.Birds
         {
             if (template == null) return;
 
+            // Math.Min ensures we never go above 100.
+
             // Hunger (Add, clamp to 100)
             Hunger = Math.Min(100, Hunger + template.HungerChange);
 
@@ -156,6 +158,7 @@ namespace BirdCafe.Shared.Models.Birds
             Energy = Math.Min(100, Energy + template.EnergyChange);
 
             // Stress (Add [usually negative], clamp to 0 minimum)
+            // Math.Max ensures we never go below 0.
             Stress = Math.Max(0, Stress + template.StressChange);
         }
 
@@ -165,14 +168,18 @@ namespace BirdCafe.Shared.Models.Birds
         /// <param name="amount">Amount of energy to reduce.</param>
         public void ConsumeEnergy(float amount)
         {
+            // Reduce energy but ensure it doesn't drop below 0.
             Energy = Math.Max(0, Energy - amount);
         }
 
         /// <summary>
         /// Applies daily decay stats (Hunger, Mood).
         /// </summary>
+        /// <param name="hungerDecay">Amount to reduce hunger by.</param>
+        /// <param name="moodDecay">Amount to reduce mood by.</param>
         public void ApplyDailyDecay(float hungerDecay, float moodDecay)
         {
+            // Reduce stats but clamp to 0.
             Hunger = Math.Max(0, Hunger - hungerDecay);
             Mood = Math.Max(0, Mood - moodDecay);
         }
@@ -180,12 +187,15 @@ namespace BirdCafe.Shared.Models.Birds
         /// <summary>
         /// Recovers energy during a rest day.
         /// </summary>
+        /// <param name="amount">Amount of energy to restore.</param>
         public void RecoverEnergy(float amount)
         {
+            // Increase energy but clamp to 100.
             Energy = Math.Min(100, Energy + amount);
+            // Reduce stress, clamping to 0.
             Stress = Math.Max(0, Stress - 30); // Hardcoded stress relief for resting
         }
-        
+
         #endregion
     }
 }

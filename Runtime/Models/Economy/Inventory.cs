@@ -1,7 +1,6 @@
 
-using System;
-using System.Collections.Generic;
 using BirdCafe.Shared.Enums;
+using System;
 
 namespace BirdCafe.Shared.Models.Economy
 {
@@ -57,7 +56,7 @@ namespace BirdCafe.Shared.Models.Economy
         /// If true, unsold stock is removed (wasted) at the end of the day.
         /// </summary>
         public bool IsPerishable { get; set; }
-        
+
         /// <summary>
         /// Tracks quantity purchased specifically for the current day's plan.
         /// </summary>

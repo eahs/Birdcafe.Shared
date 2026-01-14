@@ -1,13 +1,11 @@
 
 using System;
-using BirdCafe.Shared.Enums;
 
 namespace BirdCafe.Shared.Models.Meta
 {
     /// <summary>
     /// Contains global configuration and balancing constants.
-    /// Junior Dev Note: Tweak these values to balance the game. 
-    /// Do not hardcode numbers in Managers!
+    /// Tweak these values to balance the game.
     /// </summary>
     [Serializable]
     public class GameConfiguration
@@ -68,13 +66,13 @@ namespace BirdCafe.Shared.Models.Meta
         /// Amount of Energy lost per customer served.
         /// </summary>
         public float EnergyCostPerService { get; set; } = 2f;
-        
+
         // --- Sickness ---
 
         /// <summary>
         /// Base probability (0.0 to 1.0) of a bird getting sick.
         /// </summary>
-        public float BaselineSicknessChance { get; set; } = 0.05f; 
+        public float BaselineSicknessChance { get; set; } = 0.05f;
 
         /// <summary>
         /// Multiplier applied to sickness chance when hunger is low.
@@ -85,7 +83,7 @@ namespace BirdCafe.Shared.Models.Meta
         /// Multiplier applied to sickness chance when energy is low.
         /// </summary>
         public float LowEnergySicknessMultiplier { get; set; } = 1.5f;
-        
+
         // --- Economy ---
 
         /// <summary>
@@ -107,7 +105,7 @@ namespace BirdCafe.Shared.Models.Meta
         /// Standard sale price for a unit of Themed Merch.
         /// </summary>
         public decimal BasePriceThemedMerch { get; set; } = 15.00m;
-        
+
         // --- Care Costs ---
 
         /// <summary>
@@ -119,7 +117,7 @@ namespace BirdCafe.Shared.Models.Meta
         /// Standard cost for a single "Vet Visit".
         /// </summary>
         public decimal BaselineVetCost { get; set; } = 50.00m;
-        
+
         /// <summary>
         /// Standard cost for playing with a bird (Toys, etc).
         /// </summary>

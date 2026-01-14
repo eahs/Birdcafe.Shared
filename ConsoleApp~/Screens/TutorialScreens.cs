@@ -1,6 +1,6 @@
 
-using System;
 using BirdCafe.Shared;
+using System;
 
 namespace BirdCafe.ConsoleApp.Screens
 {
@@ -14,8 +14,8 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.WriteLine("=========================================");
             Console.WriteLine($"   {vm.Title.ToUpper()}   ");
             Console.WriteLine("=========================================");
-            
-            foreach(var step in vm.Steps)
+
+            foreach (var step in vm.Steps)
             {
                 Console.WriteLine($"\n{step.Title}");
                 Console.WriteLine(step.Description);
@@ -23,7 +23,7 @@ namespace BirdCafe.ConsoleApp.Screens
 
             Console.WriteLine("\n[Got it] (Press Enter)");
             Console.ReadLine();
-            
+
             BirdCafeGame.Instance.CompleteTutorial();
         }
     }

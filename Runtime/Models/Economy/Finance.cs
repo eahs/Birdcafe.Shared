@@ -1,7 +1,7 @@
 
+using BirdCafe.Shared.Enums;
 using System;
 using System.Collections.Generic;
-using BirdCafe.Shared.Enums;
 
 namespace BirdCafe.Shared.Models.Economy
 {
@@ -52,7 +52,7 @@ namespace BirdCafe.Shared.Models.Economy
         /// The classification of the expense or income.
         /// </summary>
         public ExpenseCategory Category { get; set; }
-        
+
         /// <summary>
         /// The product involved in the transaction, if any.
         /// </summary>

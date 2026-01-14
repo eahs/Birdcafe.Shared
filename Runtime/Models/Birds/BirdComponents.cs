@@ -12,7 +12,7 @@ namespace BirdCafe.Shared.Models.Birds
         /// <summary>
         /// The unique code for the trait type.
         /// </summary>
-        public string TraitType { get; set; } 
+        public string TraitType { get; set; }
 
         /// <summary>
         /// Human-readable name of the trait.
@@ -49,8 +49,8 @@ namespace BirdCafe.Shared.Models.Birds
         /// <summary>
         /// Category of the item (e.g., "Cosmetic", "Booster").
         /// </summary>
-        public string Category { get; set; } 
-        
+        public string Category { get; set; }
+
         /// <summary>
         /// Bonus added to the bird's Productivity stat.
         /// </summary>
@@ -65,7 +65,7 @@ namespace BirdCafe.Shared.Models.Birds
         /// Bonus added to the bird's Reliability stat.
         /// </summary>
         public float ReliabilityBonus { get; set; }
-        
+
         /// <summary>
         /// Description of any special activation conditions.
         /// </summary>
@@ -92,7 +92,7 @@ namespace BirdCafe.Shared.Models.Birds
         /// Cost in game currency to perform this action.
         /// </summary>
         public decimal MoneyCost { get; set; }
-        
+
         /// <summary>
         /// Amount added to Hunger (positive means less hungry).
         /// </summary>
@@ -121,6 +121,6 @@ namespace BirdCafe.Shared.Models.Birds
         /// <summary>
         /// Maximum times this can be used per day per bird (-1 for infinite).
         /// </summary>
-        public int DailyUseLimit { get; set; } = -1; 
+        public int DailyUseLimit { get; set; } = -1;
     }
 }

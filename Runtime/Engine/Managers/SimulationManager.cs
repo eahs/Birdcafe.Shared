@@ -1,11 +1,11 @@
 
-using System;
-using System.Linq;
-using System.Collections.Generic;
 using BirdCafe.Shared.Enums;
-using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Meta;
+using BirdCafe.Shared.Models.Simulation;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BirdCafe.Shared.Engine.Managers
 {
@@ -15,8 +15,15 @@ namespace BirdCafe.Shared.Engine.Managers
     /// </summary>
     public class SimulationManager
     {
+        /// <summary>
+        /// Reference to the main controller.
+        /// </summary>
         private readonly BirdCafeController _controller;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SimulationManager"/> class.
+        /// </summary>
+        /// <param name="controller">The main game controller.</param>
         public SimulationManager(BirdCafeController controller)
         {
             _controller = controller;
@@ -28,32 +35,38 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <returns>A detailed result object containing timeline events and stats.</returns>
         public EngineResult RunDaySimulation()
         {
+            // Verify correct phase.
             if (_controller.CurrentPhase != GamePhase.DayLoop)
                 return EngineResult.Failure("InvalidPhase", "Cannot run simulation outside of DayLoop phase.");
 
             var state = _controller.CurrentState;
             var plan = state.CurrentDayState.CurrentPlan;
+            // Initialize Random Number Generator with the specific seed for this day to ensure deterministic results.
             var rng = new Random(plan.DaySeed);
             var config = state.Config;
 
             // --- Step 1: Initialize Result Object ---
             var result = InitializeDayResult(state);
-            
+
             // --- Step 2: Snapshot Bird State ---
+            // Use LINQ Where to filter the birds list:
+            // We only want birds whose IDs are in the "BirdIdsWorking" list AND are not Severely Sick.
             var workingBirds = state.Birds
                 .Where(b => plan.BirdIdsWorking.Contains(b.Id) && !b.IsSeverelySick)
                 .ToList();
 
-            // Track when each bird will be free (TimeSeconds)
+            // Create a Dictionary to track when each bird will be free.
+            // Key = Bird ID, Value = The time (in seconds) they finish their current task.
             var birdAvailability = workingBirds.ToDictionary(b => b.Id, b => 0.0f);
-            
-            // Initialize summaries for report
-            foreach(var b in state.Birds)
+
+            // Create initial summary records for all birds (even those resting).
+            foreach (var b in state.Birds)
             {
                 result.BirdSummaries.Add(new DayBirdSummary
                 {
                     BirdId = b.Id,
                     BirdName = b.Name,
+                    // Check if the dictionary has this bird's ID to see if they are working.
                     WorkedToday = birdAvailability.ContainsKey(b.Id),
                     MoodAtStart = b.Mood,
                     HealthAtStart = b.Health,
@@ -66,7 +79,8 @@ namespace BirdCafe.Shared.Engine.Managers
             result.Customers.CustomersArrived = customers.Count;
 
             // --- Step 4: Process Simulation Loop ---
-            foreach(var cust in customers)
+            // Iterate through every generated customer and simulate their interaction.
+            foreach (var cust in customers)
             {
                 ProcessCustomerInteraction(state, cust, workingBirds, birdAvailability, result);
             }
@@ -74,8 +88,10 @@ namespace BirdCafe.Shared.Engine.Managers
             // --- Step 5: End of Day Cleanup (Decay, Waste, Profit) ---
             FinalizeDayStats(state, result, rng);
 
-            // Save result to history
+            // Add the final result to the history list.
             state.PastDayResults.Add(result);
+
+            // Sort the timeline events by time so they play back in order.
             result.Timeline = result.Timeline.OrderBy(t => t.TimeSeconds).ToList();
 
             return EngineResult.Success(result);
@@ -84,6 +100,7 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <summary>
         /// Advances the game phase after the user has viewed the simulation results.
         /// </summary>
+        /// <returns>Success result.</returns>
         public EngineResult AdvanceFromSimulation()
         {
             if (_controller.CurrentPhase != GamePhase.DayLoop)
@@ -94,9 +111,14 @@ namespace BirdCafe.Shared.Engine.Managers
         }
 
         // ============================================================================
-        // Private Helpers (Broken down for Junior Developer readability)
+        // Private Helpers
         // ============================================================================
 
+        /// <summary>
+        /// Creates the initial empty result object with start-of-day stats.
+        /// </summary>
+        /// <param name="state">The game state.</param>
+        /// <returns>A new DaySimulationResult object.</returns>
         private DaySimulationResult InitializeDayResult(GameSave state)
         {
             return new DaySimulationResult
@@ -109,30 +131,37 @@ namespace BirdCafe.Shared.Engine.Managers
             };
         }
 
+        /// <summary>
+        /// Generates a list of customers who will visit the cafe today.
+        /// </summary>
+        /// <param name="state">The game state.</param>
+        /// <param name="rng">The random number generator.</param>
+        /// <returns>A list of customer transaction records.</returns>
         private List<CustomerTransactionRecord> GenerateDailyCustomers(GameSave state, Random rng)
         {
             var config = state.Config;
-            
-            // Calculate count based on config (No magic numbers here!)
+
+            // Calculate count: Base + (Popularity * Factor).
             int count = (int)(config.BaseCustomersPerDay + (state.Cafe.Popularity * config.PopularityToCustomerFactor));
-            count = Math.Max(1, count + rng.Next(-2, 3)); 
+            // Add slight randomness (-2 to +2 customers).
+            count = Math.Max(1, count + rng.Next(-2, 3));
 
             var customers = new List<CustomerTransactionRecord>();
-            
-            for(int i = 0; i < count; i++)
+
+            for (int i = 0; i < count; i++)
             {
                 var newCustomer = new CustomerTransactionRecord
                 {
                     CustomerId = i,
-                    // Spread customers out over the day duration
+                    // Determine arrival time randomly within the day's duration.
                     ArrivalTimeSeconds = (float)rng.NextDouble() * config.DayDurationSeconds,
                     DesiredProducts = new List<ProductType>()
                 };
 
-                // Add Primary Item
+                // Add Primary Item.
                 newCustomer.DesiredProducts.Add(RollForProduct(rng));
 
-                // Chance for Secondary Item (Multi-purchase logic)
+                // Check random chance for a second item.
                 if (rng.NextDouble() < config.ChanceForSecondaryItem)
                 {
                     newCustomer.DesiredProducts.Add(RollForProduct(rng));
@@ -140,27 +169,43 @@ namespace BirdCafe.Shared.Engine.Managers
 
                 customers.Add(newCustomer);
             }
-            
+
+            // Sort customers by arrival time so the simulation processes them in order.
             return customers.OrderBy(c => c.ArrivalTimeSeconds).ToList();
         }
 
+        /// <summary>
+        /// Randomly selects a product type based on weighted probabilities.
+        /// </summary>
+        /// <param name="rng">The random number generator.</param>
+        /// <returns>The selected product type.</returns>
         private ProductType RollForProduct(Random rng)
         {
             var prodRoll = rng.NextDouble();
-            // FIX: Check highest threshold first!
+            // 10% chance for Merch (0.9 to 1.0)
             if (prodRoll > 0.9) return ProductType.ThemedMerch;
+            // 20% chance for Baked Goods (0.7 to 0.9)
             else if (prodRoll > 0.7) return ProductType.BakedGoods;
+            // 70% chance for Coffee (0.0 to 0.7)
             return ProductType.Coffee;
         }
 
+        /// <summary>
+        /// Simulates a single customer interaction: assigning a bird, checking stock, and recording outcome.
+        /// </summary>
+        /// <param name="state">Game state.</param>
+        /// <param name="cust">Customer record.</param>
+        /// <param name="workingBirds">List of birds on duty.</param>
+        /// <param name="birdAvailability">Dictionary tracking when birds are free.</param>
+        /// <param name="result">The result object to update.</param>
         private void ProcessCustomerInteraction(
-            GameSave state, 
-            CustomerTransactionRecord cust, 
-            List<Bird> workingBirds, 
-            Dictionary<string, float> birdAvailability, 
+            GameSave state,
+            CustomerTransactionRecord cust,
+            List<Bird> workingBirds,
+            Dictionary<string, float> birdAvailability,
             DaySimulationResult result)
         {
-            // Log Arrival (We use the first item as the icon/description key)
+            // Log Arrival event for the timeline.
             result.Timeline.Add(new SimulationTimelineEvent
             {
                 TimeSeconds = cust.ArrivalTimeSeconds,
@@ -169,57 +214,66 @@ namespace BirdCafe.Shared.Engine.Managers
                 Product = cust.DesiredProducts.FirstOrDefault()
             });
 
-            // 1. Find a bird who is free soon enough (Patience Check)
+            // 1. Find a bird who is free soon enough (Patience Check).
             var patienceLimit = cust.ArrivalTimeSeconds + state.Config.CustomerPatienceSeconds;
-            
+
+            // LINQ Query:
+            // 1. Filter birds whose 'Next Free Time' is less than the customer's 'Patience Limit'.
+            // 2. Filter birds who have enough energy to work (> 5).
+            // 3. Sort by who is free soonest.
+            // 4. Take the first one found, or null if none match.
             var candidate = workingBirds
-                .Where(b => birdAvailability[b.Id] <= patienceLimit) // Must be free before patience runs out
-                .Where(b => b.Energy > 5f) // Must have energy
-                .OrderBy(b => birdAvailability[b.Id]) // Pick the one free soonest
+                .Where(b => birdAvailability[b.Id] <= patienceLimit)
+                .Where(b => b.Energy > 5f)
+                .OrderBy(b => birdAvailability[b.Id])
                 .FirstOrDefault();
 
             if (candidate == null)
             {
-                // Outcome: Walked Out
+                // Outcome: Walked Out due to waiting too long.
                 RecordFailedService(cust, result, "WaitTooLong", -1, cust.ArrivalTimeSeconds + state.Config.CustomerPatienceSeconds);
                 result.Customers.CustomersLeftUnhappy++;
                 return;
             }
 
-            // 2. Check Inventory (Iterate all items)
+            // 2. Check Inventory (Iterate all items desired).
             var fulfillableItems = new List<ProductType>();
             var unfulfillableItems = new List<ProductType>();
 
-            foreach(var desired in cust.DesiredProducts)
+            foreach (var desired in cust.DesiredProducts)
             {
                 bool hasStock = CheckAndConsumeInventory(state, desired);
                 if (hasStock) fulfillableItems.Add(desired);
                 else unfulfillableItems.Add(desired);
             }
 
-            // 3. Resolve Outcome
+            // 3. Resolve Outcome.
             if (fulfillableItems.Count == 0)
             {
-                // Outcome: No Stock for ANY item
+                // Outcome: No Stock for ANY item.
+                // The fail time is the later of: when the customer arrived OR when the bird became free to check stock.
                 float failTime = Math.Max(cust.ArrivalTimeSeconds, birdAvailability[candidate.Id]) + 1.0f;
                 RecordFailedService(cust, result, "NoStock", -2, failTime, candidate.Id);
                 result.Customers.CustomersLeftNoStock++;
-                
-                // Bird still wasted time checking stock
+
+                // Bird still wasted time checking stock.
                 birdAvailability[candidate.Id] = failTime;
             }
             else
             {
-                // Outcome: Success (At least partially)
+                // Outcome: Success (At least partially).
                 RecordSuccessfulService(state, cust, result, candidate, birdAvailability, fulfillableItems);
             }
         }
 
+        /// <summary>
+        /// Records a failed service interaction to the timeline and customer record.
+        /// </summary>
         private void RecordFailedService(CustomerTransactionRecord cust, DaySimulationResult result, string reason, int popHit, float time, string birdId = null)
         {
             cust.Outcome = CustomerOutcome.LeftUnhappy;
             cust.PopularityDelta = popHit;
-            
+
             result.Timeline.Add(new SimulationTimelineEvent
             {
                 TimeSeconds = time,
@@ -231,33 +285,37 @@ namespace BirdCafe.Shared.Engine.Managers
             });
         }
 
+        /// <summary>
+        /// Records a successful transaction, updates revenue, and updates bird fatigue.
+        /// </summary>
         private void RecordSuccessfulService(
-            GameSave state, 
-            CustomerTransactionRecord cust, 
-            DaySimulationResult result, 
-            Bird bird, 
+            GameSave state,
+            CustomerTransactionRecord cust,
+            DaySimulationResult result,
+            Bird bird,
             Dictionary<string, float> birdAvailability,
             List<ProductType> servedItems)
         {
             cust.Outcome = CustomerOutcome.Served;
             cust.ServingBirdId = bird.Id;
-            
-            // Time Calculation
-            // We assume serving multiple items takes slightly longer, but keeping it simple for now:
-            float duration = (100f / bird.Productivity); 
-            // Slight penalty for multi-items? Let's add 20% duration per extra item.
+
+            // Calculate Service Duration.
+            // Base duration depends on Productivity (higher productivity = lower duration).
+            float duration = (100f / bird.Productivity);
+            // Add 20% penalty for each extra item.
             duration += duration * 0.2f * (servedItems.Count - 1);
 
+            // Start time is whichever is later: Arrival or Bird Available.
             float startTime = Math.Max(cust.ArrivalTimeSeconds, birdAvailability[bird.Id]);
             float endTime = startTime + duration;
 
             cust.ServiceStartTimeSeconds = startTime;
             cust.ServiceEndTimeSeconds = endTime;
 
-            // Update Bird Availability
+            // Update Bird Availability to the new end time.
             birdAvailability[bird.Id] = endTime;
 
-            // Timeline: Start (Only one start event)
+            // Log Service Start event.
             result.Timeline.Add(new SimulationTimelineEvent
             {
                 TimeSeconds = startTime,
@@ -266,21 +324,20 @@ namespace BirdCafe.Shared.Engine.Managers
                 BirdId = bird.Id
             });
 
-            // Process Each Item (Revenue, Energy, Stats)
+            // Process each item sold.
             decimal totalRevenue = 0;
-            foreach(var item in servedItems)
+            foreach (var item in servedItems)
             {
                 decimal price = GetProductPrice(state, item);
                 totalRevenue += price;
-                
-                // Consume Energy per item (Work is physical!)
+
+                // Bird gets tired.
                 bird.ConsumeEnergy(state.Config.EnergyCostPerService);
 
-                // Update Stats
+                // Update aggregate counts.
                 UpdateProductSales(result.Customers, item);
 
-                // Add "Service Completed" Event for EACH item so UI shows multiple popups
-                // We use endTime for all of them so they appear at once
+                // Log completion event for this specific item.
                 result.Timeline.Add(new SimulationTimelineEvent
                 {
                     TimeSeconds = endTime,
@@ -289,33 +346,31 @@ namespace BirdCafe.Shared.Engine.Managers
                     BirdId = bird.Id,
                     Product = item,
                     MoneyDelta = price,
-                    PopularityDelta = 1f / servedItems.Count // Split pop gain or give full per item? 
-                    // Let's give 1 full pop point for the interaction, logged on the last item?
-                    // Or keep it simple: 1 pop point per interaction regardless of size.
+                    PopularityDelta = 1f / servedItems.Count // Split popularity gain evenly.
                 });
             }
 
             cust.Revenue = totalRevenue;
-            cust.PopularityDelta = 1; // Flat bonus for successful service
+            cust.PopularityDelta = 1; // Flat bonus for successful service.
             result.Customers.CustomersServed++;
-            
-            // Assign stats to Bird Summary
-            // We increment specific bird stats later in FinalizeDayStats, but we can do simple ones here?
-            // Actually Finalize counts transactions. Let's leave that logic as is.
 
             result.CustomerTransactions.Add(cust);
         }
 
+        /// <summary>
+        /// Calculates final totals, applies waste logic, and handles bird daily decay.
+        /// </summary>
         private void FinalizeDayStats(GameSave state, DaySimulationResult result, Random rng)
         {
             var config = state.Config;
 
-            // 1. Waste Perishables (Coffee/Baked Goods die, Merch stays)
+            // 1. Waste Perishables (Coffee/Baked Goods die, Merch stays).
             var inv = state.Cafe.Inventory;
-            
+
             result.Customers.CoffeeWasted = inv.Coffee.QuantityOnHand;
             result.Customers.BakedGoodsWasted = inv.BakedGoods.QuantityOnHand;
-            
+
+            // Reset perishable quantities to 0.
             inv.Coffee.QuantityOnHand = 0;
             inv.BakedGoods.QuantityOnHand = 0;
 
@@ -326,98 +381,122 @@ namespace BirdCafe.Shared.Engine.Managers
                 ReasonCode = "EndOfDay"
             });
 
-            // 2. Calculate Money
+            // 2. Calculate Money Stats.
             result.Economy.TotalRevenue = result.CustomerTransactions.Sum(t => t.Revenue);
             state.Economy.CurrentBalance += result.Economy.TotalRevenue;
             result.Economy.EndingMoney = state.Economy.CurrentBalance;
 
-            // Simple COGS calc
+            // Simple Cost of Goods Sold (COGS) calculation.
             result.Economy.InventoryCost = (result.Customers.CoffeeSold * 1.0m) + (result.Customers.BakedGoodsSold * 2.0m) + (result.Customers.MerchSold * 8.0m);
+            // Cost of wasted items.
             result.Economy.WasteCost = (result.Customers.CoffeeWasted * 1.0m) + (result.Customers.BakedGoodsWasted * 2.0m);
+            // Net Profit = Revenue - Expenses.
             result.Economy.NetProfit = result.Economy.TotalRevenue - (result.Economy.InventoryCost + result.Economy.WasteCost);
 
-            // 3. Popularity
+            // 3. Update Popularity.
             float popDelta = result.CustomerTransactions.Sum(t => t.PopularityDelta);
+            // Clamp popularity between 0 and 100.
             state.Cafe.Popularity = Math.Clamp(state.Cafe.Popularity + popDelta, 0, 100);
             result.Popularity.PopularityAtEnd = state.Cafe.Popularity;
 
-            // 4. Bird Decay & Sickness (Logic moved to Bird class where possible)
-            foreach(var summary in result.BirdSummaries)
+            // 4. Bird Decay & Sickness.
+            foreach (var summary in result.BirdSummaries)
             {
                 var bird = state.Birds.First(b => b.Id == summary.BirdId);
+                // Count how many times this bird served a customer.
                 summary.CustomersServed = result.CustomerTransactions.Count(t => t.ServingBirdId == bird.Id);
 
-                // Apply generic daily decay
+                // Apply generic daily decay (hunger/mood).
                 bird.ApplyDailyDecay(config.DailyHungerDecay, config.DailyMoodDecay);
 
-                // Overnight Sleep Recovery (Applies to ALL birds, even those who worked)
+                // Overnight Sleep Recovery (Applies to ALL birds).
                 bird.RecoverEnergy(config.BaseNightlyEnergyRecovery);
 
-                // Additional Recovery if explicitly resting
+                // Additional Recovery if they didn't work.
                 if (!summary.WorkedToday)
                 {
                     bird.RecoverEnergy(config.RestDayEnergyBonus);
                 }
 
-                // Sickness Roll
+                // Check if they get sick.
                 RollForSickness(bird, summary, config, rng);
 
-                // Final snapshot
+                // Snapshot final stats.
                 summary.MoodAtEnd = bird.Mood;
                 summary.HealthAtEnd = bird.Health;
                 summary.EnergyAtEnd = bird.Energy;
             }
         }
 
+        /// <summary>
+        /// Determines if a bird gets sick based on chance and stats.
+        /// </summary>
         private void RollForSickness(Bird bird, DayBirdSummary summary, GameConfiguration config, Random rng)
         {
             float chance = config.BaselineSicknessChance;
-            
+
+            // Increase chance if stats are low.
             if (bird.Hunger < 20) chance *= config.LowHungerSicknessMultiplier;
             if (bird.Energy < 10) chance *= config.LowEnergySicknessMultiplier;
-            
+
+            // Roll the dice.
             if (rng.NextDouble() < chance)
             {
                 bird.IsSick = true;
                 summary.BecameSick = true;
-                // Health hit
+                // Reduce health.
                 bird.Health = Math.Clamp(bird.Health - 20, 0, 100);
             }
         }
-        
+
         // --- Trivial Helpers ---
 
+        /// <summary>
+        /// Checks if an item is in stock and decrements it if true.
+        /// </summary>
         private bool CheckAndConsumeInventory(GameSave state, ProductType type)
         {
             var inv = state.Cafe.Inventory;
-            switch(type)
+            switch (type)
             {
-                case ProductType.Coffee: if (inv.Coffee.QuantityOnHand > 0) { inv.Coffee.QuantityOnHand--; return true; } break;
-                case ProductType.BakedGoods: if (inv.BakedGoods.QuantityOnHand > 0) { inv.BakedGoods.QuantityOnHand--; return true; } break;
-                case ProductType.ThemedMerch: if (inv.ThemedMerch.QuantityOnHand > 0) { inv.ThemedMerch.QuantityOnHand--; return true; } break;
+                case ProductType.Coffee:
+                    if (inv.Coffee.QuantityOnHand > 0) { inv.Coffee.QuantityOnHand--; return true; }
+                    break;
+                case ProductType.BakedGoods:
+                    if (inv.BakedGoods.QuantityOnHand > 0) { inv.BakedGoods.QuantityOnHand--; return true; }
+                    break;
+                case ProductType.ThemedMerch:
+                    if (inv.ThemedMerch.QuantityOnHand > 0) { inv.ThemedMerch.QuantityOnHand--; return true; }
+                    break;
             }
             return false;
         }
 
+        /// <summary>
+        /// Gets the sale price of a product from config.
+        /// </summary>
         private decimal GetProductPrice(GameSave state, ProductType type)
         {
             var config = state.Config;
-            return type switch 
-            { 
-                ProductType.Coffee => config.BasePriceCoffee, 
-                ProductType.BakedGoods => config.BasePriceBakedGoods, 
-                ProductType.ThemedMerch => config.BasePriceThemedMerch, 
-                _ => 0m 
+            return type switch
+            {
+                ProductType.Coffee => config.BasePriceCoffee,
+                ProductType.BakedGoods => config.BasePriceBakedGoods,
+                ProductType.ThemedMerch => config.BasePriceThemedMerch,
+                _ => 0m
             };
         }
 
+        /// <summary>
+        /// Updates the sales counters in the summary object.
+        /// </summary>
         private void UpdateProductSales(DayCustomerSummary summary, ProductType type)
         {
-            switch(type) 
-            { 
-                case ProductType.Coffee: summary.CoffeeSold++; break; 
-                case ProductType.BakedGoods: summary.BakedGoodsSold++; break; 
-                case ProductType.ThemedMerch: summary.MerchSold++; break; 
+            switch (type)
+            {
+                case ProductType.Coffee: summary.CoffeeSold++; break;
+                case ProductType.BakedGoods: summary.BakedGoodsSold++; break;
+                case ProductType.ThemedMerch: summary.MerchSold++; break;
             }
         }
     }

@@ -1,6 +1,6 @@
 
-using System;
 using BirdCafe.Shared;
+using System;
 
 namespace BirdCafe.ConsoleApp.Screens
 {
@@ -9,7 +9,7 @@ namespace BirdCafe.ConsoleApp.Screens
         public static void ShowWeeklyReport()
         {
             // Simple loop to allow help/chat support without progressing
-            while(true)
+            while (true)
             {
                 Console.Clear();
                 var vm = BirdCafeGame.Instance.GetWeeklyReport();
@@ -23,23 +23,23 @@ namespace BirdCafe.ConsoleApp.Screens
 
                 Console.WriteLine("\nPress [ENTER] to start next week.");
                 Console.WriteLine("[H] Help  [C] Chat");
-                
+
                 string input = Console.ReadLine();
-                if (input?.ToUpper() == "H") 
-                { 
-                    BirdCafeGame.Instance.FireHelpPopup("Weekly Report"); 
-                    continue; 
+                if (input?.ToUpper() == "H")
+                {
+                    BirdCafeGame.Instance.FireHelpPopup("Weekly Report");
+                    continue;
                 }
-                if (input?.ToUpper() == "C") 
-                { 
-                    BirdCafeGame.Instance.FireChatPopup(); 
-                    continue; 
+                if (input?.ToUpper() == "C")
+                {
+                    BirdCafeGame.Instance.FireChatPopup();
+                    continue;
                 }
 
                 // Any other input (usually empty Enter) proceeds
                 break;
             }
-            
+
             BirdCafeGame.Instance.CompleteWeek();
         }
 
@@ -61,9 +61,9 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.WriteLine("[H] Help");
 
             var input = Console.ReadLine();
-             if (input?.ToUpper() == "H") 
-            { 
-                BirdCafeGame.Instance.FireHelpPopup("Game Over"); 
+            if (input?.ToUpper() == "H")
+            {
+                BirdCafeGame.Instance.FireHelpPopup("Game Over");
                 // Don't need loop here, user will likely just hit enter again or see menu next
             }
 

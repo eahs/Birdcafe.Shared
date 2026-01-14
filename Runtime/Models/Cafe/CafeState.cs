@@ -1,7 +1,7 @@
 
+using BirdCafe.Shared.Models.Economy;
 using System;
 using System.Collections.Generic;
-using BirdCafe.Shared.Models.Economy;
 
 namespace BirdCafe.Shared.Models.Cafe
 {
@@ -19,13 +19,13 @@ namespace BirdCafe.Shared.Models.Cafe
         /// <summary>
         /// The reputation score (1-100). Higher popularity attracts more customers.
         /// </summary>
-        public float Popularity { get; set; } = 10f; 
-        
+        public float Popularity { get; set; } = 10f;
+
         /// <summary>
         /// The current inventory holdings.
         /// </summary>
         public InventoryState Inventory { get; set; } = new InventoryState();
-        
+
         /// <summary>
         /// IDs of unlocked special product variants.
         /// </summary>

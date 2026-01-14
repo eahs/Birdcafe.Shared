@@ -1,5 +1,3 @@
-
-using System;
 using BirdCafe.Shared.Models.Birds;
 
 namespace BirdCafe.Shared.Engine.Utils
@@ -16,9 +14,10 @@ namespace BirdCafe.Shared.Engine.Utils
         /// <returns>A fully initialized Bird object.</returns>
         public static Bird CreateStarterBird()
         {
-            return new Bird 
-            { 
-                Name = "Peep", 
+            // Initialize a new Bird with predefined stats.
+            return new Bird
+            {
+                Name = "Peep",
                 SpeciesId = "Sparrow_Standard",
                 PrimaryColorHex = "#FFCC00",
                 Productivity = 20,

@@ -1,5 +1,3 @@
-
-using System;
 using BirdCafe.Shared.Enums;
 
 namespace BirdCafe.Shared.Engine.Utils
@@ -22,7 +20,7 @@ namespace BirdCafe.Shared.Engine.Utils
             // Ideally these unit costs should come from GameConfig, 
             // but we hardcode them here to centralize the magic numbers 
             // if we haven't added them to config yet.
-            
+
             decimal unitCost = type switch
             {
                 ProductType.Coffee => 1.0m,
@@ -31,14 +29,20 @@ namespace BirdCafe.Shared.Engine.Utils
                 _ => 0m
             };
 
+            // Multiply unit cost by quantity.
             return unitCost * quantity;
         }
 
         /// <summary>
         /// Calculates total cost for a mixed cart of items.
         /// </summary>
+        /// <param name="coffeeQty">Amount of coffee.</param>
+        /// <param name="bakedQty">Amount of baked goods.</param>
+        /// <param name="merchQty">Amount of merch.</param>
+        /// <returns>Sum total cost.</returns>
         public static decimal CalculateTotalPlanCost(int coffeeQty, int bakedQty, int merchQty)
         {
+            // Sum up the cost of each category.
             return CalculateRestockCost(ProductType.Coffee, coffeeQty) +
                    CalculateRestockCost(ProductType.BakedGoods, bakedQty) +
                    CalculateRestockCost(ProductType.ThemedMerch, merchQty);

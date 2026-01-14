@@ -1,7 +1,7 @@
 
+using BirdCafe.Shared;
 using System;
 using System.Threading;
-using BirdCafe.Shared;
 
 namespace BirdCafe.ConsoleApp.Screens
 {
@@ -15,19 +15,19 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.WriteLine("#########################################");
             Console.WriteLine($"   START OF DAY {vm.DayNumber}: {vm.DayName}");
             // Junior Dev Note: Added Cafe Name per UI request
-            Console.WriteLine($"   {vm.CafeName.ToUpper()}"); 
+            Console.WriteLine($"   {vm.CafeName.ToUpper()}");
             Console.WriteLine("#########################################");
             Console.WriteLine($"Popularity: {vm.Popularity}");
             Console.WriteLine($"Message: {vm.Message}");
             Console.WriteLine("\nPress [ENTER] to open the Cafe. ([H] Help)");
 
             var input = Console.ReadLine();
-            if (input?.ToUpper() == "H") 
-            { 
+            if (input?.ToUpper() == "H")
+            {
                 BirdCafeGame.Instance.FireHelpPopup("Day Intro");
                 // Just proceed after help
             }
-            
+
             // Triggers engine to calculate day
             BirdCafeGame.Instance.StartSimulationPlayback();
         }
@@ -37,7 +37,7 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.Clear();
             Console.WriteLine("--- SIMULATION RUNNING ---");
             Console.WriteLine("(Press 'H' to pause for Help)");
-            
+
             var timeline = BirdCafeGame.Instance.GetDayTimeline();
 
             // In console, we just print the log with small delays to simulate time
@@ -55,18 +55,18 @@ namespace BirdCafe.ConsoleApp.Screens
 
                 // Updated to use the Formatted Time string (e.g. 7:30 AM) instead of raw seconds
                 Console.Write($"[{evt.FormattedTime}] ");
-                
+
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.Write($"{evt.EventType.PadRight(20)} ");
                 Console.ResetColor();
 
                 if (!string.IsNullOrEmpty(evt.BirdName) && evt.BirdName != "Unknown")
                     Console.Write($"Bird: {evt.BirdName} | ");
-                
+
                 Console.WriteLine(evt.Description);
 
                 // Fake animation delay
-                Thread.Sleep(50); 
+                Thread.Sleep(50);
             }
 
             Console.WriteLine("\n--- DAY COMPLETE ---");

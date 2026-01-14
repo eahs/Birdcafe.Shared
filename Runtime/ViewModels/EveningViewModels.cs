@@ -1,6 +1,7 @@
+
+using BirdCafe.Shared.Enums;
 using System;
 using System.Collections.Generic;
-using BirdCafe.Shared.Enums;
 
 namespace BirdCafe.Shared.ViewModels
 {
