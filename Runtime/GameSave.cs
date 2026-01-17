@@ -63,7 +63,7 @@ namespace BirdCafe.Shared
         /// <summary>
         /// Game configuration values (constants and balancing).
         /// </summary>
-        public GameConfig.GameConfiguration Config { get; set; } = new GameConfig.GameConfiguration();
+        public GameConfiguration Config { get; set; } = new GameConfiguration();
 
         /// <summary>
         /// Tracks narrative progression flags.
