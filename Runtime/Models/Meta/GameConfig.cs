@@ -32,7 +32,7 @@ namespace BirdCafe.Shared.Models.Meta
         /// <summary>
         /// How long a game day lasts in simulation seconds.
         /// </summary>
-        public float DayDurationSeconds { get; set; } = 120f;
+        public float DayDurationSeconds { get; set; } = 45f;
 
         /// <summary>
         /// How long a customer waits (in seconds) before leaving angry.
