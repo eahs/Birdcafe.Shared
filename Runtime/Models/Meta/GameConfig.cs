@@ -1,4 +1,3 @@
-
 using System;
 
 namespace BirdCafe.Shared.Models.Meta
@@ -67,7 +66,7 @@ namespace BirdCafe.Shared.Models.Meta
         /// </summary>
         public float EnergyCostPerService { get; set; } = 2f;
 
-        // --- Sickness ---
+        // --- Sickness & Starvation ---
 
         /// <summary>
         /// Base probability (0.0 to 1.0) of a bird getting sick.
@@ -75,14 +74,19 @@ namespace BirdCafe.Shared.Models.Meta
         public float BaselineSicknessChance { get; set; } = 0.05f;
 
         /// <summary>
-        /// Multiplier applied to sickness chance when hunger is low.
+        /// Multiplier applied to sickness chance when hunger is low (but > 0).
         /// </summary>
-        public float LowHungerSicknessMultiplier { get; set; } = 2.0f;
+        public float LowHungerSicknessMultiplier { get; set; } = 5.0f;
 
         /// <summary>
         /// Multiplier applied to sickness chance when energy is low.
         /// </summary>
-        public float LowEnergySicknessMultiplier { get; set; } = 1.5f;
+        public float LowEnergySicknessMultiplier { get; set; } = 3.0f;
+
+        /// <summary>
+        /// Amount of Health lost instantly at the end of the day if Hunger is 0.
+        /// </summary>
+        public float StarvationHealthDamage { get; set; } = 15.0f;
 
         // --- Economy ---
 

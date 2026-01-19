@@ -1,4 +1,3 @@
-
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Meta;
@@ -409,6 +408,19 @@ namespace BirdCafe.Shared.Engine.Managers
                 // Apply generic daily decay (hunger/mood).
                 bird.ApplyDailyDecay(config.DailyHungerDecay, config.DailyMoodDecay);
 
+                // Starvation Check: If hunger hits 0, bird loses health directly.
+                if (bird.Hunger <= 0)
+                {
+                    bird.Health = Math.Max(0, bird.Health - config.StarvationHealthDamage);
+                    result.Timeline.Add(new SimulationTimelineEvent
+                    {
+                        TimeSeconds = config.DayDurationSeconds + 2,
+                        EventType = SimulationTimelineEventType.BirdStateChanged,
+                        BirdId = bird.Id,
+                        ReasonCode = "StarvationHealthLoss"
+                    });
+                }
+
                 // Overnight Sleep Recovery (Applies to ALL birds).
                 bird.RecoverEnergy(config.BaseNightlyEnergyRecovery);
 
@@ -436,7 +448,7 @@ namespace BirdCafe.Shared.Engine.Managers
             float chance = config.BaselineSicknessChance;
 
             // Increase chance if stats are low.
-            if (bird.Hunger < 20) chance *= config.LowHungerSicknessMultiplier;
+            if (bird.Hunger < 20 && bird.Hunger > 0) chance *= config.LowHungerSicknessMultiplier;
             if (bird.Energy < 10) chance *= config.LowEnergySicknessMultiplier;
 
             // Roll the dice.
