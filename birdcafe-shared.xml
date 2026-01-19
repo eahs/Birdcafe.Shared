@@ -909,117 +909,6 @@ namespace BirdCafe.Shared.Engine.Utils
 }
 </file>
 
-<file path="Runtime/GameSave.cs">
-using BirdCafe.Shared.Models.Birds;
-using BirdCafe.Shared.Models.Cafe;
-using BirdCafe.Shared.Models.Economy;
-using BirdCafe.Shared.Models.Meta;
-using BirdCafe.Shared.Models.Simulation;
-using System;
-using System.Collections.Generic;
-
-namespace BirdCafe.Shared
-{
-    /// <summary>
-    /// The root data object for a saved game.
-    /// Contains all persistent data needed to restore a session.
-    /// </summary>
-    [Serializable]
-    public class GameSave
-    {
-        /// <summary>
-        /// Unique ID for the save file.
-        /// </summary>
-        public string SaveId { get; set; } = Guid.NewGuid().ToString();
-
-        /// <summary>
-        /// Version number of the save format for backward compatibility.
-        /// </summary>
-        public int SchemaVersion { get; set; } = 1;
-
-        /// <summary>
-        /// Timestamp of when the file was last written.
-        /// </summary>
-        public DateTime LastSaved { get; set; } = DateTime.Now;
-
-        // Time
-
-        /// <summary>
-        /// The current integer day number (1, 2, 3...).
-        /// </summary>
-        public int CurrentDayNumber { get; set; } = 1;
-
-        /// <summary>
-        /// The current day of the week (Monday, Tuesday...).
-        /// </summary>
-        public DayOfWeek CurrentDayName { get; set; } = DayOfWeek.Monday;
-
-        /// <summary>
-        /// The current week number.
-        /// </summary>
-        public int CurrentWeekNumber { get; set; } = 1;
-
-        // Meta
-
-        /// <summary>
-        /// Player profile information.
-        /// </summary>
-        public PlayerProfile Profile { get; set; } = new PlayerProfile();
-
-        /// <summary>
-        /// User preferences/settings.
-        /// </summary>
-        public PlayerPreferences Preferences { get; set; } = new PlayerPreferences();
-
-        /// <summary>
-        /// Game configuration values (constants and balancing).
-        /// </summary>
-        public GameConfig.GameConfiguration Config { get; set; } = new GameConfig.GameConfiguration();
-
-        /// <summary>
-        /// Tracks narrative progression flags.
-        /// </summary>
-        public StoryState Story { get; set; } = new StoryState();
-
-        // World
-
-        /// <summary>
-        /// State of the physical cafe (Inventory, Popularity).
-        /// </summary>
-        public CafeState Cafe { get; set; } = new CafeState();
-
-        /// <summary>
-        /// Financial state (Balance, Ledger).
-        /// </summary>
-        public EconomyState Economy { get; set; } = new EconomyState();
-
-        /// <summary>
-        /// List of all birds owned by the player.
-        /// </summary>
-        public List<Bird> Birds { get; set; } = new List<Bird>();
-
-        // History
-
-        /// <summary>
-        /// Complete history of detailed simulation results for previous days.
-        /// </summary>
-        public List<DaySimulationResult> PastDayResults { get; set; } = new List<DaySimulationResult>();
-
-        /// <summary>
-        /// History of weekly summary reports.
-        /// </summary>
-        public List<WeeklySummary> PastWeeklySummaries { get; set; } = new List<WeeklySummary>();
-
-        // Current State logic
-
-        /// <summary>
-        /// The active state for the current day, including the daily plan.
-        /// </summary>
-        public DayState CurrentDayState { get; set; } = new DayState();
-    }
-}
-</file>
-
 <file path="Runtime/Models/Birds/BirdComponents.cs">
 using System;
 
@@ -3846,6 +3735,117 @@ namespace BirdCafe.Shared.Engine.Managers
 }
 </file>
 
+<file path="Runtime/GameSave.cs">
+using BirdCafe.Shared.Models.Birds;
+using BirdCafe.Shared.Models.Cafe;
+using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Meta;
+using BirdCafe.Shared.Models.Simulation;
+using System;
+using System.Collections.Generic;
+
+namespace BirdCafe.Shared
+{
+    /// <summary>
+    /// The root data object for a saved game.
+    /// Contains all persistent data needed to restore a session.
+    /// </summary>
+    [Serializable]
+    public class GameSave
+    {
+        /// <summary>
+        /// Unique ID for the save file.
+        /// </summary>
+        public string SaveId { get; set; } = Guid.NewGuid().ToString();
+
+        /// <summary>
+        /// Version number of the save format for backward compatibility.
+        /// </summary>
+        public int SchemaVersion { get; set; } = 1;
+
+        /// <summary>
+        /// Timestamp of when the file was last written.
+        /// </summary>
+        public DateTime LastSaved { get; set; } = DateTime.Now;
+
+        // Time
+
+        /// <summary>
+        /// The current integer day number (1, 2, 3...).
+        /// </summary>
+        public int CurrentDayNumber { get; set; } = 1;
+
+        /// <summary>
+        /// The current day of the week (Monday, Tuesday...).
+        /// </summary>
+        public DayOfWeek CurrentDayName { get; set; } = DayOfWeek.Monday;
+
+        /// <summary>
+        /// The current week number.
+        /// </summary>
+        public int CurrentWeekNumber { get; set; } = 1;
+
+        // Meta
+
+        /// <summary>
+        /// Player profile information.
+        /// </summary>
+        public PlayerProfile Profile { get; set; } = new PlayerProfile();
+
+        /// <summary>
+        /// User preferences/settings.
+        /// </summary>
+        public PlayerPreferences Preferences { get; set; } = new PlayerPreferences();
+
+        /// <summary>
+        /// Game configuration values (constants and balancing).
+        /// </summary>
+        public GameConfiguration Config { get; set; } = new GameConfiguration();
+
+        /// <summary>
+        /// Tracks narrative progression flags.
+        /// </summary>
+        public StoryState Story { get; set; } = new StoryState();
+
+        // World
+
+        /// <summary>
+        /// State of the physical cafe (Inventory, Popularity).
+        /// </summary>
+        public CafeState Cafe { get; set; } = new CafeState();
+
+        /// <summary>
+        /// Financial state (Balance, Ledger).
+        /// </summary>
+        public EconomyState Economy { get; set; } = new EconomyState();
+
+        /// <summary>
+        /// List of all birds owned by the player.
+        /// </summary>
+        public List<Bird> Birds { get; set; } = new List<Bird>();
+
+        // History
+
+        /// <summary>
+        /// Complete history of detailed simulation results for previous days.
+        /// </summary>
+        public List<DaySimulationResult> PastDayResults { get; set; } = new List<DaySimulationResult>();
+
+        /// <summary>
+        /// History of weekly summary reports.
+        /// </summary>
+        public List<WeeklySummary> PastWeeklySummaries { get; set; } = new List<WeeklySummary>();
+
+        // Current State logic
+
+        /// <summary>
+        /// The active state for the current day, including the daily plan.
+        /// </summary>
+        public DayState CurrentDayState { get; set; } = new DayState();
+    }
+}
+</file>
+
 <file path="Runtime/Models/Birds/Bird.cs">
 using BirdCafe.Shared.Enums;
 using System;
@@ -5419,134 +5419,6 @@ namespace BirdCafe.Shared.ViewModels
 }
 </file>
 
-<file path="Runtime/Models/Meta/GameConfig.cs">
-using System;
-
-namespace BirdCafe.Shared.Models.Meta
-{
-    /// <summary>
-    /// Contains global configuration and balancing constants.
-    /// Tweak these values to balance the game.
-    /// </summary>
-    [Serializable]
-    public class GameConfiguration
-    {
-        // --- Customer Flow ---
-
-        /// <summary>
-        /// Baseline customers per day at neutral popularity.
-        /// </summary>
-        public int BaseCustomersPerDay { get; set; } = 10;
-
-        /// <summary>
-        /// Multiplier determining how much Popularity affects customer count.
-        /// </summary>
-        public float PopularityToCustomerFactor { get; set; } = 0.5f;
-
-        /// <summary>
-        /// Chance (0.0 to 1.0) that a customer will order a second item.
-        /// </summary>
-        public float ChanceForSecondaryItem { get; set; } = 0.3f;
-
-        // --- Simulation Settings ---
-
-        /// <summary>
-        /// How long a game day lasts in simulation seconds.
-        /// </summary>
-        public float DayDurationSeconds { get; set; } = 120f;
-
-        /// <summary>
-        /// How long a customer waits (in seconds) before leaving angry.
-        /// </summary>
-        public float CustomerPatienceSeconds { get; set; } = 5.0f;
-
-        // --- Bird Stats & Decay ---
-
-        /// <summary>
-        /// Amount of Hunger lost automatically at end of day.
-        /// </summary>
-        public float DailyHungerDecay { get; set; } = 30f;
-
-        /// <summary>
-        /// Amount of Mood lost automatically at end of day due to stress/boredom.
-        /// </summary>
-        public float DailyMoodDecay { get; set; } = 10f;
-
-        /// <summary>
-        /// Base amount of Energy EVERY bird recovers overnight by sleeping.
-        /// </summary>
-        public float BaseNightlyEnergyRecovery { get; set; } = 15f;
-
-        /// <summary>
-        /// ADDITIONAL amount of Energy recovered if a bird is assigned a Rest Day.
-        /// Total recovery = BaseNightlyEnergyRecovery + RestDayEnergyBonus.
-        /// </summary>
-        public float RestDayEnergyBonus { get; set; } = 40f;
-
-        /// <summary>
-        /// Amount of Energy lost per customer served.
-        /// </summary>
-        public float EnergyCostPerService { get; set; } = 2f;
-
-        // --- Sickness ---
-
-        /// <summary>
-        /// Base probability (0.0 to 1.0) of a bird getting sick.
-        /// </summary>
-        public float BaselineSicknessChance { get; set; } = 0.05f;
-
-        /// <summary>
-        /// Multiplier applied to sickness chance when hunger is low.
-        /// </summary>
-        public float LowHungerSicknessMultiplier { get; set; } = 2.0f;
-
-        /// <summary>
-        /// Multiplier applied to sickness chance when energy is low.
-        /// </summary>
-        public float LowEnergySicknessMultiplier { get; set; } = 1.5f;
-
-        // --- Economy ---
-
-        /// <summary>
-        /// Initial coffee stock provided on Day 1.
-        /// </summary>
-        public int DefaultDay1Coffee { get; set; } = 20;
-
-        /// <summary>
-        /// Standard sale price for a unit of Coffee.
-        /// </summary>
-        public decimal BasePriceCoffee { get; set; } = 3.00m;
-
-        /// <summary>
-        /// Standard sale price for a unit of Baked Goods.
-        /// </summary>
-        public decimal BasePriceBakedGoods { get; set; } = 4.50m;
-
-        /// <summary>
-        /// Standard sale price for a unit of Themed Merch.
-        /// </summary>
-        public decimal BasePriceThemedMerch { get; set; } = 15.00m;
-
-        // --- Care Costs ---
-
-        /// <summary>
-        /// Standard cost for a single "Feed" action.
-        /// </summary>
-        public decimal BaselineBirdFoodCost { get; set; } = 5.00m;
-
-        /// <summary>
-        /// Standard cost for a single "Vet Visit".
-        /// </summary>
-        public decimal BaselineVetCost { get; set; } = 50.00m;
-
-        /// <summary>
-        /// Standard cost for playing with a bird (Toys, etc).
-        /// </summary>
-        public decimal BaselinePlayCost { get; set; } = 0.00m;
-    }
-}
-</file>
-
 <file path="Runtime/ViewModels/EveningViewModels.cs">
 using BirdCafe.Shared.Enums;
 using System;
@@ -6466,6 +6338,134 @@ namespace BirdCafe.Shared.Engine.Managers
 }
 </file>
 
+<file path="Runtime/Models/Meta/GameConfig.cs">
+using System;
+
+namespace BirdCafe.Shared.Models.Meta
+{
+    /// <summary>
+    /// Contains global configuration and balancing constants.
+    /// Tweak these values to balance the game.
+    /// </summary>
+    [Serializable]
+    public class GameConfiguration
+    {
+        // --- Customer Flow ---
+
+        /// <summary>
+        /// Baseline customers per day at neutral popularity.
+        /// </summary>
+        public int BaseCustomersPerDay { get; set; } = 10;
+
+        /// <summary>
+        /// Multiplier determining how much Popularity affects customer count.
+        /// </summary>
+        public float PopularityToCustomerFactor { get; set; } = 0.5f;
+
+        /// <summary>
+        /// Chance (0.0 to 1.0) that a customer will order a second item.
+        /// </summary>
+        public float ChanceForSecondaryItem { get; set; } = 0.3f;
+
+        // --- Simulation Settings ---
+
+        /// <summary>
+        /// How long a game day lasts in simulation seconds.
+        /// </summary>
+        public float DayDurationSeconds { get; set; } = 45f;
+
+        /// <summary>
+        /// How long a customer waits (in seconds) before leaving angry.
+        /// </summary>
+        public float CustomerPatienceSeconds { get; set; } = 5.0f;
+
+        // --- Bird Stats & Decay ---
+
+        /// <summary>
+        /// Amount of Hunger lost automatically at end of day.
+        /// </summary>
+        public float DailyHungerDecay { get; set; } = 30f;
+
+        /// <summary>
+        /// Amount of Mood lost automatically at end of day due to stress/boredom.
+        /// </summary>
+        public float DailyMoodDecay { get; set; } = 10f;
+
+        /// <summary>
+        /// Base amount of Energy EVERY bird recovers overnight by sleeping.
+        /// </summary>
+        public float BaseNightlyEnergyRecovery { get; set; } = 15f;
+
+        /// <summary>
+        /// ADDITIONAL amount of Energy recovered if a bird is assigned a Rest Day.
+        /// Total recovery = BaseNightlyEnergyRecovery + RestDayEnergyBonus.
+        /// </summary>
+        public float RestDayEnergyBonus { get; set; } = 40f;
+
+        /// <summary>
+        /// Amount of Energy lost per customer served.
+        /// </summary>
+        public float EnergyCostPerService { get; set; } = 2f;
+
+        // --- Sickness ---
+
+        /// <summary>
+        /// Base probability (0.0 to 1.0) of a bird getting sick.
+        /// </summary>
+        public float BaselineSicknessChance { get; set; } = 0.05f;
+
+        /// <summary>
+        /// Multiplier applied to sickness chance when hunger is low.
+        /// </summary>
+        public float LowHungerSicknessMultiplier { get; set; } = 2.0f;
+
+        /// <summary>
+        /// Multiplier applied to sickness chance when energy is low.
+        /// </summary>
+        public float LowEnergySicknessMultiplier { get; set; } = 1.5f;
+
+        // --- Economy ---
+
+        /// <summary>
+        /// Initial coffee stock provided on Day 1.
+        /// </summary>
+        public int DefaultDay1Coffee { get; set; } = 20;
+
+        /// <summary>
+        /// Standard sale price for a unit of Coffee.
+        /// </summary>
+        public decimal BasePriceCoffee { get; set; } = 3.00m;
+
+        /// <summary>
+        /// Standard sale price for a unit of Baked Goods.
+        /// </summary>
+        public decimal BasePriceBakedGoods { get; set; } = 4.50m;
+
+        /// <summary>
+        /// Standard sale price for a unit of Themed Merch.
+        /// </summary>
+        public decimal BasePriceThemedMerch { get; set; } = 15.00m;
+
+        // --- Care Costs ---
+
+        /// <summary>
+        /// Standard cost for a single "Feed" action.
+        /// </summary>
+        public decimal BaselineBirdFoodCost { get; set; } = 5.00m;
+
+        /// <summary>
+        /// Standard cost for a single "Vet Visit".
+        /// </summary>
+        public decimal BaselineVetCost { get; set; } = 50.00m;
+
+        /// <summary>
+        /// Standard cost for playing with a bird (Toys, etc).
+        /// </summary>
+        public decimal BaselinePlayCost { get; set; } = 0.00m;
+    }
+}
+</file>
+
 <file path="Runtime/Engine/BirdCafeGame.cs">
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Utils;
@@ -7268,7 +7268,7 @@ namespace BirdCafe.Shared
 <file path="package.json">
 {
   "name": "com.birdcafe.shared",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "displayName": "Bird Cafe Shared Library",
   "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
   "unity": "2022.3",

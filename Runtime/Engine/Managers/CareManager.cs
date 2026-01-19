@@ -1,4 +1,3 @@
-
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Economy;
@@ -73,6 +72,13 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // Apply the statistical changes (Health, Mood, etc.) to the bird object.
             bird.ApplyCareEffect(template);
+
+            // If this was a Vet visit, clear the sickness flags so the bird is healthy again.
+            if (actionId == CareActionIds.Vet)
+            {
+                bird.IsSick = false;
+                bird.IsSeverelySick = false;
+            }
 
             return EngineResult.Success(bird);
         }
