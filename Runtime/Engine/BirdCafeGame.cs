@@ -233,9 +233,9 @@ namespace BirdCafe.Shared
                 Title = "Your First Day at the Bird Cafe",
                 Steps = new List<TutorialStep>
                 {
-                    new TutorialStep { Title = "Step 1: Plan inventory", Description = "We gave you starter coffee. Choose how much to sell for each day after." },
-                    new TutorialStep { Title = "Step 2: Start the work day", Description = "Open the cafe and let your birds serve customers." },
-                    new TutorialStep { Title = "Step 3: Take care of your birds at night", Description = "Feed, rest, and heal birds so they are ready for tomorrow." }
+                    new TutorialStep { Title = "Step 1: Start the work day", Description = "We gave you starter coffee. Open the cafe and let your birds serve customers." },
+                    new TutorialStep { Title = "Step 2: Take care of your birds at night", Description = "Feed, rest, and heal birds so they are ready for tomorrow." },
+                    new TutorialStep { Title = "Step 3: Plan inventory", Description = "Choose how much to sell for each day after." }
                 }
             };
         }
