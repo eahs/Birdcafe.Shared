@@ -1,3 +1,4 @@
+
 # Bird Cafe
 Virtual Pet and Cafe Management Simulation (FBLA Introduction to Programming 2025–2026)
 
@@ -34,10 +35,8 @@ dotnet run
 
 Console notes:
 
--   The CLI includes a guided tutorial screen.
-    
--   On most screens, press **H** for contextual help.
-    
+-   The CLI includes a guided tutorial screen.    
+-   On most screens, press **H** for contextual help.    
 -   The chat popup key (**C**) is present as UI scaffolding and returns a mock response.
     
 
@@ -56,28 +55,21 @@ Bird Cafe runs on a repeatable daily cycle:
 
 1.  **Morning planning**
     
-    -   Assign birds to **Work** or **Rest** for the day.
-        
+    -   Assign birds to **Work** or **Rest** for the day.        
     -   Review current inventory and recent performance.
         
 2.  **Workday simulation**
     
-    -   Customers arrive based on cafe popularity.
-        
-    -   Birds on duty process orders (Coffee, Baked Goods, Themed Merch).
-        
+    -   Customers arrive based on cafe popularity.        
+    -   Birds on duty process orders (Coffee, Baked Goods, Themed Merch).        
     -   Results produce revenue, inventory consumption, and performance outcomes.
         
 3.  **Evening care**
     
-    -   Care actions improve bird well-being and reduce risk:
-        
-        -   **Feed**
-            
-        -   **Play Time**
-            
-        -   **Vet Visit**
-            
+    -   Care actions improve bird well-being and reduce risk:        
+        -   **Feed**            
+        -   **Play Time**            
+        -   **Vet Visit**            
     -   Each action is validated against available funds.
         
 4.  **Reporting**
@@ -96,14 +88,10 @@ Bird Cafe implements the required topic elements as follows:
 
 ### Care features
 
--   **Feed:** improves hunger and supports health
-    
--   **Play Time:** improves mood
-    
--   **Vet Visit:** restores health and addresses sickness risk
-    
--   **Rest:** handled through the planning phase by scheduling birds off-duty
-    
+-   **Feed:** improves hunger and supports health    
+-   **Play Time:** improves mood    
+-   **Vet Visit:** restores health and addresses sickness risk    
+-   **Rest:** handled through the planning phase by scheduling birds off-duty    
 
 ### Reactions and behaviors
 
@@ -118,10 +106,8 @@ Bird Cafe implements the required topic elements as follows:
     
 -   Baseline care costs are configured in `Runtime/Models/Meta/GameConfig.cs`:
     
-    -   Feed: $5.00
-        
-    -   Vet Visit: $50.00
-        
+    -   Feed: $5.00        
+    -   Vet Visit: $50.00        
     -   Play Time: $0.00
         
 
@@ -131,12 +117,9 @@ Bird Cafe implements the required topic elements as follows:
     
 -   Base product prices are configured in `Runtime/Models/Meta/GameConfig.cs`:
     
-    -   Coffee: $3.00
-        
-    -   Baked Goods: $4.50
-        
-    -   Themed Merch: $15.00
-        
+    -   Coffee: $3.00        
+    -   Baked Goods: $4.50        
+    -   Themed Merch: $15.00        
 
 ### Reporting
 
@@ -151,23 +134,17 @@ Bird Cafe is built with a clean separation between game rules and presentation.
 
 The shared engine is a Unity-compatible **.NET Standard 2.1** library that contains:
 
--   Core models (birds, cafe, economy, inventory, planning, and reports)
-    
--   Deterministic simulation logic (seeded day-by-day for repeatable outcomes)
-    
--   Managers for care, planning, and simulation
-    
+-   Core models (birds, cafe, economy, inventory, planning, and reports)    
+-   Deterministic simulation logic (seeded day-by-day for repeatable outcomes)    
+-   Managers for care, planning, and simulation    
 -   View models designed for UI consumption (Unity UI and the console UI)
     
 
 Key entry points:
 
--   `Runtime/Engine/BirdCafeController.cs` — engine controller and manager coordinator
-    
--   `Runtime/Engine/BirdCafeGame.cs` — higher-level facade that exposes UI-friendly operations and events
-    
--   `Runtime/GameSave.cs` — serializable state container used throughout the engine
-    
+-   `Runtime/Engine/BirdCafeController.cs` — engine controller and manager coordinator    
+-   `Runtime/Engine/BirdCafeGame.cs` — higher-level facade that exposes UI-friendly operations and events    
+-   `Runtime/GameSave.cs` — serializable state container used throughout the engine    
 
 ### Console reference implementation (judge-friendly)
 
@@ -194,10 +171,8 @@ BirdCafe/
 
 ## Build and run notes
 
--   No internet connection is required to run the Unity project, console project, or tests.
-    
--   `BirdCafe.Shared` targets **.NET Standard 2.1** for Unity compatibility.
-    
+-   No internet connection is required to run the Unity project, console project, or tests.    
+-   `BirdCafe.Shared` targets **.NET Standard 2.1** for Unity compatibility.    
 -   The console app and tests target **.NET 6.0**.
     
 
@@ -205,10 +180,8 @@ BirdCafe/
 
 The engine is designed to prevent invalid or inconsistent state:
 
--   **Funds checks:** care actions validate the current balance before allowing spending.
-    
--   **Stat bounds:** bird stats are clamped to safe ranges to avoid invalid values.
-    
+-   **Funds checks:** care actions validate the current balance before allowing spending.    
+-   **Stat bounds:** bird stats are clamped to safe ranges to avoid invalid values.    
 -   **Determinism:** daily simulation uses a seeded RNG so results are reproducible and testable.
     
 
@@ -216,17 +189,14 @@ The engine is designed to prevent invalid or inconsistent state:
 
 ### Runtime / code libraries
 
--   Unity 2022.3 LTS — game runtime and UI framework
-    
--   .NET SDK (6+) — console application and tests
-    
+-   Unity 2022.3 LTS — game runtime and UI framework    
+-   .NET SDK (6+) — console application and tests    
 -   NUnit — automated testing framework
     
 
 ### Unity UI / asset packages
 
--   Cute Kawaii GUI Pack (Ricimi, Unity Asset Store) — UI layout and widgets
-    
+-   Cute Kawaii GUI Pack (Ricimi, Unity Asset Store) — UI layout and widgets    
 -   Easy Tooltip (Ahmed Benlakhdhar) — tooltip/popup UX components
     
 
@@ -234,12 +204,9 @@ The engine is designed to prevent invalid or inconsistent state:
 
 AI tools were used to accelerate repetitive code and early drafts of data models and scaffolding. All code was reviewed, debugged, and integrated by the developers to ensure correctness and alignment with FBLA requirements.
 
--   Tools referenced during development: ChatGPT and Google Gemini
-    
--   Scope of assistance: boilerplate generation, draft structures, and iterative refactoring support
-    
--   Human responsibility: final design decisions, implementation integration, testing, and submission quality
-    
+-   Tools referenced during development: ChatGPT and Google Gemini    
+-   Scope of assistance: boilerplate generation, draft structures, and iterative refactoring support    
+-   Human responsibility: final design decisions, implementation integration, testing, and submission quality    
 
 ## License
 
@@ -252,4 +219,3 @@ This project is provided under the **MIT License**. See `LICENSE` in the reposit
 -   `dotnet` not found: install the .NET SDK and restart your terminal.
     
 -   Tests failing unexpectedly: run `dotnet test` from the repository root so project references resolve correctly.
-    
