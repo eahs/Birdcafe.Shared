@@ -1,1 +1,1 @@
-repomix --instruction-file-path "README.MD" -o birdcafe-shared.xml
+repomix --instruction-file-path "llm-instructions.md" -o birdcafe-shared.xml
