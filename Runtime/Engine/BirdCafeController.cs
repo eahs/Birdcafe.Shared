@@ -58,6 +58,8 @@ namespace BirdCafe.Shared.Engine
             Care = new CareManager(this);
             Planning = new PlanningManager(this);
             Reporting = new ReportingManager(this);
+
+            Meta.StartNewGame("FBLA Judge", "FBLA Cafe");
         }
 
         /// <summary>

@@ -52,6 +52,8 @@ build-llm.bat
 build-llm.bat.meta
 ConsoleApp~/BirdCafe.Shared.Console.csproj
 ConsoleApp~/Program.cs
+ConsoleApp~/Screens/ChatScreens.cs
+ConsoleApp~/Screens/ChatScreens.cs.meta
 ConsoleApp~/Screens/EveningScreens.cs
 ConsoleApp~/Screens/MetaScreens.cs
 ConsoleApp~/Screens/ReportScreens.cs
@@ -63,6 +65,7 @@ package.json
 package.json.meta
 README.md
 README.md.meta
+Runtime.meta
 Runtime/BirdCafe.Shared.asmdef
 Runtime/BirdCafe.Shared.asmdef.meta
 Runtime/Engine.meta
@@ -86,6 +89,8 @@ Runtime/Engine/Managers/SimulationManager.cs.meta
 Runtime/Engine/Utils.meta
 Runtime/Engine/Utils/BirdFactory.cs
 Runtime/Engine/Utils/BirdFactory.cs.meta
+Runtime/Engine/Utils/ChatData.cs
+Runtime/Engine/Utils/ChatData.cs.meta
 Runtime/Engine/Utils/EconomyHelper.cs
 Runtime/Engine/Utils/EconomyHelper.cs.meta
 Runtime/Enums.meta
@@ -132,19 +137,131 @@ Runtime/ViewModels/SimulationViewModels.cs
 Runtime/ViewModels/SimulationViewModels.cs.meta
 Runtime/ViewModels/TutorialViewModel.cs
 Runtime/ViewModels/TutorialViewModel.cs.meta
-Tests/BirdCafe.Shared.Tests.meta
-Tests/BirdCafe.Shared.Tests/bin.meta
 Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef
-Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef.meta
 Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj
-Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj.meta
-Tests/BirdCafe.Shared.Tests/obj.meta
 Tests/BirdCafe.Shared.Tests/SimulationTests.cs
-Tests/BirdCafe.Shared.Tests/SimulationTests.cs.meta
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="BirdCafe.Shared.csproj">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <RootNamespace>BirdCafe.Shared</RootNamespace>
+    <LangVersion>9.0</LangVersion>
+	<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<NoWarn>1591</NoWarn>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<!-- IMPORTANT: Include all scripts in the Runtime folder -->
+		<Compile Include="Runtime\**\*.cs" />
+	</ItemGroup>
+	
+  <ItemGroup>
+    <!-- If developing inside a Unity project structure, exclude .meta files -->
+    <None Remove="**/*.meta" />
+  </ItemGroup>
+
+</Project>
+</file>
+
+<file path="ConsoleApp~/BirdCafe.Shared.Console.csproj">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>BirdCafe.ConsoleApp</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Reference the Shared Library -->
+    <ProjectReference Include="..\BirdCafe.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
+</file>
+
+<file path="ConsoleApp~/Screens/ChatScreens.cs">
+using BirdCafe.Shared;
+using BirdCafe.Shared.ViewModels;
+using System;
+using System.Text.RegularExpressions;
+
+namespace BirdCafe.ConsoleApp.Screens
+{
+    public static class ChatScreens
+    {
+        public static void ShowChatScreen()
+        {
+            bool stayingInChat = true;
+
+            while (stayingInChat)
+            {
+                Console.Clear();
+                Console.WriteLine("=========================================");
+                Console.WriteLine("       O R A C L E   C H A T             ");
+                Console.WriteLine("=========================================");
+
+                var node = BirdCafeGame.Instance.GetCurrentChatNode();
+
+                // Simple parser to strip TMP tags for Console display
+                string cleanText = StripTags(node.OracleText);
+                Console.WriteLine("\nORACLE: " + cleanText + "\n");
+                
+                Console.WriteLine("-----------------------------------------");
+                for (int i = 0; i < node.Options.Count; i++)
+                {
+                    var opt = node.Options[i];
+                    Console.WriteLine($"{i + 1}. {opt.ResponseText}");
+                }
+                Console.WriteLine("-----------------------------------------");
+
+                Console.Write("\nChoose an option (or Q to Force Quit Chat): ");
+                var key = Console.ReadKey(true);
+
+                if (char.ToUpper(key.KeyChar) == 'Q')
+                {
+                    stayingInChat = false;
+                }
+                else if (char.IsDigit(key.KeyChar))
+                {
+                    int idx = int.Parse(key.KeyChar.ToString()) - 1;
+                    if (idx >= 0 && idx < node.Options.Count)
+                    {
+                        var selected = node.Options[idx];
+                        if (selected.IsExit)
+                        {
+                            stayingInChat = false;
+                        }
+                        else
+                        {
+                            BirdCafeGame.Instance.SelectChatOption(idx);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static string StripTags(string input)
+        {
+            // Regex to remove <...> tags
+            return Regex.Replace(input, "<.*?>", string.Empty);
+        }
+    }
+}
+</file>
+
+<file path="ConsoleApp~/Screens/ChatScreens.cs.meta">
+fileFormatVersion: 2
+guid: 8d73d68b85f5b104fbbaf80e00acc59d
+</file>
 
 <file path="llm-instructions.md">
 ## 1. Output-file syntax (mandatory for new or replacement files)
@@ -1086,379 +1203,9 @@ Generic event log entry for significant in-game occurrences.
 * Short Text Description or Payload giving additional detail
 </file>
 
-<file path="llm-instructions.md.meta">
-fileFormatVersion: 2
-guid: f34da6767c160ae45ad0d06e07e3ec67
-</file>
-
-<file path="birdcafe-shared.xml.meta">
-fileFormatVersion: 2
-guid: 6f63eb53870e547499771e159f348266
-</file>
-
-<file path="BirdCafe.Shared.csproj">
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <RootNamespace>BirdCafe.Shared</RootNamespace>
-    <LangVersion>9.0</LangVersion>
-	<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>1591</NoWarn>
-  </PropertyGroup>
-
-	<ItemGroup>
-		<!-- IMPORTANT: Include all scripts in the Runtime folder -->
-		<Compile Include="Runtime\**\*.cs" />
-	</ItemGroup>
-	
-  <ItemGroup>
-    <!-- If developing inside a Unity project structure, exclude .meta files -->
-    <None Remove="**/*.meta" />
-  </ItemGroup>
-
-</Project>
-</file>
-
-<file path="BirdCafe.Shared.csproj.meta">
-fileFormatVersion: 2
-guid: 62f45f7dd9123a14e826ec7a879f0ed7
-</file>
-
-<file path="BirdCafe.Shared.sln.meta">
-fileFormatVersion: 2
-guid: c6604bd8edb54934fa2f16cbf0241d89
-</file>
-
-<file path="build-llm.bat">
-repomix --instruction-file-path "llm-instructions.md" -o birdcafe-shared.xml
-</file>
-
-<file path="build-llm.bat.meta">
-fileFormatVersion: 2
-guid: 911342232acb80445adee6ade8a7ae81
-</file>
-
-<file path="ConsoleApp~/BirdCafe.Shared.Console.csproj">
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <RootNamespace>BirdCafe.ConsoleApp</RootNamespace>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <!-- Reference the Shared Library -->
-    <ProjectReference Include="..\BirdCafe.Shared.csproj" />
-  </ItemGroup>
-
-</Project>
-</file>
-
-<file path="package.json.meta">
-fileFormatVersion: 2
-guid: e8783cbc33972104fa73d24319e7e75a
-</file>
-
-<file path="README.md.meta">
-fileFormatVersion: 2
-guid: e34da79d2c160ae45ad0d06e07e3ec68
-</file>
-
-<file path="Runtime/BirdCafe.Shared.asmdef.meta">
-fileFormatVersion: 2
-guid: 2e2ede89ab5779d4fb72d6fc7ae94d09
-AssemblyDefinitionImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine.meta">
-fileFormatVersion: 2
-guid: ef22e418c07b40340a860e5165e34813
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine/BirdCafeController.cs.meta">
-fileFormatVersion: 2
-guid: 85593eb8327ad7940b8eefd459f7ca9c
-</file>
-
-<file path="Runtime/Engine/BirdCafeGame.cs.meta">
-fileFormatVersion: 2
-guid: b8e16bc1b63ed91429b74258646e56ce
-</file>
-
-<file path="Runtime/Engine/EngineResult.cs.meta">
-fileFormatVersion: 2
-guid: a95de792fae91a84f852503c4d647be7
-</file>
-
-<file path="Runtime/Engine/Managers.meta">
-fileFormatVersion: 2
-guid: c9390947241afed40951b59eb4b6b1cc
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine/Managers/CareManager.cs.meta">
-fileFormatVersion: 2
-guid: d673d68b85f5b104fbbaf80e00acc59b
-</file>
-
-<file path="Runtime/Engine/Managers/MetaManager.cs.meta">
-fileFormatVersion: 2
-guid: 8f346519650f1de4aa7cf5dcb3b1723b
-</file>
-
-<file path="Runtime/Engine/Managers/PlanningManager.cs.meta">
-fileFormatVersion: 2
-guid: 8d1bff1eb6af0e94a8ae8d7755375a69
-</file>
-
-<file path="Runtime/Engine/Managers/ReportingManager.cs.meta">
-fileFormatVersion: 2
-guid: 27ec8f6044cd6f848a7ca4dd7c6383a3
-</file>
-
-<file path="Runtime/Engine/Managers/SimulationManager.cs.meta">
-fileFormatVersion: 2
-guid: 14f94a940557a11478ab209825ce128f
-</file>
-
-<file path="Runtime/Engine/Utils.meta">
-fileFormatVersion: 2
-guid: 6bdeec41fb147e14fb12e1cb1c68588c
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine/Utils/BirdFactory.cs.meta">
-fileFormatVersion: 2
-guid: 932011d9014e16049bb7a3e2e569bcfd
-</file>
-
-<file path="Runtime/Engine/Utils/EconomyHelper.cs.meta">
-fileFormatVersion: 2
-guid: f71fd8af99e773a408e990d1cefce1b1
-</file>
-
-<file path="Runtime/Enums.meta">
-fileFormatVersion: 2
-guid: 8488d5a9bed8dfd4bb1cad4cce648829
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
 <file path="Runtime/Enums/GameEnums.cs.meta">
 fileFormatVersion: 2
 guid: 841310f38e7c2b645987c145f5cc698d
-</file>
-
-<file path="Runtime/GameSave.cs.meta">
-fileFormatVersion: 2
-guid: 1ab43a6c4d858734bbb798ec6c10cac7
-</file>
-
-<file path="Runtime/Models.meta">
-fileFormatVersion: 2
-guid: 955b866bc7197ea4bb9572c68769a7f3
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Birds.meta">
-fileFormatVersion: 2
-guid: 52fb0763dc226e8409de4ea96cc1199d
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Birds/Bird.cs.meta">
-fileFormatVersion: 2
-guid: 41adfaeeaa374b74e82c9ad71987e1ef
-</file>
-
-<file path="Runtime/Models/Birds/BirdComponents.cs.meta">
-fileFormatVersion: 2
-guid: 3b00b3cc6e946c742b3654a35d2208c3
-</file>
-
-<file path="Runtime/Models/Cafe.meta">
-fileFormatVersion: 2
-guid: b0a729f1e24d8e844abd4acd5a9efa62
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Cafe/CafeState.cs.meta">
-fileFormatVersion: 2
-guid: 29dc592297a61594d9c4c1fa635d3546
-</file>
-
-<file path="Runtime/Models/Economy.meta">
-fileFormatVersion: 2
-guid: 878d22a1f20c43945b99d89e2e3b3d60
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Economy/Finance.cs.meta">
-fileFormatVersion: 2
-guid: bf78d875123205b458e7a3a92c9e5640
-</file>
-
-<file path="Runtime/Models/Economy/Inventory.cs.meta">
-fileFormatVersion: 2
-guid: d3ba7ac08885ea94c8b1cf9f5e821652
-</file>
-
-<file path="Runtime/Models/Meta.meta">
-fileFormatVersion: 2
-guid: 80e36b6943d59b44db6e904eb78ff93b
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Meta/GameConfig.cs.meta">
-fileFormatVersion: 2
-guid: fdf1e07d12e30004a8a802c5165ed396
-</file>
-
-<file path="Runtime/Models/Meta/Player.cs.meta">
-fileFormatVersion: 2
-guid: c87810ac12fc40647adf46f1ac9bfe30
-</file>
-
-<file path="Runtime/Models/Simulation.meta">
-fileFormatVersion: 2
-guid: 8c58645a43dde1944ae2a8d92e104c9a
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/Models/Simulation/DayCycle.cs.meta">
-fileFormatVersion: 2
-guid: cf015fe16fd44fa4f86215ba3fe14660
-</file>
-
-<file path="Runtime/Models/Simulation/SimulationModels.cs.meta">
-fileFormatVersion: 2
-guid: de35170492f419e4b9b0a400b01a42ba
-</file>
-
-<file path="Runtime/Models/Simulation/Summaries.cs.meta">
-fileFormatVersion: 2
-guid: 8e06e4384f8a3ea4db7de6614d61b45f
-</file>
-
-<file path="Runtime/ViewModels.meta">
-fileFormatVersion: 2
-guid: 705bac6ac213e20449146319630257fc
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Runtime/ViewModels/ChatViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 20a87649ef78478393be7827a3373d7a
-</file>
-
-<file path="Runtime/ViewModels/EveningViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 17f5767ff6039d64fa0f6b7a6ce0071a
-</file>
-
-<file path="Runtime/ViewModels/GeneralViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 4e5a921b09e118349b0fdfa507f14dcb
-</file>
-
-<file path="Runtime/ViewModels/ReportViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 5eac0cbb4e59af346bf907b157b7a717
-</file>
-
-<file path="Runtime/ViewModels/SimulationViewModels.cs.meta">
-fileFormatVersion: 2
-guid: 07a0e9a2fefdf724b89ec69b53be1815
-</file>
-
-<file path="Runtime/ViewModels/TutorialViewModel.cs.meta">
-fileFormatVersion: 2
-guid: e6defdb0577b4a6eb491248b9f8f918b
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests.meta">
-fileFormatVersion: 2
-guid: 50f7dca3059f1d44e97aa913cd5c972d
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests/bin.meta">
-fileFormatVersion: 2
-guid: cd4ae631052cf48408ee6f3c336a4f99
-folderAsset: yes
-DefaultImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
 </file>
 
 <file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef">
@@ -1486,16 +1233,6 @@ DefaultImporter:
 }
 </file>
 
-<file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef.meta">
-fileFormatVersion: 2
-guid: ecd6d41297ad7b4419018d54682c2980
-AssemblyDefinitionImporter:
-  externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant:
-</file>
-
 <file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj">
 <Project Sdk="Microsoft.NET.Sdk">
 
@@ -1517,25 +1254,24 @@ AssemblyDefinitionImporter:
 </Project>
 </file>
 
-<file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj.meta">
+<file path="birdcafe-shared.xml.meta">
 fileFormatVersion: 2
-guid: bd0f2a8d34802a646b33df6ab018855b
-</file>
-
-<file path="Tests/BirdCafe.Shared.Tests/obj.meta">
-fileFormatVersion: 2
-guid: 0fd370b6b48d1094596ca85825c4eca3
-folderAsset: yes
-DefaultImporter:
+guid: 3ebba554a20d256438a1d63ce7f7988e
+TextScriptImporter:
   externalObjects: {}
   userData: 
   assetBundleName: 
   assetBundleVariant:
 </file>
 
-<file path="Tests/BirdCafe.Shared.Tests/SimulationTests.cs.meta">
+<file path="BirdCafe.Shared.csproj.meta">
 fileFormatVersion: 2
-guid: 4eae16f8a2e8b1a4fbf5fbab30927d7e
+guid: c7de52b5080c637408335a6dc79be757
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
 </file>
 
 <file path="BirdCafe.Shared.sln">
@@ -1577,6 +1313,30 @@ Global
 EndGlobal
 </file>
 
+<file path="BirdCafe.Shared.sln.meta">
+fileFormatVersion: 2
+guid: 517ee31353c28e2468ede4cc6473bb2d
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="build-llm.bat">
+repomix --instruction-file-path "llm-instructions.md" -o birdcafe-shared.xml
+</file>
+
+<file path="build-llm.bat.meta">
+fileFormatVersion: 2
+guid: 106fa6b031ec9644eaba6d16b418eee4
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="ConsoleApp~/Screens/TutorialScreens.cs">
 using BirdCafe.Shared;
 using System;
@@ -1609,6 +1369,36 @@ namespace BirdCafe.ConsoleApp.Screens
 }
 </file>
 
+<file path="llm-instructions.md.meta">
+fileFormatVersion: 2
+guid: 32f6606e37b833047a1871928481f64f
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="package.json.meta">
+fileFormatVersion: 2
+guid: 2fe892a723cb64d41a914c8c1da98d6c
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="README.md.meta">
+fileFormatVersion: 2
+guid: 4e915819016bdba489337ed840db64c2
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="Runtime/BirdCafe.Shared.asmdef">
 {
     "name": "BirdCafe.Shared",
@@ -1624,6 +1414,16 @@ namespace BirdCafe.ConsoleApp.Screens
     "versionDefines": [],
     "noEngineReferences": true
 }
+</file>
+
+<file path="Runtime/BirdCafe.Shared.asmdef.meta">
+fileFormatVersion: 2
+guid: 22051c317b51b294c9ae1b6b9a845c92
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
 </file>
 
 <file path="Runtime/Engine/BirdCafeController.cs">
@@ -1687,6 +1487,8 @@ namespace BirdCafe.Shared.Engine
             Care = new CareManager(this);
             Planning = new PlanningManager(this);
             Reporting = new ReportingManager(this);
+
+            Meta.StartNewGame("FBLA Judge", "FBLA Cafe");
         }
 
         /// <summary>
@@ -1712,6 +1514,16 @@ namespace BirdCafe.Shared.Engine
         }
     }
 }
+</file>
+
+<file path="Runtime/Engine/BirdCafeController.cs.meta">
+fileFormatVersion: 2
+guid: 6ebd654dbfc7ef04d968c50f54a81ee1
+</file>
+
+<file path="Runtime/Engine/BirdCafeGame.cs.meta">
+fileFormatVersion: 2
+guid: b7e4a5db163fcea49bc4041481d14d51
 </file>
 
 <file path="Runtime/Engine/EngineResult.cs">
@@ -1767,6 +1579,36 @@ namespace BirdCafe.Shared.Engine
 }
 </file>
 
+<file path="Runtime/Engine/EngineResult.cs.meta">
+fileFormatVersion: 2
+guid: 7bb28fd21fae98e4cb791980aabbbe6c
+</file>
+
+<file path="Runtime/Engine/Managers/CareManager.cs.meta">
+fileFormatVersion: 2
+guid: 57e1d6661860dcc4cb05db94a5023677
+</file>
+
+<file path="Runtime/Engine/Managers/MetaManager.cs.meta">
+fileFormatVersion: 2
+guid: d26a429480af97d4b86f96d5a948ad39
+</file>
+
+<file path="Runtime/Engine/Managers/PlanningManager.cs.meta">
+fileFormatVersion: 2
+guid: 48239a8eab7a8e441879d556a463af4f
+</file>
+
+<file path="Runtime/Engine/Managers/ReportingManager.cs.meta">
+fileFormatVersion: 2
+guid: 814c9ee34e884484a9ca7a89f24c0118
+</file>
+
+<file path="Runtime/Engine/Managers/SimulationManager.cs.meta">
+fileFormatVersion: 2
+guid: eb6638d5cafc0b34aa541def049136d3
+</file>
+
 <file path="Runtime/Engine/Utils/BirdFactory.cs">
 using BirdCafe.Shared.Models.Birds;
 
@@ -1800,6 +1642,464 @@ namespace BirdCafe.Shared.Engine.Utils
         }
     }
 }
+</file>
+
+<file path="Runtime/Engine/Utils/BirdFactory.cs.meta">
+fileFormatVersion: 2
+guid: ccc72238a271793448c435fbd45119ab
+</file>
+
+<file path="Runtime/Engine/Utils/ChatData.cs">
+using BirdCafe.Shared.ViewModels;
+using System.Collections.Generic;
+using System;
+
+namespace BirdCafe.Shared.Engine.Utils
+{
+    /// <summary>
+    /// Static data container for the Oracle's dialogue tree.
+    /// Refactored to ensure no node exceeds 5 options.
+    /// </summary>
+    public static class ChatData
+    {
+        public const string ROOT_ID = "ROOT";
+        private static readonly Dictionary<string, ChatMessage> _nodes = new Dictionary<string, ChatMessage>();
+        private static readonly Random _rng = new Random();
+
+        private static readonly List<string> _exitPhrases = new List<string>
+        {
+            "Maybe let's talk about something else later.",
+            "I think I've heard enough for now.",
+            "I need to get back to the cafe.",
+            "Let's pause this conversation.",
+            "I'm good for now, thanks!",
+            "Got it. Catch you later.",
+            "I have birds to feed, bye!",
+            "Let's chat again some other time.",
+            "That's all the info I need.",
+            "Thanks, Oracle. See ya!"
+        };
+
+        static ChatData()
+        {
+            BuildDialogueTree();
+        }
+
+        public static ChatMessage GetNode(string id)
+        {
+            if (_nodes.ContainsKey(id)) return _nodes[id];
+            return _nodes[ROOT_ID];
+        }
+
+        private static void BuildDialogueTree()
+        {
+            // --- ROOT (5 Options MAX) ---
+            Add(ROOT_ID,
+                "<size=120%>Greetings, Bird Boss!</size>\nI am the <color=#00AA00>Oracle of the Aviary</color>. I know everything about running a Bird Cafe. What wisdom do you seek today?",
+                "Tell me about Customizing my birds.", "Custom_Intro",
+                "How do I take care of them?", "Care_Intro",
+                "I want to make more money!", "Money_Intro",
+                "How do I win this game?", "Strat_Intro",
+                "Misc Mechanics / Lore", "Mech_Hub");
+
+            // =================================================================================
+            // BRANCH 1: CUSTOMIZATION
+            // =================================================================================
+            Add("Custom_Intro",
+                "Making the cafe yours starts with your team! You can change names, species, and colors. It's not just about looks; it's about <color=#FF00FF>personality</color>.",
+                "Does species matter?", "Custom_Species",
+                "Tell me about names.", "Custom_Names",
+                "Back to main topics.", ROOT_ID);
+
+            // Refactored to link to Species Hub to save space
+            Add("Custom_Species",
+                "Absolutely! A <color=#FF0000>Cardinal</color> might be energetic, while an <color=#555555>Owl</color> is wise but sleepy. Choosing the right species changes your cafe's vibe.",
+                "Show me specific bird types...", "Species_Hub",
+                "What about visuals?", "Custom_Visuals",
+                "Do they have special skills?", "Custom_Skills",
+                "Back to customization.", "Custom_Intro");
+
+            Add("Species_Hub", "Select a species to learn more:",
+                 "Sparrow Info", "Lore_Sparrow",
+                 "Bluejay Info", "Lore_Bluejay",
+                 "Robin Info", "Lore_Robin",
+                 "Owl Info", "Lore_Owl",
+                 "Back to Species", "Custom_Species");
+
+            Add("Custom_Visuals",
+                "You can dye their feathers! Primary and secondary colors. Want a <color=#00FF00>neon green</color> sparrow? Go for it. Customers love unique birds.",
+                "Does color affect popularity?", "Custom_ColorPop",
+                "What about hats?", "Custom_Accessory",
+                "Back to species info.", "Custom_Species");
+
+            Add("Custom_ColorPop",
+                "Directly? No. But a cool looking bird makes <i>you</i> happy, and a happy Boss makes better decisions!",
+                "Fair point. Accessories?", "Custom_Accessory",
+                "Okay, let's talk names.", "Custom_Names",
+                "Back to visuals.", "Custom_Visuals");
+
+            Add("Custom_Accessory",
+                "Hats, glasses, aprons! Accessories are the ultimate flex. Some might even give small stat boosts in the future.",
+                "How do I unlock them?", "Custom_Unlock",
+                "Can I craft them?", "Custom_Craft",
+                "Back to visuals.", "Custom_Visuals");
+
+            Add("Custom_Unlock",
+                "You unlock items by leveling up your cafe Popularity or surviving many weeks. Keep playing!",
+                "Cool. What about skills?", "Custom_Skills",
+                "Let's talk money.", "Money_Intro",
+                "Back to accessories.", "Custom_Accessory");
+
+            Add("Custom_Craft",
+                "Not yet! But maybe a crafty bird could learn... for now, just buy them or unlock them.",
+                "Okay, unlocking info?", "Custom_Unlock",
+                "Back to accessories.", "Custom_Accessory");
+
+            Add("Custom_Skills",
+                "Birds have <color=#00AA00>Traits</color>. Some eat less, some work faster. Traits are permanent, so choose your eggs wisely!",
+                "Can I change traits?", "Custom_TraitChange",
+                "What is the best trait?", "Custom_BestTrait",
+                "Back to species.", "Custom_Species");
+
+            Add("Custom_TraitChange",
+                "Nope! A bird is who they are. You must love them for their quirks, even if they are a <color=#FF0000>Glutton</color>.",
+                "What does Glutton do?", "Custom_Glutton",
+                "What is the best trait?", "Custom_BestTrait",
+                "Back to skills.", "Custom_Skills");
+
+            Add("Custom_Glutton",
+                "A Glutton gets hungry 2x faster! But they get a huge mood boost from snacks. High maintenance, high reward.",
+                "Interesting. Other traits?", "Custom_BestTrait",
+                "Let's talk Care.", "Care_Intro",
+                "Back to trait changing.", "Custom_TraitChange");
+
+            Add("Custom_BestTrait",
+                "There is no 'best'. <color=#00AA00>Fast Learner</color> is good for profit. <color=#00AA00>Friendly</color> is good for Popularity. Balance your team!",
+                "I want a Friendly bird.", "Custom_Intro",
+                "I want a Fast bird.", "Custom_Intro",
+                "Back to skills.", "Custom_Skills");
+
+            Add("Custom_Names",
+                "Naming is powerful. <i>Sir Chirps</i> sounds professional. <i>Peanut</i> sounds cute. It sets the tone!",
+                "Can I rename them?", "Custom_Rename",
+                "Do customers see names?", "Custom_CustSeeName",
+                "Back to Intro.", "Custom_Intro");
+
+            Add("Custom_Rename",
+                "Yes! You can rename your birds in the evening menu. Identity theft is not a crime for birds.",
+                "Good to know.", "Custom_Names",
+                "Back to names.", "Custom_Names");
+
+            Add("Custom_CustSeeName",
+                "They do! If a bird gives bad service, customers might leave a review mentioning <i>Peanut</i> by name. Yikes.",
+                "I better train Peanut.", "Care_Intro",
+                "I'll rename him.", "Custom_Rename",
+                "Back to naming.", "Custom_Names");
+
+            // =================================================================================
+            // BRANCH 2: CARE
+            // =================================================================================
+            Add("Care_Intro",
+                "Care is the heartbeat of the cafe. You have 4 main tools: <color=#00AA00>Feed, Play, Rest, and Vet</color>.",
+                "Tell me about Food.", "Care_Feed",
+                "Tell me about Health.", "Care_Health",
+                "Back to Main Menu.", ROOT_ID);
+
+            // Refactored: Moved deep mechanics to sub-menu to keep option count <= 5
+            Add("Care_Feed",
+                "Food fuels the flight! Hunger drops every day. If it hits 0, your bird takes <color=#FF0000>Health Damage</color> from starvation.",
+                "Hunger/Starve Mechanics...", "Care_Food_Deep",
+                "Does food cost money?", "Care_FoodCost",
+                "Do they like specific food?", "Care_FoodPref",
+                "Back to Care.", "Care_Intro");
+
+            Add("Care_Food_Deep", "Details on Hunger Mechanics:",
+                "Hunger Logic", "Care_Deep_Hunger",
+                "Starvation Penalty", "Care_Deep_Starve",
+                "Back to Feed", "Care_Feed");
+
+            Add("Care_Deep_Hunger", "Hunger affects Mood. A hungry bird is a grumpy bird (-Mood/hr). Keep them fed!",
+                "Okay", "Care_Feed", "Back", "Care_Feed");
+            Add("Care_Deep_Starve", "Starvation kicks in at 0 Hunger. It causes massive HP loss. It's cruel. Don't do it.",
+                "I won't", "Care_Feed", "Back", "Care_Feed");
+
+            Add("Care_FoodCost",
+                "Yes. Basic seeds are cheap ($5). Premium treats cost more but boost Mood too. Budget for it!",
+                "What if I run out of money?", "Money_Bankrupt",
+                "Tell me about Play.", "Care_Play",
+                "Back to Food.", "Care_Feed");
+
+            Add("Care_FoodPref",
+                "Currently, they all eat standard cafe bird mix. It's nutritious and delicious.",
+                "Easy enough.", "Care_Feed",
+                "Back to Food.", "Care_Feed");
+
+            Add("Care_Play",
+                "All work and no play makes a bird <color=#0000FF>Sad</color>. Sad birds work slower and are rude to customers.",
+                "How do I play?", "Care_HowPlay",
+                "Does playing cost money?", "Care_PlayCost",
+                "Back to Care.", "Care_Intro");
+
+            Add("Care_HowPlay",
+                "In the Evening menu, select 'Play'. It takes energy but boosts Mood massively. Use it on grumpy birds.",
+                "It takes energy?", "Care_Energy",
+                "Got it.", "Care_Play",
+                "Back to Play info.", "Care_Play");
+
+            Add("Care_PlayCost",
+                "Usually, playing is free! It just costs time and Energy. It's the best way to fix a bad mood on a budget.",
+                "That's good.", "Care_Play",
+                "Let's talk Money.", "Money_Intro",
+                "Back to Play info.", "Care_Play");
+
+            Add("Care_Energy",
+                "Energy is stamina. Working drains it. Playing drains it. Only <color=#00AA00>Rest</color> restores it fully.",
+                "Tell me about Rest.", "Care_Rest",
+                "What happens if Energy is low?", "Care_LowEnergy",
+                "Back to Play.", "Care_HowPlay");
+
+            Add("Care_Rest",
+                "You can toggle a bird to 'Rest' for the next day. They won't work, but they will recover tons of Energy and de-stress.",
+                "Can they work 7 days a week?", "Care_Overwork",
+                "Do they eat while resting?", "Care_RestEat",
+                "Back to Energy.", "Care_Energy");
+
+            Add("Care_Overwork",
+                "You monster! I mean... yes, but they will burn out, get sick, and hate you. Rotation is key.",
+                "I'll be nice.", "Care_Rest",
+                "I need profits though!", "Money_Intro",
+                "Back to Rest.", "Care_Rest");
+
+            Add("Care_RestEat",
+                "Yes, resting birds still get hungry. Never stop feeding them!",
+                "Understood.", "Care_Rest",
+                "Back to Rest.", "Care_Rest");
+
+            Add("Care_LowEnergy",
+                "Low energy increases the chance of <color=#FF0000>Sickness</color>. Tired birds have weak immune systems.",
+                "Tell me about Sickness.", "Care_Sick",
+                "How do I fix Energy?", "Care_Rest",
+                "Back to Energy.", "Care_Energy");
+
+            Add("Care_Health",
+                "Health is life. If it drops, use the Vet immediately. Low health leads to... well, let's not go there.",
+                "How much is the Vet?", "Care_VetCost",
+                "Can I cure them with food?", "Care_FoodCure",
+                "Back to Care.", "Care_Intro");
+
+            Add("Care_Sick",
+                "Sickness is a status. A sick bird loses health daily and infects others. Quarantine them by Resting them!",
+                "How do I cure it?", "Care_Vet",
+                "Can they work while sick?", "Care_SickWork",
+                "Back to Energy.", "Care_LowEnergy");
+
+            Add("Care_SickWork", "Technically yes, unless they are Severely Sick. But they will infect others and make customers sad.", "Okay", "Care_Sick", "Back", "Care_Sick");
+            Add("Care_FoodCure", "No. Food helps prevent sickness by keeping stats high, but only the Vet can cure an active illness.", "Okay", "Care_Health", "Back", "Care_Health");
+
+            Add("Care_Vet",
+                "Select 'Vet Visit' in the menu. It heals them and cures sickness instantly. Modern medicine is amazing.",
+                "Is it expensive?", "Care_VetCost",
+                "Back to Sickness.", "Care_Sick",
+                "Back to Care.", "Care_Intro");
+
+            Add("Care_VetCost",
+                "It is pricey ($50+). This is why you need an Emergency Fund. Don't spend all your profit on merch!",
+                "I'll save up.", "Strat_Fund",
+                "Ouch.", "Care_Health",
+                "Back to Vet.", "Care_Vet");
+
+            // =================================================================================
+            // BRANCH 3: MONEY
+            // =================================================================================
+            Add("Money_Intro",
+                "Cash rules the cafe. You earn by selling Coffee, Baked Goods, and Merch. You lose money on Stock and Care.",
+                "What sells best?", "Money_Products",
+                "How do I stop losing money?", "Money_Loss",
+                "Back to Main Menu.", ROOT_ID);
+
+            Add("Money_Products",
+                "Coffee is steady. Baked Goods are popular but spoil. <color=#00AA00>Merch</color> is pure profit but sells slowly.",
+                "Tell me about Spoilage.", "Money_Spoil",
+                "Should I buy tons of Merch?", "Money_MerchStrat",
+                "Back to Money.", "Money_Intro");
+
+            Add("Money_Spoil",
+                "Coffee and Muffins go bad at midnight. If you buy 50 and sell 10, you wasted money on 40. Planning is everything!",
+                "How do I predict sales?", "Strat_Reports",
+                "That sounds hard.", "Money_Products",
+                "Back to Products.", "Money_Products");
+
+            Add("Money_MerchStrat",
+                "Merch doesn't spoil! It sits on the shelf until sold. It's a safe investment if you have extra cash.",
+                "I'll stock up.", "Money_Products",
+                "Back to Products.", "Money_Products");
+
+            Add("Money_Loss",
+                "You lose money if: 1. You waste food (Inventory). 2. Your birds are sick (Vet bills). 3. You have no customers (Popularity).",
+                "How to fix Popularity?", "Strat_Vibe",
+                "How to fix Waste?", "Money_Spoil",
+                "Back to Money.", "Money_Intro");
+
+            Add("Money_Bankrupt",
+                "If you can't afford food or coffee stock... it's Game Over. The cafe closes. Keep a buffer!",
+                "How much buffer?", "Strat_Fund",
+                "I'll be careful.", "Money_Intro",
+                "Back to previous.", "Money_Intro");
+
+            // =================================================================================
+            // BRANCH 4: STRATEGY
+            // =================================================================================
+            Add("Strat_Intro",
+                "Winning requires brain power. Three pillars: <color=#00AA00>Emergency Fund, Vibe Balance, and Data</color>.",
+                "The Emergency Fund?", "Strat_Fund",
+                "Balancing the Vibe?", "Strat_Vibe",
+                "Using Data?", "Strat_Reports",
+                "Back to Main Menu.", ROOT_ID);
+
+            Add("Strat_Fund",
+                "Keep at least $60 in the bank. That covers one Vet visit ($50) plus food ($5) and coffee stock ($5).",
+                "That's a lot.", "Strat_Intro",
+                "What if I spend it?", "Money_Bankrupt",
+                "Back to Strategy.", "Strat_Intro");
+
+            Add("Strat_Vibe",
+                "If birds are Sad, they work slow. Customers wait too long and leave angry. Popularity drops. It's a death spiral!",
+                "How to fix it?", "Care_Play",
+                "What if birds are happy?", "Strat_Happy",
+                "Back to Strategy.", "Strat_Intro");
+
+            Add("Strat_Happy",
+                "Happy birds get tips (maybe) and boost Popularity. High Popularity = More Customers = More Money.",
+                "I want that.", "Strat_Vibe",
+                "Back to Vibe.", "Strat_Vibe");
+
+            Add("Strat_Reports",
+                "Check the Evening Summary. If you see 'Wasted: 20', buy 20 less tomorrow. Adjust until waste is zero.",
+                "Simple math.", "Strat_Intro",
+                "Does history matter?", "Strat_History",
+                "Back to Strategy.", "Strat_Intro");
+
+            Add("Strat_History",
+                "Yes! Look at the last 7 days. Is the trend going up? Buy more. Going down? Buy less.",
+                "I feel smart.", "Strat_Reports",
+                "Back to Reports.", "Strat_Reports");
+
+            // =================================================================================
+            // MECHANICS & LORE
+            // =================================================================================
+            Add("Mech_Hub", "Here are some loose ends about how the game world works.",
+                "Time Mechanics?", "Mech_Time",
+                "Saving the Game?", "Mech_Save",
+                "Decorations?", "Mech_Decor",
+                "More Topics...", "Mech_Hub2"); // Paging to keep options < 5
+
+            Add("Mech_Hub2", "More mechanics info:",
+                "Weeks & Milestones?", "Mech_Week",
+                "Failure Conditions?", "Mech_Fail",
+                "Lore & Responsibility?", "Lore_Intro",
+                "Back to Hub 1", "Mech_Hub");
+
+            Add("Mech_Time", "Time moves only when the Simulation runs. Take all the time you need to plan in the Evening.", "Okay", "Mech_Hub");
+            Add("Mech_Save", "The game saves automatically in memory, but use 'Save Game' to keep it on disk.", "Okay", "Mech_Hub");
+            Add("Mech_Decor", "Decorations unlock automatically. You don't place them, they just appear to make the cafe pretty.", "Okay", "Mech_Hub");
+            Add("Mech_Week", "Weeks act as milestones. Surviving Week 1 is your first major achievement.", "Okay", "Mech_Hub2");
+            Add("Mech_Fail", "Failure is part of learning. If you go bankrupt, try again with a cheaper strategy.", "Okay", "Mech_Hub2");
+
+            Add("Lore_Intro",
+                "Being a Bird Boss is about responsibility. These pixel birds depend on you entirely.",
+                "It's just a game.", "Lore_Game",
+                "I love them.", "Lore_Love",
+                "Back to Main Menu.", ROOT_ID);
+
+            Add("Lore_Game",
+                "Is it? You practice budgeting, care, and planning here. Those are real life skills, Boss!",
+                "True.", "Lore_Intro",
+                "Back to Lore.", "Lore_Intro");
+
+            Add("Lore_Love",
+                "That's the spirit! A loved bird works hard. Treat them as partners, not employees.",
+                "They are my friends.", "Lore_Intro",
+                "Back to Lore.", "Lore_Intro");
+
+            // --- BIRD SPECIFICS (Leaves) ---
+            Add("Lore_Sparrow", "Sparrows are the backbone of the workforce. Reliable, standard stats, loves seeds.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Bluejay", "Bluejays are loud! High Friendliness but they get Stressed easily by crowds.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Robin", "Robins are early birds. High Energy recovery, but lower base Productivity.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Owl", "Owls work best at night... wait, we aren't open at night. They are just sleepy but very Wise (High XP gain).", "Neat", "Species_Hub", "Back", "Species_Hub");
+        }
+
+        /// <summary>
+        /// Helper to add a node with 4 standard options (Deep, Deep, Back, Exit).
+        /// </summary>
+        private static void Add(string id, string text, string opt1, string target1, string opt2, string target2, string backText, string backTarget)
+        {
+            var msg = new ChatMessage
+            {
+                StateId = id,
+                OracleText = text,
+                Options = new List<ChatResponseOption>
+                {
+                    new ChatResponseOption { ResponseText = opt1, NextStateId = target1 },
+                    new ChatResponseOption { ResponseText = opt2, NextStateId = target2 },
+                    new ChatResponseOption { ResponseText = backText, NextStateId = backTarget },
+                    new ChatResponseOption { ResponseText = GetRandomExitPhrase(), NextStateId = ROOT_ID, IsExit = true }
+                }
+            };
+            _nodes[id] = msg;
+        }
+
+        /// <summary>
+        /// Helper to add a node with arbitrary options (params).
+        /// Format: Text, OptionText, TargetId, OptionText, TargetId...
+        /// Automatically adds Exit button ONLY if options < 5 and it's not ROOT.
+        /// </summary>
+        private static void Add(string id, string text, params string[] args)
+        {
+            var msg = new ChatMessage
+            {
+                StateId = id,
+                OracleText = text,
+                Options = new List<ChatResponseOption>()
+            };
+
+            for (int i = 0; i < args.Length; i += 2)
+            {
+                if (i + 1 < args.Length)
+                {
+                    msg.Options.Add(new ChatResponseOption
+                    {
+                        ResponseText = args[i],
+                        NextStateId = args[i + 1],
+                        IsExit = false
+                    });
+                }
+            }
+
+            // Add a dedicated exit button to every node except ROOT if there's room
+            if (id != ROOT_ID && msg.Options.Count < 5)
+            {
+                msg.Options.Add(new ChatResponseOption
+                {
+                    ResponseText = GetRandomExitPhrase(),
+                    NextStateId = ROOT_ID,
+                    IsExit = true
+                });
+            }
+
+            _nodes[id] = msg;
+        }
+
+        private static string GetRandomExitPhrase()
+        {
+            return _exitPhrases[_rng.Next(_exitPhrases.Count)];
+        }
+    }
+}
+</file>
+
+<file path="Runtime/Engine/Utils/ChatData.cs.meta">
+fileFormatVersion: 2
+guid: 2f765e10ec043dc4481d59106ef81ea6
 </file>
 
 <file path="Runtime/Engine/Utils/EconomyHelper.cs">
@@ -1854,6 +2154,21 @@ namespace BirdCafe.Shared.Engine.Utils
         }
     }
 }
+</file>
+
+<file path="Runtime/Engine/Utils/EconomyHelper.cs.meta">
+fileFormatVersion: 2
+guid: d878f48b3fdaf114e95bc2e75cfbbbdc
+</file>
+
+<file path="Runtime/GameSave.cs.meta">
+fileFormatVersion: 2
+guid: 258773e426e49f2419b87356deeba451
+</file>
+
+<file path="Runtime/Models/Birds/Bird.cs.meta">
+fileFormatVersion: 2
+guid: a0c37b125ced771449f40459c5eb1c10
 </file>
 
 <file path="Runtime/Models/Birds/BirdComponents.cs">
@@ -1984,6 +2299,11 @@ namespace BirdCafe.Shared.Models.Birds
 }
 </file>
 
+<file path="Runtime/Models/Birds/BirdComponents.cs.meta">
+fileFormatVersion: 2
+guid: 84b778ccae0ca01448a199a1bda227aa
+</file>
+
 <file path="Runtime/Models/Cafe/CafeState.cs">
 using BirdCafe.Shared.Models.Economy;
 using System;
@@ -2023,6 +2343,11 @@ namespace BirdCafe.Shared.Models.Cafe
         public List<string> UnlockedDecorationIds { get; set; } = new List<string>();
     }
 }
+</file>
+
+<file path="Runtime/Models/Cafe/CafeState.cs.meta">
+fileFormatVersion: 2
+guid: 818d44bd51edb51458c3ce011839b7fe
 </file>
 
 <file path="Runtime/Models/Economy/Finance.cs">
@@ -2098,6 +2423,11 @@ namespace BirdCafe.Shared.Models.Economy
 }
 </file>
 
+<file path="Runtime/Models/Economy/Finance.cs.meta">
+fileFormatVersion: 2
+guid: 20d445ff4df9c744dbe73e4463bf52ce
+</file>
+
 <file path="Runtime/Models/Economy/Inventory.cs">
 using BirdCafe.Shared.Enums;
 using System;
@@ -2168,6 +2498,16 @@ namespace BirdCafe.Shared.Models.Economy
         public int QuantityRolledOver { get; set; }
     }
 }
+</file>
+
+<file path="Runtime/Models/Economy/Inventory.cs.meta">
+fileFormatVersion: 2
+guid: 7a56110d4ce8636448e77337ddce5360
+</file>
+
+<file path="Runtime/Models/Meta/GameConfig.cs.meta">
+fileFormatVersion: 2
+guid: 6d8b8f36010faf44ea2016e49627ad79
 </file>
 
 <file path="Runtime/Models/Meta/Player.cs">
@@ -2261,6 +2601,11 @@ namespace BirdCafe.Shared.Models.Meta
         public System.Collections.Generic.List<string> NarrativeMilestones { get; set; } = new System.Collections.Generic.List<string>();
     }
 }
+</file>
+
+<file path="Runtime/Models/Meta/Player.cs.meta">
+fileFormatVersion: 2
+guid: 3c8fe8d67c69e8b4a880bd4498275110
 </file>
 
 <file path="Runtime/Models/Simulation/DayCycle.cs">
@@ -2357,6 +2702,16 @@ namespace BirdCafe.Shared.Models.Simulation
         public string Notes { get; set; }
     }
 }
+</file>
+
+<file path="Runtime/Models/Simulation/DayCycle.cs.meta">
+fileFormatVersion: 2
+guid: 44a5c4b3d14ab3b4fac716ec8711de57
+</file>
+
+<file path="Runtime/Models/Simulation/SimulationModels.cs.meta">
+fileFormatVersion: 2
+guid: baab6fd96e2a0104eacbe55bead833ed
 </file>
 
 <file path="Runtime/Models/Simulation/Summaries.cs">
@@ -2481,38 +2836,24 @@ namespace BirdCafe.Shared.Models.Simulation
 }
 </file>
 
-<file path="Runtime/ViewModels/ChatViewModels.cs">
-using System;
+<file path="Runtime/Models/Simulation/Summaries.cs.meta">
+fileFormatVersion: 2
+guid: 126c755fc1ba39d47a8f1236f8cb5fe3
+</file>
 
-namespace BirdCafe.Shared.ViewModels
-{
-    /// <summary>
-    /// Represents a single message in the chat interface.
-    /// </summary>
-    [Serializable]
-    public class ChatMessage
-    {
-        /// <summary>
-        /// The name of the person sending the message.
-        /// </summary>
-        public string Sender { get; set; }
+<file path="Runtime/ViewModels/ChatViewModels.cs.meta">
+fileFormatVersion: 2
+guid: be0cfeaaa5b03e444ac7293880dfc81f
+</file>
 
-        /// <summary>
-        /// The message text.
-        /// </summary>
-        public string Content { get; set; }
+<file path="Runtime/ViewModels/EveningViewModels.cs.meta">
+fileFormatVersion: 2
+guid: ecfbc094a635f5247bbc93b0a1af1c19
+</file>
 
-        /// <summary>
-        /// When it was sent.
-        /// </summary>
-        public DateTime Timestamp { get; set; }
-
-        /// <summary>
-        /// True if sent by the human player.
-        /// </summary>
-        public bool IsUser { get; set; }
-    }
-}
+<file path="Runtime/ViewModels/GeneralViewModels.cs.meta">
+fileFormatVersion: 2
+guid: e7b82035238f10b459ecce68d4f15ddb
 </file>
 
 <file path="Runtime/ViewModels/ReportViewModels.cs">
@@ -2571,6 +2912,16 @@ namespace BirdCafe.Shared.ViewModels
 }
 </file>
 
+<file path="Runtime/ViewModels/ReportViewModels.cs.meta">
+fileFormatVersion: 2
+guid: 819e4684d36968f4fba4d14432f2f7cf
+</file>
+
+<file path="Runtime/ViewModels/SimulationViewModels.cs.meta">
+fileFormatVersion: 2
+guid: 6b222ec82d6ee644a9cef23f9ce9aa53
+</file>
+
 <file path="Runtime/ViewModels/TutorialViewModel.cs">
 using System;
 using System.Collections.Generic;
@@ -2611,6 +2962,11 @@ namespace BirdCafe.Shared.ViewModels
         public string Description { get; set; }
     }
 }
+</file>
+
+<file path="Runtime/ViewModels/TutorialViewModel.cs.meta">
+fileFormatVersion: 2
+guid: 6e002045a9385ae48840e2b9d5f39ddd
 </file>
 
 <file path="Tests/BirdCafe.Shared.Tests/SimulationTests.cs">
@@ -2706,127 +3062,6 @@ namespace BirdCafe.Shared.Tests
             var lastEntry = _controller.CurrentState.Economy.Ledger.Last();
             Assert.AreEqual(-5.0m, lastEntry.Amount);
             Assert.AreEqual("Inventory Restock", lastEntry.Reason);
-        }
-    }
-}
-</file>
-
-<file path="ConsoleApp~/Program.cs">
-using BirdCafe.Shared;
-using BirdCafe.Shared.ViewModels;
-using System;
-
-namespace BirdCafe.ConsoleApp
-{
-    class Program
-    {
-        // State tracking for the console loop
-        private static bool _isRunning = true;
-        private static GameScreen _currentScreen = GameScreen.MainMenu;
-
-        static void Main(string[] args)
-        {
-            Console.Title = "Bird Cafe - Console Edition";
-
-            // 1. Setup Hooks
-            BirdCafeGame.Instance.OnScreenChanged += HandleScreenChange;
-
-            BirdCafeGame.Instance.OnToastMessage += (msg) =>
-            {
-                var oldColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"\n>>> ALERT: {msg} <<<\n");
-                Console.ForegroundColor = oldColor;
-                Console.WriteLine("(Press any key to continue...)");
-                Console.ReadKey();
-            };
-
-            BirdCafeGame.Instance.OnHelpPopup += (msg) =>
-            {
-                var oldColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"\n>>> HELP: {msg} <<<\n");
-                Console.ForegroundColor = oldColor;
-                Console.WriteLine("(Press any key to close help...)");
-                Console.ReadKey();
-            };
-
-            BirdCafeGame.Instance.OnChatPopup += () =>
-            {
-                var oldColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"\n>>> CHAT: (Placeholder for Chat UI) <<<\n");
-                Console.ForegroundColor = oldColor;
-                Console.WriteLine("(Press any key to close chat...)");
-                Console.ReadKey();
-            };
-
-            BirdCafeGame.Instance.OnMoneyChanged += (amount) =>
-            {
-                // In a console app, we can't easily update a header in real-time 
-                // without clearing screen, so we ignore this for now or log it.
-            };
-
-            // 2. Game Loop
-            while (_isRunning)
-            {
-                try
-                {
-                    DrawCurrentScreen();
-                }
-                catch (Exception ex)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"CRITICAL ERROR: {ex.Message}");
-                    Console.WriteLine(ex.StackTrace);
-                    Console.ResetColor();
-                    Console.ReadLine();
-                    _isRunning = false;
-                }
-            }
-        }
-
-        private static void HandleScreenChange(GameScreen newScreen)
-        {
-            _currentScreen = newScreen;
-        }
-
-        private static void DrawCurrentScreen()
-        {
-            // Route to specific screen logic
-            switch (_currentScreen)
-            {
-                case GameScreen.MainMenu:
-                    Screens.MetaScreens.ShowMainMenu();
-                    break;
-                case GameScreen.LoadGame:
-                    Screens.MetaScreens.ShowLoadGame();
-                    break;
-                case GameScreen.Tutorial:
-                    Screens.TutorialScreens.ShowTutorial();
-                    break;
-                case GameScreen.DayIntro:
-                    Screens.SimulationScreens.ShowDayIntro();
-                    break;
-                case GameScreen.DaySimulation:
-                    Screens.SimulationScreens.RunSimulationPlayback();
-                    break;
-                case GameScreen.EveningSummary:
-                    Screens.EveningScreens.ShowDailySummary();
-                    break;
-                case GameScreen.EveningCare:
-                    Screens.EveningScreens.ShowCareDashboard();
-                    break;
-                case GameScreen.EveningPlanning:
-                    Screens.EveningScreens.ShowPlanning();
-                    break;
-                case GameScreen.WeeklySummary:
-                    Screens.ReportScreens.ShowWeeklyReport();
-                    break;
-                case GameScreen.GameOver:
-                    Screens.ReportScreens.ShowGameOver();
-                    break;
-            }
         }
     }
 }
@@ -3314,944 +3549,15 @@ namespace BirdCafe.ConsoleApp.Screens
 }
 </file>
 
-<file path="README.md">
-## 1. Output-file syntax (mandatory for new or replacement files)
-
-When the user requests code, wrap each file in a single **`output` block** so automation scripts know where to save it.
-
-````markdown
-```output
-<files>
-  <file path="src/RizzyUI/Components/Fancy/RzFancyThing/RzFancyThing.cs">
-  // C#
-  </file>
-
-  <file path="src/RizzyUI/Components/Fancy/RzFancyThing/RzFancyThing2.cs">
-  // C# 
-  </file>
-
-  <file path="src/RizzyUI/Components/Fancy/RzFancyThing/Styling/DefaultRzFancyThingStyles.cs">
-  // C#
-  </file>
-</files>
-```
-````
-
-* Never nest `<files>` elements.
-* Always close every `<file>` tag.
-* If no new files are needed, **omit** the `output` block entirely.
-
-
-Here is the design specification:
-
----
-
-# Bird Cafe – Game Design Document (Revised)
-
-## 1. Overview
-
-**Title:** Bird Cafe
-**Genre:** Cozy pet-management + light business simulation
-**Platform:** Unity (initial focus on desktop; adaptable to others)
-
-**Core Concept:**
-You run a small cafe staffed by birds. Each day, customers arrive and are served by your birds, buying Coffee, Baked Goods, and Themed Merch. After watching the day play out, you spend the evening caring for your birds and planning inventory and staffing for the next day. Happy, healthy, well-managed birds lead to better service, more customers, and higher profits. Neglect or poor planning can cause your cafe to struggle or shut down.
-
-### 1.1 Day Structure
-
-* **Each day begins with a work day simulation.**
-
-  * The cafe opens, customers show up, birds serve them.
-  * Product sales and customer experiences are simulated.
-* **Evening is for care and planning.**
-
-  * You review the day’s performance.
-  * You care for birds (feed, play, rest, vet).
-  * You plan inventory purchases and which birds will work the next day.
-
-### 1.2 Special Rules for Day 1 and Weeks
-
-* **Day 1:**
-
-  * Occurs on a **Monday**.
-  * The player starts with a **preset amount of Coffee** and watches the first simulation with no prior planning (tutorial-like).
-  * After the Day 1 simulation ends, the player gets their first evening phase and starts making real decisions.
-* **Days & Weeks:**
-
-  * Days are numbered: **Day 1, Day 2, Day 3, ...**
-  * Each day also has a day-of-week label (e.g., Monday, Tuesday).
-  * **Weeks are recorded as Sunday–Saturday** for summary and reporting:
-
-    * Weekly summaries always cover Sunday through Saturday.
-    * Day 1 (Monday) falls into its appropriate Sunday–Saturday week window.
-
----
-
-## 2. Design Goals
-
-### 2.1 Gameplay Goals
-
-* Provide a **relaxed, visually appealing** experience with short, satisfying daily cycles.
-* Keep the systems straightforward but deep enough to support multiple weeks of play:
-
-  * Few product categories: Coffee, Baked Goods, Themed Merch.
-  * Clear connections between decisions and outcomes.
-* Encourage players to think about:
-
-  * Resource management (money, inventory).
-  * The trade-off between caring for birds and maximizing profit.
-
-### 2.2 Educational Goals
-
-* Illustrate the **cost of pet care**:
-
-  * Food and basic supplies.
-  * Vet visits and health care.
-  * Toys and enrichment.
-  * Cosmetic and functional upgrades.
-* Demonstrate **budgeting and consequences**:
-
-  * Overspending on inventory or care can reduce profit.
-  * Underspending on care leads to unhealthy, unhappy birds, which harms the business over time.
-* Reinforce that **animals are responsibilities**, not just decorations.
-
----
-
-## 3. Target Audience
-
-* **Age:** Middle school and up, including families and casual players.
-* **Experience:** Suitable for players with little or no management-game experience.
-* **Educational Use:** Can support classroom discussions about:
-
-  * Personal finance and budgeting.
-  * Planning and forecasting.
-  * Responsibility in pet ownership.
-
----
-
-## 4. Core Loop & Day Flow
-
-### 4.1 Daily Flow
-
-Each in-game day follows this structure:
-
-**1. Work Day Simulation (Start of Day)**
-The game automatically begins the day’s simulation:
-
-* The cafe opens for business.
-* Customers arrive over time based on:
-
-  * The cafe’s **Popularity**.
-  * A **Popularity-to-Customer factor** defined in the configuration.
-  * Some randomness to keep days varied.
-* Each customer wants to buy something:
-
-  * Coffee
-  * Baked Goods
-  * Themed Merch
-* Birds serve customers:
-
-  * Birds’ **Productivity**, **Friendliness**, and **Reliability** (all on 1–100 scales) determine:
-
-    * How quickly they can serve.
-    * How many customers they can handle.
-    * How often errors or slowdowns occur.
-  * Birds’ **Mood**, **Health**, **Hunger**, **Energy**, and **Stress** (also on 1–100 scales) influence these stats.
-* The simulation resolves:
-
-  * How many items are sold.
-  * How many customers leave unserved.
-  * How much income is earned.
-  * How much perishable inventory is wasted.
-  * Changes to cafe Popularity.
-  * Changes to each bird’s state (tiredness, hunger, mood, sickness chance).
-
-The player primarily watches during this phase; it is a visual payoff for prior planning.
-
----
-
-**2. Evening Phase (Care, Planning, and Budgeting)**
-
-After the work day simulation ends, the evening begins. The evening is the core decision-making time.
-
-**2.1 Review the Day**
-
-* Summary of the day:
-
-  * Customers arrived, served, and lost.
-  * Sales of Coffee, Baked Goods, and Themed Merch.
-  * Wasted Coffee and Baked Goods.
-  * Total income and expenses for the day.
-  * Net profit.
-  * Change in Popularity.
-* Quick snapshot of each bird:
-
-  * Mood, Health, Hunger, Energy, Stress before and after the day (or current state).
-
-**2.2 Care for Birds**
-
-The player selects care actions for each bird. Care actions adjust 1–100 attributes:
-
-* **Feed:**
-
-  * Increases Hunger (toward 100, “full”).
-  * Can improve Health and Mood slightly, depending on food quality.
-* **Play:**
-
-  * Increases Mood and may reduce Stress.
-  * Uses some Energy.
-* **Rest:**
-
-  * The player can mark a bird as resting for the next day.
-  * This recovers Energy and can lower Stress.
-  * Resting birds do not work during the next day’s simulation.
-* **Vet Visit:**
-
-  * Used if a bird is sick or at risk.
-  * Has a monetary cost.
-  * Improves Health and can remove sickness status.
-  * The bird may need to rest afterward and not work next day.
-
-Care decisions directly influence how birds will perform in the next simulation, as well as their likelihood of sickness and mood swings.
-
-**2.3 Plan and Budget for the Next Day**
-
-The player sets the **Daily Plan** for the next day:
-
-* Inventory planning:
-
-  * Quantity of **Coffee** to purchase.
-  * Quantity of **Baked Goods** to purchase.
-  * Quantity of **Themed Merch** to purchase.
-* Staffing:
-
-  * Which birds will work tomorrow.
-  * Which birds will rest tomorrow.
-* Budgeting:
-
-  * An optional self-imposed **daily budget limit** that the player tries not to exceed (for learning purposes).
-* Price awareness:
-
-  * Each product type has a **base sale price** defined in the game configuration.
-  * The player can see these prices.
-  * Future versions of the game may allow the player to adjust sale prices for the next day, but for now price control is a planned extension, not a core mechanic.
-
-When the player confirms the evening decisions, the Daily Plan is saved and will govern the next day’s work day simulation.
-
----
-
-## 5. Systems Design
-
-### 5.1 Bird System
-
-Each bird is central to the game and has:
-
-**Identity and Progression**
-
-* Name (chosen by the player).
-* Species (which may affect base stats or appearance).
-* Age stage (e.g., hatchling, juvenile, adult).
-* Level and experience, which may gradually increase stats through good care and work.
-
-**State Attributes (All on 1–100 Scales)**
-
-* **Mood:**
-
-  * 1 = extremely angry or sad, 100 = ecstatic.
-  * Influenced by care (feeding, play), workload, sickness, and stress.
-* **Health:**
-
-  * 1 = very sick, 100 = perfectly healthy.
-  * Affects likelihood of becoming or staying sick, and ability to work.
-* **Hunger:**
-
-  * 1 = starving, 100 = fully fed.
-  * Low Hunger increases sickness chance and reduces mood and performance.
-* **Energy:**
-
-  * 1 = exhausted, 100 = fully rested.
-  * Low Energy reduces productivity and may increase mistakes.
-* **Stress:**
-
-  * 1 = completely calm, 100 = extremely stressed.
-  * High Stress reduces mood and reliability, can lead to more frequent negative events.
-
-**Work Stats (Also on 1–100 Scales)**
-
-* **Productivity:**
-
-  * How many customers a bird can realistically serve in a day.
-* **Friendliness:**
-
-  * How much each successful interaction improves customer satisfaction and Popularity.
-* **Reliability:**
-
-  * How often the bird avoids mistakes, spills, and delays.
-
-**Customization & Traits**
-
-* Visual customization:
-
-  * Primary feather color.
-  * Secondary feather color.
-  * Beak color.
-  * Costume.
-  * Accessories (e.g., hats, glasses, apron).
-* Traits:
-
-  * Permanent modifiers that shape play style, such as:
-
-    * “Fast Learner” (gains productivity more quickly).
-    * “Shy” (less impact on popularity but gets stressed more slowly).
-    * “Glutton” (loses Hunger faster but gains more Mood from feeding).
-
-**Sickness & Availability**
-
-* Birds can become sick, especially when:
-
-  * Hunger is low.
-  * Energy is low.
-  * They are repeatedly overworked or not given rest.
-* A severely sick bird may not be available to work the next day.
-* Vet visits can cure sickness but cost money.
-
----
-
-### 5.2 Products & Inventory System
-
-The cafe sells only three product categories:
-
-* **Coffee**
-* **Baked Goods**
-* **Themed Merch** (mugs, posters, t-shirts)
-
-**Perishability**
-
-* **Coffee** and **Baked Goods** are **perishable**:
-
-  * They are purchased for a specific day via the Daily Plan.
-  * Unsold units at the end of the day are **wasted** and removed from inventory.
-* **Themed Merch** is **non-perishable**:
-
-  * It remains in inventory across days until sold.
-  * It has a single standard price defined by the game configuration.
-
-**Pricing**
-
-* The game configuration defines a **base sale price** for:
-
-  * Coffee
-  * Baked Goods
-  * Themed Merch
-* These base prices are used during sales.
-* The design anticipates that **future versions** may allow the player or advanced systems to adjust sale prices for the next day, but this is not required for the initial implementation.
-
----
-
-### 5.3 Customers & Popularity
-
-**Popularity (1–100)**
-
-* A single value that represents how attractive the cafe is to customers.
-* Affects:
-
-  * The base number of customers that will arrive each day.
-  * The chance of special or high-value customers.
-* Changes due to:
-
-  * Good service (short waits, birds in good mood and health).
-  * Poor service (long waits, errors, unserved customers).
-  * Visible bird issues (very unhappy or sick birds may hurt reputation).
-
-**Popularity-to-Customer Factor**
-
-* Defined in the Game Configuration:
-
-  * A numeric factor that determines how much Popularity increases the number of customers.
-  * For example, higher Popularity multiplies with this factor to raise daily customer counts.
-* Combined with:
-
-  * A baseline customer count.
-  * A random variance to keep days unpredictable.
-
-**Customer Behavior**
-
-* Customers arrive during the work day simulation.
-* Each customer:
-
-  * Has a preferred product type (Coffee, Baked Goods, or Themed Merch).
-  * Tries to purchase that product if it is in stock and a bird is able to serve them.
-* Possible outcomes:
-
-  * If served successfully:
-
-    * The appropriate product is sold.
-    * Income is earned.
-    * Popularity may increase based on bird performance.
-  * If not served in time, or if product is unavailable:
-
-    * The customer leaves.
-    * Popularity may decrease.
-
-Different abstract “customer types” may exist (regulars, super fans, critics, special guests), each with slightly different spending patterns and popularity effects.
-
----
-
-### 5.4 Cost-of-Care & Economy
-
-The economy tracks:
-
-* **Income:**
-
-  * Primarily from sales of Coffee, Baked Goods, and Themed Merch.
-* **Expenses:**
-
-  * Inventory purchases (all product categories).
-  * Bird food and supplies.
-  * Toys and enrichment activities.
-  * Vet visits and treatments.
-  * Cosmetic and functional upgrades for birds.
-
-A **ledger** records each transaction, including:
-
-* Amount (positive for income, negative for expense).
-* Reason and category.
-* Related products or birds, if applicable.
-
-**Budgeting:**
-
-* During the evening, the player plans the next day’s spending.
-* The player may choose an internal daily budget limit for themselves.
-* The game does not enforce savings goals, but the ledger and summaries make it easy to see how different spending choices affect profitability.
-
----
-
-### 5.5 Weekly Summary & Feedback
-
-Every week (Sunday–Saturday), the game generates a Weekly Summary:
-
-* **Financial Overview:**
-
-  * Total income.
-  * Total care-related expenses.
-  * Total inventory-related expenses.
-  * Net profit for the week.
-* **Bird Welfare:**
-
-  * Average Health (1–100).
-  * Average Mood (1–100).
-* **Business Health:**
-
-  * Total change in Popularity over the week.
-  * Average customers per day.
-* **Narrative Feedback:**
-
-  * A short paragraph describing the week.
-  * Highlights of major trends (e.g., “You wasted many baked goods” or “Your birds stayed mostly healthy and energized.”)
-
-The weekly summary helps players see the longer-term impact of their care and budgeting decisions.
-
----
-
-### 5.6 Progression & Failure
-
-**Progression:**
-
-* New birds can be introduced over time (e.g., new eggs).
-* Birds can level up and become more productive.
-* The cafe can unlock:
-
-  * New thematic merch or cosmetic items.
-  * Special visitors or small narrative events.
-
-**Failure Conditions:**
-
-* If the player’s money balance becomes too low to:
-
-  * Purchase minimal necessary inventory for the next day AND
-  * Afford basic care costs for the birds,
-* Or if Popularity falls so low that almost no customers arrive:
-
-  * The cafe effectively cannot operate.
-* In such cases:
-
-  * The game shows a clear summary of what led to the shutdown (spending patterns, care/neglect, popularity collapse).
-
----
-
-## 6. User Interface & Flow (High-Level)
-
-### 6.1 Work Day Simulation Screen
-
-* Visible elements:
-
-  * Current day number and day-of-week.
-  * Current Popularity value.
-  * Brief display of birds currently working.
-  * Real-time counters for:
-
-    * Customers arrived.
-    * Customers served.
-    * Customers lost.
-    * Coffee sold.
-    * Baked Goods sold.
-    * Themed Merch sold.
-    * Current income for the day.
-* The player mostly watches; this is the payoff for prior evening decisions.
-
-### 6.2 Evening Screen
-
-* **Day Summary Panel:**
-
-  * Profit or loss for the day.
-  * Items sold and wasted.
-  * Change in Popularity.
-* **Bird Care Panel:**
-
-  * List of birds.
-  * Current values for Mood, Health, Hunger, Energy, Stress (1–100).
-  * Buttons or controls for:
-
-    * Feed, Play, Rest, Vet Visit.
-  * Clear display of the cost and expected attribute changes for each action.
-* **Next-Day Plan Panel:**
-
-  * Controls to set purchase quantities for:
-
-    * Coffee
-    * Baked Goods
-    * Themed Merch
-  * Controls to mark which birds will work and which will rest tomorrow.
-  * Optional field or indicator for a self-imposed daily budget target.
-* **Money & Overview Panel:**
-
-  * Current money balance.
-  * High-level breakdown of today’s expenses (care vs inventory).
-  * Simple indication if the player is trending toward profit or loss.
-
-### 6.3 Weekly Summary Screen
-
-* Presented at the end of each Saturday (or when a week’s days are complete).
-* Shows:
-
-  * Financial totals and net profit.
-  * Bird welfare averages.
-  * Popularity trend.
-  * A short narrative summary.
-
----
-
-## 7. Data Model / Object Definitions (No Code)
-
-This section lists all objects that need structured data, and their properties, in plain language. Attribute scales of **1–100** are used where specified.
-
-### 7.1 Global / Meta Objects
-
-#### Object: Game Save
-
-Represents a complete snapshot of the current game.
-
-* Save Identifier
-* Schema Version (for migration if data structures change in the future)
-* Current Day Number (Day 1, Day 2, etc.)
-* Current Day-of-Week Name (Monday, Tuesday, etc.)
-* Current Week Number
-* Flag: Day 1 Intro/Tutorial Completed (yes/no)
-* Player Profile (linked object)
-* Player Preferences (linked object)
-* Cafe State (linked object)
-* Economy State (linked object)
-* List of Bird objects owned by the player
-* Story State (linked object)
-* List of Day Summaries for past days
-* List of Weekly Summaries for past weeks
-
----
-
-#### Object: Player Profile
-
-Identifies and describes the player.
-
-* Player Identifier
-* Player Display Name
-* Creation Date and Time of the profile
-* Starting Funds value used for this profile
-
----
-
-#### Object: Player Preferences
-
-Player-specific settings.
-
-* Tutorials Enabled (yes/no)
-* Tooltips/Hints Enabled (yes/no)
-* Text or UI Scale (for readability)
-* Animations Enabled (yes/no)
-* Preferred Language or Locale Code
-
----
-
-#### Object: Game Configuration
-
-Tunable game-wide values and base settings.
-
-* Base Number of Customers per Day at neutral Popularity
-* Popularity-to-Customer Factor
-
-  * A numeric factor that determines how strongly Popularity affects daily customer count.
-* Default Starting Inventory for Day 1
-
-  * For example, initial Coffee quantity so the player can watch the first day.
-* Baseline Sickness Chance per Bird per Day
-* Multipliers that adjust sickness chance based on:
-
-  * Low Hunger
-  * Low Energy
-* Base Sale Price for Coffee
-* Base Sale Price for Baked Goods
-* Base Sale Price for Themed Merch
-* Baseline cost values for:
-
-  * Bird food and basic supplies
-  * Toys and enrichment activities
-  * Vet visits and treatments
-  * Upgrades and customizations
-* Definition of Week Boundaries (Sunday–Saturday) for summary aggregation
-
----
-
-### 7.2 Cafe & Economy Objects
-
-#### Object: Cafe
-
-Current state of the cafe business.
-
-* Cafe Name
-* Current Popularity (1–100)
-* Inventory State (linked object)
-* List of Unlocked Product Variants, if any (e.g., special blends or themed baked goods)
-* List of Unlocked Decorations or Themed Elements (visual flavor, even if not tracked as a numeric decor level)
-
----
-
-#### Object: Inventory State
-
-Tracks product stocks.
-
-* Coffee Inventory Entry (linked object)
-* Baked Goods Inventory Entry (linked object)
-* Themed Merch Inventory Entry (linked object)
-
----
-
-#### Object: Product Inventory Entry
-
-Data for a single product category.
-
-* Product Type (Coffee, Baked Goods, Themed Merch)
-* Quantity on Hand (current stock)
-* Current Sale Price per Unit (often equal to the base sale price, unless adjusted in a future extension)
-* Average Cost Basis per Unit (what the player effectively paid, used for analysis)
-* Perishable Flag (true for Coffee and Baked Goods, false for Themed Merch)
-* Quantity Purchased for the Current Day (for tracking waste)
-* Quantity Left Over from Previous Days (relevant mainly for Themed Merch; often zero for perishables)
-
----
-
-#### Object: Economy State
-
-Overall financial status of the game.
-
-* Current Money Balance
-* List of Ledger Entries representing all transactions
-
----
-
-#### Object: Ledger Entry
-
-One financial transaction.
-
-* Ledger Entry Identifier
-* Date and Time of Transaction
-* Amount (positive for income, negative for expense)
-* Reason (e.g., product sale, inventory purchase, food purchase, vet bill, toy purchase, upgrade purchase, refund, other)
-* Expense Category (e.g., food and supplies, vet care, toys and activities, upgrades and customization, inventory for Coffee, inventory for Baked Goods, inventory for Themed Merch, miscellaneous)
-* Related Product Type, if applicable
-* Related Bird Identifier, if applicable (for bird-specific costs like vet care)
-* Short Description explaining the transaction in plain language
-
----
-
-### 7.3 Bird & Care Objects
-
-#### Object: Bird
-
-Represents one bird in the game.
-
-**Identity & Progression**
-
-* Bird Identifier
-* Name chosen by the player
-* Species Identifier
-* Age Stage (e.g., hatchling, juvenile, adult)
-* Level (progression level)
-* Experience Points accumulated
-
-**State Attributes (1–100)**
-
-* Mood (1–100; 1 = very unhappy, 100 = ecstatic)
-* Health (1–100; 1 = very sick, 100 = perfectly healthy)
-* Hunger (1–100; 1 = starving, 100 = fully fed)
-* Energy (1–100; 1 = exhausted, 100 = fully rested)
-* Stress (1–100; 1 = calm, 100 = extremely stressed)
-
-**Work Stats (1–100)**
-
-* Productivity (1–100; how many customers they can effectively serve)
-* Friendliness (1–100; how positive their interactions are for Popularity)
-* Reliability (1–100; how rarely they make mistakes)
-
-**Flags & Work Assignment**
-
-* Currently Sick Flag (yes/no)
-* Severely Sick Flag (yes/no) – cannot or should not work when true
-* Assigned Day Off for Next Day (yes/no)
-* Worked During Last Simulation Day (yes/no)
-
-**Customization**
-
-* Primary Feather Color
-* Secondary Feather Color
-* Beak Color
-* Costume Identifier
-* List of Accessory Identifiers (hats, glasses, apron, etc.)
-
-**Traits & Equipment**
-
-* List of Bird Traits (linked objects)
-* List of Equipped Items (linked objects)
-
----
-
-#### Object: Bird Trait
-
-A permanent characteristic of a bird.
-
-* Trait Type (e.g., Fast Learner, Shy, Glutton, Friendly, Stoic, Clumsy)
-* Trait Description (what it means in plain language)
-* Gameplay Impact Description (how it affects stats or behavior, in general terms)
-
----
-
-#### Object: Equipped Item
-
-An item used or worn by a bird.
-
-* Item Identifier
-* Display Name
-* Item Category (e.g., purely cosmetic, productivity booster, friendliness booster, reliability booster, mixed)
-* Productivity Bonus (how much it improves productivity, if relevant)
-* Friendliness Bonus (how much it improves friendliness, if relevant)
-* Reliability Bonus (how much it improves reliability, if relevant)
-* Special Conditions (text description, such as “only active when bird is healthy” or “only during special events”)
-
----
-
-#### Object: Care Action Template
-
-Defines a type of care action the player can perform in the evening.
-
-* Care Action Identifier (e.g., feed basic food, play with toy, vet visit)
-* Display Name
-* Monetary Cost to perform the action
-* List of Attribute Changes applied when used, such as:
-
-  * Hunger increase
-  * Mood increase
-  * Health change
-  * Energy change
-  * Stress change
-* Any Daily Use Limit or other constraints (e.g., can only use once per day per bird)
-
----
-
-#### Object: Care Action Record (Optional)
-
-Records a specific care action performed on a bird.
-
-* Day Number
-* Bird Identifier
-* Care Action Identifier (which template was used)
-* Money Spent for this action
-* Summary of Attribute Changes applied to the bird (for history and analytics)
-
----
-
-### 7.4 Time, Planning & Simulation Objects
-
-#### Object: Day State
-
-Tracks the current day’s status.
-
-* Day Number
-* Day-of-Week Name
-* Week Number
-* Flag indicating whether the work day simulation has been completed
-* Reference to the Daily Plan that governs this day
-
----
-
-#### Object: Daily Plan
-
-Represents decisions made during the evening for the next day.
-
-* Day Number this plan applies to
-* Planned Coffee Purchase Quantity for the next day
-* Planned Baked Goods Purchase Quantity for the next day
-* Planned Themed Merch Purchase Quantity for the next day
-* Optional Daily Budget Limit (a self-chosen spending cap)
-* List of Bird Identifiers assigned to work the next day
-* List of Bird Identifiers assigned to rest the next day
-* Optional Notes or Tags describing the plan strategy (for flavor or debugging)
-
----
-
-#### Object: Day Simulation Result
-
-Stores the outcome of the day’s work simulation.
-
-**High-Level Day Data**
-
-* Day Number
-* Total Customers Who Arrived
-* Total Customers Served
-* Total Customers Lost (unserved)
-
-**Product Sales & Waste**
-
-* Coffee Sold (number of units)
-* Coffee Wasted (end-of-day unsold units)
-* Baked Goods Sold
-* Baked Goods Wasted
-* Themed Merch Sold (no waste, since non-perishable)
-
-**Financial Outcome**
-
-* Total Income from sales for the day
-* Total Expenses for the day (inventory plus care actions taken earlier that affect the day)
-* Net Profit for the day
-* Popularity Change (positive or negative value)
-
-**Bird-Specific Outcomes**
-
-For each bird that exists:
-
-* Bird Identifier
-* Worked Today (yes/no)
-* Number of Customers Served by this bird (if worked)
-* Mood at Start of Day (1–100)
-* Mood at End of Day (1–100)
-* Health at Start of Day (1–100)
-* Health at End of Day (1–100)
-* Hunger at Start of Day (1–100)
-* Hunger at End of Day (1–100)
-* Energy at Start of Day (1–100)
-* Energy at End of Day (1–100)
-* Became Sick During the Day (yes/no)
-* Recovered from Sickness During the Day (yes/no)
-
-**Events**
-
-* List of Game Event Records generated during the day (see below)
-
----
-
-#### Object: Day Summary
-
-Compact day-level record used for history and weekly summaries.
-
-* Day Number
-* Day-of-Week Name
-* Week Number
-* Reference to the Day Simulation Result
-* Total Care Expenses for the Day (sum from ledger)
-* Total Inventory Expenses for the Day (sum from ledger)
-* Net Profit for the Day
-
----
-
-#### Object: Weekly Summary
-
-Aggregated report from Sunday to Saturday.
-
-* Week Number
-* First Day Number included in this week
-* Last Day Number included in this week
-
-**Financial Totals**
-
-* Total Income during the week
-* Total Care-Related Expenses (food, vet, toys, upgrades)
-* Total Inventory-Related Expenses (Coffee, Baked Goods, Themed Merch purchases)
-* Net Profit for the week
-
-**Bird Welfare**
-
-* Average Bird Health across all birds and days this week (1–100)
-* Average Bird Mood across all birds and days this week (1–100)
-
-**Business Health**
-
-* Total Popularity Change during the week
-* Average Number of Customers per Day for the week
-
-**Narrative Summary**
-
-* One or more sentences describing the week in plain language
-* Optional bullet list of notable highlights (e.g., “Bird X was sick for 3 days,” “Large waste of baked goods on Thursday”)
-
----
-
-### 7.5 Customers & Story Objects
-
-#### Object: Customer Type Definition
-
-Defines behavior of a category of customers.
-
-* Customer Type Name (e.g., Regular, Curious Visitor, Super Fan, Critic, Special Guest)
-* Typical Spending Pattern (average number of items they buy)
-* Typical Positive Popularity Impact when satisfied
-* Typical Negative Popularity Impact when dissatisfied
-* Special Behavior Notes (e.g., may give feedback, may appear at higher popularity only)
-
-*(You may not need to store each individual customer; counts by type and day are often enough.)*
-
----
-
-#### Object: Story State
-
-Tracks narrative progress and special events.
-
-* Flag indicating whether the opening “mysterious egg” story has been shown
-* Flag indicating whether the Day 1 tutorial is complete
-* List of Triggered Story Event Identifiers
-* Flags for Special Narrative Milestones (e.g., “featured in local paper”, “reached major popularity milestone”)
-
----
-
-#### Object: Game Event Record
-
-Generic event log entry for significant in-game occurrences.
-
-* Event Identifier
-* Event Type description (e.g., day started, day ended, bird got sick, bird recovered, product sold, product wasted, customer served, popularity changed, game over)
-* Date and Time of the Event
-* Day Number associated with the event
-* Week Number associated with the event
-* Related Bird Identifier, if applicable
-* Related Product Type, if applicable
-* Money Amount associated with the event, if applicable
-* Short Text Description or Payload giving additional detail
+<file path="Runtime.meta">
+fileFormatVersion: 2
+guid: ed29d4703f091bc418d6852ccee7186b
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
 </file>
 
 <file path="Runtime/Engine/Managers/MetaManager.cs">
@@ -5357,92 +4663,54 @@ namespace BirdCafe.Shared.Models.Simulation
 }
 </file>
 
-<file path="Runtime/ViewModels/GeneralViewModels.cs">
+<file path="Runtime/ViewModels/ChatViewModels.cs">
 using System;
+using System.Collections.Generic;
 
 namespace BirdCafe.Shared.ViewModels
 {
     /// <summary>
-    /// Enumerates all possible high-level screens in the game application.
+    /// Represents a single state in the Oracle dialogue tree.
     /// </summary>
-    public enum GameScreen
+    [Serializable]
+    public class ChatMessage
     {
         /// <summary>
-        /// The main start menu.
+        /// The unique ID for this conversation state.
         /// </summary>
-        MainMenu,
+        public string StateId { get; set; }
 
         /// <summary>
-        /// The load game selection screen.
+        /// The text the Oracle speaks. Supports TextMeshPro formatting.
         /// </summary>
-        LoadGame,
+        public string OracleText { get; set; }
 
         /// <summary>
-        /// The first-time user tutorial.
+        /// The available responses the player can choose from.
         /// </summary>
-        Tutorial,
-
-        /// <summary>
-        /// The morning intro banner ("Day 1 - Monday").
-        /// </summary>
-        DayIntro,
-
-        /// <summary>
-        /// The active workday simulation view.
-        /// </summary>
-        DaySimulation,
-
-        /// <summary>
-        /// The end-of-day financial summary.
-        /// </summary>
-        EveningSummary,
-
-        /// <summary>
-        /// The evening care interface (feeding/petting).
-        /// </summary>
-        EveningCare,
-
-        /// <summary>
-        /// The shop and staffing planning interface.
-        /// </summary>
-        EveningPlanning,
-
-        /// <summary>
-        /// The weekly performance report.
-        /// </summary>
-        WeeklySummary,
-
-        /// <summary>
-        /// The game over screen.
-        /// </summary>
-        GameOver
+        public List<ChatResponseOption> Options { get; set; } = new List<ChatResponseOption>();
     }
 
     /// <summary>
-    /// Represents a save file slot for the load menu.
+    /// Represents a choice the player can make in the chat.
     /// </summary>
     [Serializable]
-    public class SaveSlotViewModel
+    public class ChatResponseOption
     {
         /// <summary>
-        /// ID of the save.
+        /// The text displayed to the player for this option.
         /// </summary>
-        public string Id { get; set; }
+        public string ResponseText { get; set; }
 
         /// <summary>
-        /// Name of player in save.
+        /// The ID of the state to transition to if this option is selected.
         /// </summary>
-        public string PlayerName { get; set; }
+        public string NextStateId { get; set; }
 
         /// <summary>
-        /// Current day reached.
+        /// If true, choosing this option ends the chat session.
         /// </summary>
-        public int DayNumber { get; set; }
-
-        /// <summary>
-        /// Current week reached.
-        /// </summary>
-        public int WeekNumber { get; set; }
+        public bool IsExit { get; set; }
     }
 }
 </file>
@@ -5890,6 +5158,182 @@ FodyWeavers.xsd
 /[Mm]emoryCaptures/
 </file>
 
+<file path="ConsoleApp~/Program.cs">
+using BirdCafe.Shared;
+using BirdCafe.Shared.ViewModels;
+using System;
+
+namespace BirdCafe.ConsoleApp
+{
+    class Program
+    {
+        // State tracking for the console loop
+        private static bool _isRunning = true;
+        private static GameScreen _currentScreen = GameScreen.MainMenu;
+        private static GameScreen _previousScreen = GameScreen.MainMenu;
+
+        static void Main(string[] args)
+        {
+            Console.Title = "Bird Cafe - Console Edition";
+
+            // 1. Setup Hooks
+            BirdCafeGame.Instance.OnScreenChanged += HandleScreenChange;
+
+            BirdCafeGame.Instance.OnToastMessage += (msg) =>
+            {
+                var oldColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"\n>>> ALERT: {msg} <<<\n");
+                Console.ForegroundColor = oldColor;
+                Console.WriteLine("(Press any key to continue...)");
+                Console.ReadKey();
+            };
+
+            BirdCafeGame.Instance.OnHelpPopup += (msg) =>
+            {
+                var oldColor = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"\n>>> HELP: {msg} <<<\n");
+                Console.ForegroundColor = oldColor;
+                Console.WriteLine("(Press any key to close help...)");
+                Console.ReadKey();
+            };
+
+            BirdCafeGame.Instance.OnChatPopup += () =>
+            {
+                // In console, we handle this by treating Chat as a distinct screen
+                // We save the previous screen to return to it later if we wanted a stack,
+                // but for now the chat exits back to the current game state via flow logic or we handle it here.
+                // Actually, the easiest way for Console is to just manually invoke the screen
+                // then redraw the current screen when done.
+                
+                Screens.ChatScreens.ShowChatScreen();
+                // After chat loop finishes, we just let the main loop redraw the current screen state
+            };
+
+            BirdCafeGame.Instance.OnMoneyChanged += (amount) =>
+            {
+                // In a console app, we can't easily update a header in real-time 
+                // without clearing screen, so we ignore this for now or log it.
+            };
+
+            // 2. Game Loop
+            while (_isRunning)
+            {
+                try
+                {
+                    DrawCurrentScreen();
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"CRITICAL ERROR: {ex.Message}");
+                    Console.WriteLine(ex.StackTrace);
+                    Console.ResetColor();
+                    Console.ReadLine();
+                    _isRunning = false;
+                }
+            }
+        }
+
+        private static void HandleScreenChange(GameScreen newScreen)
+        {
+            _previousScreen = _currentScreen;
+            _currentScreen = newScreen;
+        }
+
+        private static void DrawCurrentScreen()
+        {
+            // Route to specific screen logic
+            switch (_currentScreen)
+            {
+                case GameScreen.MainMenu:
+                    Screens.MetaScreens.ShowMainMenu();
+                    break;
+                case GameScreen.LoadGame:
+                    Screens.MetaScreens.ShowLoadGame();
+                    break;
+                case GameScreen.Tutorial:
+                    Screens.TutorialScreens.ShowTutorial();
+                    break;
+                case GameScreen.DayIntro:
+                    Screens.SimulationScreens.ShowDayIntro();
+                    break;
+                case GameScreen.DaySimulation:
+                    Screens.SimulationScreens.RunSimulationPlayback();
+                    break;
+                case GameScreen.EveningSummary:
+                    Screens.EveningScreens.ShowDailySummary();
+                    break;
+                case GameScreen.EveningCare:
+                    Screens.EveningScreens.ShowCareDashboard();
+                    break;
+                case GameScreen.EveningPlanning:
+                    Screens.EveningScreens.ShowPlanning();
+                    break;
+                case GameScreen.WeeklySummary:
+                    Screens.ReportScreens.ShowWeeklyReport();
+                    break;
+                case GameScreen.GameOver:
+                    Screens.ReportScreens.ShowGameOver();
+                    break;
+                case GameScreen.Chat:
+                    // If state was somehow set to chat directly
+                    Screens.ChatScreens.ShowChatScreen();
+                    // Restore previous screen state logic manually or by just relying on game controller state
+                    // (Since Chat isn't a "GamePhase" in the engine controller, the engine is likely still in DayLoop/Evening etc)
+                    // We just loop back.
+                    break;
+            }
+        }
+    }
+}
+</file>
+
+<file path="Runtime/Engine.meta">
+fileFormatVersion: 2
+guid: f773211c804cd594cbc395b878bdf1ad
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Engine/Managers.meta">
+fileFormatVersion: 2
+guid: f36afbe8761a4b54c83adccf5f13d7a0
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Engine/Utils.meta">
+fileFormatVersion: 2
+guid: 9ea6827b178fb5e47a9850f6a3405728
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Enums.meta">
+fileFormatVersion: 2
+guid: 6d10609066c01ef4b818782e0da9a9f3
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
 <file path="Runtime/Enums/GameEnums.cs">
 using System;
 
@@ -6132,6 +5576,178 @@ namespace BirdCafe.Shared.Enums
 }
 </file>
 
+<file path="Runtime/Models.meta">
+fileFormatVersion: 2
+guid: e9386ec8307e078488d96b173a662604
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Birds.meta">
+fileFormatVersion: 2
+guid: b5399e33a3773d74bb4937b76f6ae677
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Cafe.meta">
+fileFormatVersion: 2
+guid: 7f2ffe08f8ebc744992e5a2b15a984e2
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Economy.meta">
+fileFormatVersion: 2
+guid: 9ce695e9d2a0e4346ac02ab0c99be97f
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Meta.meta">
+fileFormatVersion: 2
+guid: 7ad55240a9ebea1448e407489c27aa91
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/Models/Simulation.meta">
+fileFormatVersion: 2
+guid: 0b9a5e9dec70b9044a9e222a037f1719
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/ViewModels.meta">
+fileFormatVersion: 2
+guid: 47f0e1bcc4326f64282a293b11212e1b
+folderAsset: yes
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant:
+</file>
+
+<file path="Runtime/ViewModels/GeneralViewModels.cs">
+using System;
+
+namespace BirdCafe.Shared.ViewModels
+{
+    /// <summary>
+    /// Enumerates all possible high-level screens in the game application.
+    /// </summary>
+    public enum GameScreen
+    {
+        /// <summary>
+        /// The main start menu.
+        /// </summary>
+        MainMenu,
+
+        /// <summary>
+        /// The load game selection screen.
+        /// </summary>
+        LoadGame,
+
+        /// <summary>
+        /// The first-time user tutorial.
+        /// </summary>
+        Tutorial,
+
+        /// <summary>
+        /// The morning intro banner ("Day 1 - Monday").
+        /// </summary>
+        DayIntro,
+
+        /// <summary>
+        /// The active workday simulation view.
+        /// </summary>
+        DaySimulation,
+
+        /// <summary>
+        /// The end-of-day financial summary.
+        /// </summary>
+        EveningSummary,
+
+        /// <summary>
+        /// The evening care interface (feeding/petting).
+        /// </summary>
+        EveningCare,
+
+        /// <summary>
+        /// The shop and staffing planning interface.
+        /// </summary>
+        EveningPlanning,
+
+        /// <summary>
+        /// The weekly performance report.
+        /// </summary>
+        WeeklySummary,
+
+        /// <summary>
+        /// The game over screen.
+        /// </summary>
+        GameOver,
+
+        /// <summary>
+        /// The Oracle Chat interface.
+        /// </summary>
+        Chat
+    }
+
+    /// <summary>
+    /// Represents a save file slot for the load menu.
+    /// </summary>
+    [Serializable]
+    public class SaveSlotViewModel
+    {
+        /// <summary>
+        /// ID of the save.
+        /// </summary>
+        public string Id { get; set; }
+
+        /// <summary>
+        /// Name of player in save.
+        /// </summary>
+        public string PlayerName { get; set; }
+
+        /// <summary>
+        /// Current day reached.
+        /// </summary>
+        public int DayNumber { get; set; }
+
+        /// <summary>
+        /// Current week reached.
+        /// </summary>
+        public int WeekNumber { get; set; }
+    }
+}
+</file>
+
 <file path="Runtime/ViewModels/SimulationViewModels.cs">
 using System;
 
@@ -6216,6 +5832,229 @@ namespace BirdCafe.Shared.ViewModels
         public float PopularityDelta { get; set; }
     }
 }
+</file>
+
+<file path="README.md">
+# Bird Cafe
+Virtual Pet and Cafe Management Simulation (FBLA Introduction to Programming 2025–2026)
+
+**Developers:** Morgan Kindle, Kevin Olalia, Joshua Tanczos  
+**Project Topic:** Virtual Pet Simulation  
+**Platform:** Unity 2022.3 LTS (game UI) + C# shared simulation engine (.NET Standard 2.1)  
+**Verification Builds:** Console UI (.NET 6) + NUnit tests (.NET 6)
+
+Bird Cafe is a virtual pet experience framed as a small cafe business. Players care for a team of bird “employees” while running a simple daily operation: plan staffing, serve customers, review financial results, and keep birds healthy and happy. The game is designed to highlight tradeoffs between the **cost of care** (food, enrichment, veterinary care) and **business performance** (revenue, popularity, inventory, and net profit).
+
+## Submission contents
+- A comprehensive README (this file)
+- Complete source code for the shared engine (`Runtime/`), console verifier (`ConsoleApp~/`), and tests (`Tests/`)
+- Acknowledgement of any templates, libraries, and third-party assets used (including licenses/permissions)
+- AI-assisted code disclosure (see below)
+
+## Judge quick start (recommended paths)
+
+### Option A: Unity (visual experience)
+1. Install **Unity 2022.3 LTS** or newer (Unity Hub is recommended).
+2. Open this repository as a Unity project.
+3. Open the main menu scene (typically under `Assets/Scenes/`).
+4. Press **Play**.
+
+### Option B: Console (fast logic verification)
+1. Install the **.NET 6 SDK** (or newer): https://dotnet.microsoft.com/download
+2. From the repository root, run:
+
+```bash
+cd ConsoleApp~
+dotnet run
+
+```
+
+Console notes:
+
+-   The CLI includes a guided tutorial screen.    
+-   On most screens, press **H** for contextual help.    
+-   The chat popup key (**C**) is present as UI scaffolding and returns a mock response.
+    
+
+### Option C: Automated tests (deterministic verification)
+
+From the repository root:
+
+```bash
+dotnet test Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.csproj
+
+```
+
+## How the game works (the day loop)
+
+Bird Cafe runs on a repeatable daily cycle:
+
+1.  **Morning planning**
+    
+    -   Assign birds to **Work** or **Rest** for the day.        
+    -   Review current inventory and recent performance.
+        
+2.  **Workday simulation**
+    
+    -   Customers arrive based on cafe popularity.        
+    -   Birds on duty process orders (Coffee, Baked Goods, Themed Merch).        
+    -   Results produce revenue, inventory consumption, and performance outcomes.
+        
+3.  **Evening care**
+    
+    -   Care actions improve bird well-being and reduce risk:        
+        -   **Feed**            
+        -   **Play Time**            
+        -   **Vet Visit**            
+    -   Each action is validated against available funds.
+        
+4.  **Reporting**
+    
+    -   The game generates **daily** and **weekly** reports summarizing revenue, expenses, net profit, service performance, and bird outcomes.
+        
+
+## FBLA topic alignment (Virtual Pet Simulation)
+
+Bird Cafe implements the required topic elements as follows:
+
+### Pet customization
+
+-   Players create and name their cafe and begin with a starter bird.
+    
+
+### Care features
+
+-   **Feed:** improves hunger and supports health    
+-   **Play Time:** improves mood    
+-   **Vet Visit:** restores health and addresses sickness risk    
+-   **Rest:** handled through the planning phase by scheduling birds off-duty    
+
+### Reactions and behaviors
+
+-   Bird stats (health, hunger, mood, energy, and sickness risk) change based on care and workload.
+    
+-   Neglect and overwork produce measurable consequences that impact both bird well-being and cafe performance.
+    
+
+### Cost of care and spending tracking
+
+-   Every care action is recorded as an expense in the financial ledger.
+    
+-   Baseline care costs are configured in `Runtime/Models/Meta/GameConfig.cs`:
+    
+    -   Feed: $5.00        
+    -   Vet Visit: $50.00        
+    -   Play Time: $0.00
+        
+
+### Earning and saving
+
+-   Revenue is generated during the workday simulation through customer purchases.
+    
+-   Base product prices are configured in `Runtime/Models/Meta/GameConfig.cs`:
+    
+    -   Coffee: $3.00        
+    -   Baked Goods: $4.50        
+    -   Themed Merch: $15.00        
+
+### Reporting
+
+-   Daily and weekly reports provide a clear record of performance over time (profit/loss, customer volume, inventory usage, and bird outcomes).
+    
+
+## Architecture overview
+
+Bird Cafe is built with a clean separation between game rules and presentation.
+
+### Shared simulation engine (`BirdCafe.Shared`)
+
+The shared engine is a Unity-compatible **.NET Standard 2.1** library that contains:
+
+-   Core models (birds, cafe, economy, inventory, planning, and reports)    
+-   Deterministic simulation logic (seeded day-by-day for repeatable outcomes)    
+-   Managers for care, planning, and simulation    
+-   View models designed for UI consumption (Unity UI and the console UI)
+    
+
+Key entry points:
+
+-   `Runtime/Engine/BirdCafeController.cs` — engine controller and manager coordinator    
+-   `Runtime/Engine/BirdCafeGame.cs` — higher-level facade that exposes UI-friendly operations and events    
+-   `Runtime/GameSave.cs` — serializable state container used throughout the engine    
+
+### Console reference implementation (judge-friendly)
+
+`ConsoleApp~` is a lightweight UI over the same shared engine. It is included to let judges quickly verify logic without opening Unity.
+
+### Unity front-end
+
+The Unity project provides the visual interface. Unity scripts should depend on `BirdCafe.Shared` for rules and state, not re-implement simulation logic.
+
+## Repository layout
+
+```text
+BirdCafe/
+├── Runtime/                         # BirdCafe.Shared (simulation engine)
+│   ├── Engine/                      # Controller + managers + helpers
+│   ├── Enums/                       # Game and economy enums
+│   ├── Models/                      # Birds, economy, planning, simulation summaries
+│   └── ViewModels/                  # UI-ready view models
+├── ConsoleApp~/                     # Console UI for fast evaluation
+├── Tests/                           # NUnit tests for core logic
+└── Assets/                          # Unity project assets (scenes, prefabs, UI, scripts)
+
+```
+
+## Build and run notes
+
+-   No internet connection is required to run the Unity project, console project, or tests.    
+-   `BirdCafe.Shared` targets **.NET Standard 2.1** for Unity compatibility.    
+-   The console app and tests target **.NET 6.0**.
+    
+
+## Input validation and edge cases
+
+The engine is designed to prevent invalid or inconsistent state:
+
+-   **Funds checks:** care actions validate the current balance before allowing spending.    
+-   **Stat bounds:** bird stats are clamped to safe ranges to avoid invalid values.    
+-   **Determinism:** daily simulation uses a seeded RNG so results are reproducible and testable.
+    
+
+## Third-party assets, libraries, and tools
+
+### Runtime / code libraries
+
+-   Unity 2022.3 LTS — game runtime and UI framework    
+-   .NET SDK (6+) — console application and tests    
+-   NUnit — automated testing framework
+    
+
+### Unity UI / asset packages
+
+-   Cute Kawaii GUI Pack (Ricimi, Unity Asset Store) — UI layout and widgets    
+-   Easy Tooltip (Ahmed Benlakhdhar) — tooltip/popup UX components
+    
+
+## AI-assisted development disclosure
+
+AI tools were used to accelerate repetitive code and early drafts of data models and scaffolding. All code was reviewed, debugged, and integrated by the developers to ensure correctness and alignment with FBLA requirements.
+
+-   Tools referenced during development: ChatGPT and Google Gemini    
+-   Scope of assistance: boilerplate generation, draft structures, and iterative refactoring support    
+-   Human responsibility: final design decisions, implementation integration, testing, and submission quality    
+
+## License
+
+This project is provided under the **MIT License**. See `LICENSE` in the repository.
+
+## Troubleshooting
+
+-   Unity compilation errors: verify that Unity is using a compatible scripting runtime and that the `Runtime/` assembly definition is present.
+    
+-   `dotnet` not found: install the .NET SDK and restart your terminal.
+    
+-   Tests failing unexpectedly: run `dotnet test` from the repository root so project references resolve correctly.
 </file>
 
 <file path="Runtime/Engine/Managers/CareManager.cs">
@@ -7462,212 +7301,106 @@ namespace BirdCafe.Shared
         /// </summary>
         public static BirdCafeGame Instance { get; } = new BirdCafeGame();
 
-        /// <summary>
-        /// The internal controller that manages game logic and state.
-        /// </summary>
         private readonly BirdCafeController _controller;
-
-        /// <summary>
-        /// Tracks the current screen being displayed to the user.
-        /// </summary>
         private GameScreen _currentScreen = GameScreen.MainMenu;
-
-        /// <summary>
-        /// Caches the results of the last simulation run so we don't have to recalculate it if the UI refreshes.
-        /// </summary>
         private DaySimulationResult _cachedSimResult;
 
+        // --- NEW CHAT STATE ---
         /// <summary>
-        /// Provides direct controller access, if needed for advanced debugging or extensions.
+        /// The ID of the current conversation node in the Oracle Chat.
         /// </summary>
-        public BirdCafeController Controller => _controller;
+        public string CurrentChatStateKey { get; private set; } = ChatData.ROOT_ID;
 
-        /// <summary>
-        /// Gets the current screen/phase of the game.
-        /// </summary>
+        public BirdCafeController Controller => _controller;
         public GameScreen CurrentScreen => _currentScreen;
 
-        /// <summary>
-        /// The active chat history for the current session.
-        /// </summary>
-        public List<ChatMessage> ChatHistory { get; private set; } = new List<ChatMessage>();
-
-        /// <summary>
-        /// Event fired when the game changes phase/screens (e.g., Simulation -> Evening).
-        /// </summary>
+        // Events
         public event Action<GameScreen> OnScreenChanged;
-
-        /// <summary>
-        /// Event fired when an error or important notification occurs.
-        /// </summary>
         public event Action<string> OnToastMessage;
-
-        /// <summary>
-        /// Event fired whenever the player's money balance changes.
-        /// </summary>
         public event Action<decimal> OnMoneyChanged;
-
-        /// <summary>
-        /// Event fired when the user requests Help.
-        /// </summary>
         public event Action<string> OnHelpPopup;
+        
+        // Chat event no longer passes messages, it just signals the UI to open/refresh
+        public event Action OnChatPopup; 
 
-        /// <summary>
-        /// Event fired when the user requests Chat.
-        /// </summary>
-        public event Action OnChatPopup;
-
-        /// <summary>
-        /// Event fired when the user sends a chat message.
-        /// </summary>
-        public event Action<ChatMessage> OnChatUserMessage;
-
-        /// <summary>
-        /// Event fired when the system/AI responds to a chat message.
-        /// </summary>
-        public event Action<ChatMessage> OnChatSystemMessage;
-
-        /// <summary>
-        /// Private constructor to enforce the Singleton pattern.
-        /// </summary>
         private BirdCafeGame()
         {
-            // Initialize the main controller.
             _controller = new BirdCafeController();
         }
 
         // =================================================================================
-        // 1. META & MAIN MENU
+        // META & MAIN MENU
         // =================================================================================
 
-        /// <summary>
-        /// Retrieves a list of available save slots.
-        /// </summary>
-        /// <returns>A list of save slot view models.</returns>
         public List<SaveSlotViewModel> GetSaveSlots()
         {
-            // Ask the Meta manager for available saves.
             return _controller.Meta.GetAvailableSaves();
         }
 
-        /// <summary>
-        /// Starts a new game session with the provided player and cafe details.
-        /// </summary>
-        /// <param name="playerName">The player's display name.</param>
-        /// <param name="cafeName">The name of the cafe.</param>
         public void StartNewGame(string playerName, string cafeName)
         {
-            // Attempt to start a new game via the Meta manager.
             var result = _controller.Meta.StartNewGame(playerName, cafeName);
-
-            // Check if the operation failed.
             if (!result.IsSuccess)
             {
-                // Notify the user of the failure.
                 FireToast(result.UserMessage);
                 return;
             }
-
-            // Show the Tutorial screen first for new games.
             TransitionTo(GameScreen.Tutorial);
         }
 
-        /// <summary>
-        /// Loads an existing game from a save ID.
-        /// </summary>
-        /// <param name="saveId">The unique identifier of the save file.</param>
         public void LoadGame(string saveId)
         {
-            // Placeholder logic to load the game.
-            // Eventually, this would call _controller.Meta.LoadGame().
             TransitionTo(GameScreen.DayIntro);
         }
 
-        /// <summary>
-        /// Triggers a help popup with context-specific information.
-        /// </summary>
-        /// <param name="context">The topic or screen triggering the help request.</param>
         public void FireHelpPopup(string context = "General")
         {
-            // Invoke the help event if there are any subscribers.
             OnHelpPopup?.Invoke(context);
         }
 
         /// <summary>
-        /// Opens the chat window, clears previous history, and sets the greeting.
+        /// Opens the Oracle Chat interface and resets to the root topic.
         /// </summary>
         public void FireChatPopup()
         {
-            // Clear any old messages from the history list.
-            ChatHistory.Clear();
-
-            // Create a default greeting message from the system.
-            var greeting = new ChatMessage
-            {
-                Sender = "System",
-                Content = "I'm happy to help you out with your business and bird care. What can I do for you today?",
-                Timestamp = DateTime.Now,
-                IsUser = false
-            };
-
-            // Add the greeting to the history.
-            ChatHistory.Add(greeting);
-
-            // Notify the UI that the chat window should open.
+            // Reset to start
+            CurrentChatStateKey = ChatData.ROOT_ID;
             OnChatPopup?.Invoke();
-
-            // Notify the UI to display the system's greeting message.
-            OnChatSystemMessage?.Invoke(greeting);
         }
 
         /// <summary>
-        /// Sends a message from the user to the game's chat system (e.g. LLM).
+        /// Retrieves the full data for the current state of the conversation.
         /// </summary>
-        /// <param name="message">The text content of the message.</param>
-        /// <returns>A task representing the asynchronous operation.</returns>
-        public async Task SendChatMessage(string message)
+        public ChatMessage GetCurrentChatNode()
         {
-            // Create the user's message object.
-            var userMsg = new ChatMessage
+            return ChatData.GetNode(CurrentChatStateKey);
+        }
+
+        /// <summary>
+        /// Processes a player's selection in the chat menu.
+        /// </summary>
+        /// <param name="optionIndex">The index of the option chosen.</param>
+        public void SelectChatOption(int optionIndex)
+        {
+            var node = GetCurrentChatNode();
+            if (optionIndex >= 0 && optionIndex < node.Options.Count)
             {
-                Sender = "You",
-                Content = message,
-                Timestamp = DateTime.Now,
-                IsUser = true
-            };
+                var selection = node.Options[optionIndex];
+                
+                // Update internal state
+                CurrentChatStateKey = selection.NextStateId;
 
-            // Add it to history and notify listeners immediately so it appears on screen.
-            ChatHistory.Add(userMsg);
-            OnChatUserMessage?.Invoke(userMsg);
-
-            // Simulate processing delay (Mock LLM) to make it feel realistic.
-            await Task.Delay(2000);
-
-            // Create a hardcoded system response.
-            var sysMsg = new ChatMessage
-            {
-                Sender = "System",
-                Content = "Thanks for chatting with me!",
-                Timestamp = DateTime.Now,
-                IsUser = false
-            };
-
-            // Add the response to history and notify listeners.
-            ChatHistory.Add(sysMsg);
-            OnChatSystemMessage?.Invoke(sysMsg);
+                // Signal UI to refresh (handled by same event usually, or UI polls)
+                // In console app, we call GetCurrentChatNode again loop.
+            }
         }
 
         // =================================================================================
-        // 2. TUTORIAL
+        // TUTORIAL
         // =================================================================================
 
-        /// <summary>
-        /// Gets the content for the tutorial screen.
-        /// </summary>
-        /// <returns>The view model containing tutorial steps.</returns>
         public TutorialViewModel GetTutorialContent()
         {
-            // Create and return a hardcoded tutorial structure.
             return new TutorialViewModel
             {
                 Title = "Your First Day at the Bird Cafe",
@@ -7680,117 +7413,74 @@ namespace BirdCafe.Shared
             };
         }
 
-        /// <summary>
-        /// Marks the tutorial as complete and transitions to the game intro.
-        /// </summary>
         public void CompleteTutorial()
         {
-            // Move the screen state to the Day Intro.
             TransitionTo(GameScreen.DayIntro);
         }
 
         // =================================================================================
-        // 3. DAY SIMULATION
+        // DAY SIMULATION
         // =================================================================================
 
-        /// <summary>
-        /// Gets the data needed to display the "Day Start" banner/intro screen.
-        /// </summary>
-        /// <returns>The day intro view model.</returns>
         public DayIntroViewModel GetDayIntro()
         {
-            // Access the current game state from the controller.
             var state = _controller.CurrentState;
-
-            // Map the state data to the view model.
             return new DayIntroViewModel
             {
                 DayNumber = state.CurrentDayNumber,
                 DayName = state.CurrentDayName.ToString(),
                 CafeName = state.Cafe.CafeName,
                 Popularity = (int)state.Cafe.Popularity,
-                // Construct a welcoming message with color tags for rich text displays.
                 Message = $"Good morning <#008DD4>{state.Profile.DisplayName}</color>! Today is {state.CurrentDayName}, day <#6c18a3>{state.CurrentDayNumber}</color>. Let's make it a great day at {state.Cafe.CafeName}. Good luck!"
             };
         }
 
-        /// <summary>
-        /// Starts the simulation logic and prepares the results for playback.
-        /// </summary>
-        /// <returns>True if the simulation started or was already cached; otherwise, false.</returns>
         public bool StartSimulationPlayback()
         {
-            // Check if we already have a result for the current day to avoid re-running it accidentally.
             if (_cachedSimResult != null && _cachedSimResult.DayNumber == _controller.CurrentState.CurrentDayNumber)
             {
                 TransitionTo(GameScreen.DaySimulation);
                 return true;
             }
 
-            // Run the actual simulation via the manager.
             var result = _controller.Simulation.RunDaySimulation();
 
-            // If the simulation failed (e.g., wrong phase), show an error.
             if (!result.IsSuccess)
             {
                 FireToast(result.UserMessage);
                 return false;
             }
 
-            // Cast the result payload to the expected type and cache it.
             _cachedSimResult = (DaySimulationResult)result.Payload;
-
-            // Switch screen to the simulation view.
             TransitionTo(GameScreen.DaySimulation);
             return true;
         }
 
-        /// <summary>
-        /// Converts the raw simulation timeline into a UI-friendly format.
-        /// </summary>
-        /// <returns>A list of formatted timeline events for display.</returns>
         public List<UiTimelineEvent> GetDayTimeline()
         {
-            // If there's no result cached, return an empty list.
             if (_cachedSimResult == null) return new List<UiTimelineEvent>();
 
             float simDuration = _controller.CurrentState.Config.DayDurationSeconds;
-            TimeSpan startOfDay = TimeSpan.FromHours(7); // Cafe opens at 7:00 AM
-            double realHoursOpen = 8.0; // The cafe stays open for 8 real-world hours equivalents
+            TimeSpan startOfDay = TimeSpan.FromHours(7); 
+            double realHoursOpen = 8.0; 
 
-            // Use LINQ 'Select' to transform each raw event into a UI event.
-            // This loops through every item in 'Timeline' and creates a new 'UiTimelineEvent' for it.
             return _cachedSimResult.Timeline.Select(t =>
             {
-                // Calculate how far through the day this event happened (0.0 to 1.0).
                 double pct = t.TimeSeconds / simDuration;
-
-                // Convert that percentage into a real clock time relative to 7:00 AM.
                 TimeSpan eventTime = startOfDay.Add(TimeSpan.FromHours(realHoursOpen * pct));
-
-                // Format the time nicely, e.g., "08:30 AM".
                 string timeString = DateTime.Today.Add(eventTime).ToString("hh:mm tt");
-
-                // Find the bird's name using the ID, or default to "Unknown" if not found.
                 var birdName = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == t.BirdId)?.Name ?? "Unknown";
 
                 string desc = t.ReasonCode;
-
-                // If there is no specific reason code, build a description from the event type.
                 if (string.IsNullOrEmpty(desc))
                 {
                     desc = t.EventType.ToString();
-
-                    // Add details for customer arrival.
                     if (t.EventType == SimulationTimelineEventType.CustomerArrived && t.Product.HasValue)
                         desc = $"Arrived wanting {t.Product}";
-
-                    // Add details for service completion and money earned.
                     if (t.EventType == SimulationTimelineEventType.ServiceCompleted && t.MoneyDelta > 0)
                         desc = $"Served {t.Product} (+${t.MoneyDelta:F2})";
                 }
 
-                // Return the formatted object.
                 return new UiTimelineEvent
                 {
                     TimeSeconds = t.TimeSeconds,
@@ -7802,18 +7492,12 @@ namespace BirdCafe.Shared
                     MoneyDelta = t.MoneyDelta,
                     PopularityDelta = t.PopularityDelta
                 };
-            }).ToList(); // Convert the LINQ result back into a standard List.
+            }).ToList(); 
         }
 
-        /// <summary>
-        /// Completes the simulation viewing phase and moves to the evening summary.
-        /// </summary>
         public void FinishSimulation()
         {
-            // Tell the controller to advance the state machine from Simulation to Evening.
             var res = _controller.Simulation.AdvanceFromSimulation();
-
-            // If successful, update the UI screen.
             if (res.IsSuccess)
             {
                 TransitionTo(GameScreen.EveningSummary);
@@ -7821,22 +7505,16 @@ namespace BirdCafe.Shared
         }
 
         // =================================================================================
-        // 4. EVENING SUMMARY
+        // EVENING SUMMARY
         // =================================================================================
 
-        /// <summary>
-        /// Generates the daily report view model from the cached simulation results.
-        /// </summary>
-        /// <returns>The view model containing stats for the day.</returns>
         public DailyReportViewModel GetDailyReport()
         {
-            // Safety check: return empty model if no results exist.
             if (_cachedSimResult == null) return new DailyReportViewModel();
 
             var stats = _cachedSimResult.Customers;
             var eco = _cachedSimResult.Economy;
 
-            // Map internal data structures to the View Model for the UI.
             var vm = new DailyReportViewModel
             {
                 DayNumber = _cachedSimResult.DayNumber,
@@ -7845,7 +7523,6 @@ namespace BirdCafe.Shared
                 CurrentMoney = _controller.CurrentState.Economy.CurrentBalance,
 
                 CustomersServed = stats.CustomersServed,
-                // Combine wait times and stock issues for total lost customers.
                 CustomersLost = stats.CustomersLeftUnhappy + stats.CustomersLeftNoStock,
                 LostWaitTooLong = stats.CustomersLeftUnhappy,
                 LostNoStock = stats.CustomersLeftNoStock,
@@ -7857,19 +7534,16 @@ namespace BirdCafe.Shared
                 BakedSold = stats.BakedGoodsSold,
                 MerchSold = stats.MerchSold,
 
-                // Calculate total available stock by adding sold items back to wasted/remaining items.
                 CoffeeTotal = stats.CoffeeSold + stats.CoffeeWasted,
                 BakedTotal = stats.BakedGoodsSold + stats.BakedGoodsWasted,
                 MerchTotal = stats.MerchSold + _controller.CurrentState.Cafe.Inventory.ThemedMerch.QuantityOnHand
             };
 
-            // Determine narrative text based on popularity change.
             float popDelta = _cachedSimResult.Popularity.PopularityDelta;
             if (popDelta > 2) vm.PopularityNarrative = "Popularity is rising! People love the cafe.";
             else if (popDelta < -2) vm.PopularityNarrative = "Popularity is dropping. Customers are unhappy.";
             else vm.PopularityNarrative = "Popularity is stable.";
 
-            // Add performance data for each bird.
             foreach (var b in _cachedSimResult.BirdSummaries)
             {
                 vm.Birds.Add(new BirdPerformanceModel
@@ -7885,22 +7559,15 @@ namespace BirdCafe.Shared
             return vm;
         }
 
-        /// <summary>
-        /// Acknowledges the summary screen and moves to the Care Dashboard.
-        /// </summary>
         public void AcknowledgeSummary()
         {
             TransitionTo(GameScreen.EveningCare);
         }
 
         // =================================================================================
-        // 5. EVENING CARE
+        // EVENING CARE
         // =================================================================================
 
-        /// <summary>
-        /// Gets the data for the Care Dashboard (Tamagotchi-style screen).
-        /// </summary>
-        /// <returns>The care dashboard view model.</returns>
         public CareDashboardViewModel GetCareDashboard()
         {
             var vm = new CareDashboardViewModel
@@ -7909,7 +7576,6 @@ namespace BirdCafe.Shared
                 CurrentPopularity = (int)_controller.CurrentState.Cafe.Popularity
             };
 
-            // Map each bird in the state to a care view model.
             foreach (var b in _controller.CurrentState.Birds)
             {
                 vm.Birds.Add(MapBirdToCareModel(b));
@@ -7918,17 +7584,11 @@ namespace BirdCafe.Shared
             return vm;
         }
 
-        /// <summary>
-        /// Returns a list of available actions for a specific bird, checking affordability.
-        /// </summary>
-        /// <param name="birdId">The ID of the bird to query actions for.</param>
-        /// <returns>A list of action view models.</returns>
         public List<CareActionViewModel> GetAvailableActions(string birdId)
         {
             var config = _controller.CurrentState.Config;
             var money = _controller.CurrentState.Economy.CurrentBalance;
 
-            // Define the list of standard actions.
             var actions = new List<CareActionViewModel>
             {
                 new CareActionViewModel { ActionId = CareActionIds.Feed, Label = "Feed Snack", Cost = config.BaselineBirdFoodCost },
@@ -7936,7 +7596,6 @@ namespace BirdCafe.Shared
                 new CareActionViewModel { ActionId = CareActionIds.Vet, Label = "Vet Visit", Cost = config.BaselineVetCost }
             };
 
-            // Check if the player can afford each action.
             foreach (var a in actions)
             {
                 a.IsAffordable = money >= a.Cost;
@@ -7945,12 +7604,6 @@ namespace BirdCafe.Shared
             return actions;
         }
 
-        /// <summary>
-        /// Executes a care action on a bird.
-        /// </summary>
-        /// <param name="birdId">The ID of the bird.</param>
-        /// <param name="actionId">The ID of the action to perform.</param>
-        /// <returns>True if the action succeeded; otherwise, false.</returns>
         public bool PerformCare(string birdId, string actionId)
         {
             var result = _controller.Care.PerformCareAction(birdId, actionId);
@@ -7960,17 +7613,10 @@ namespace BirdCafe.Shared
                 FireToast(result.UserMessage);
                 return false;
             }
-
-            // Notify UI that money has changed so headers can update.
             OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
             return true;
         }
 
-        /// <summary>
-        /// Toggles the rest status for a bird for the next day.
-        /// </summary>
-        /// <param name="birdId">The ID of the bird.</param>
-        /// <returns>True if successful.</returns>
         public bool ToggleRest(string birdId)
         {
             var result = _controller.Care.ToggleRest(birdId);
@@ -7982,28 +7628,20 @@ namespace BirdCafe.Shared
             return true;
         }
 
-        /// <summary>
-        /// Transitions the game to the Planning/Shop screen.
-        /// </summary>
         public void GoToPlanning()
         {
             TransitionTo(GameScreen.EveningPlanning);
         }
 
         // =================================================================================
-        // 6. EVENING PLANNING
+        // EVENING PLANNING
         // =================================================================================
 
-        /// <summary>
-        /// Gets the data for the Planning/Shop dashboard.
-        /// </summary>
-        /// <returns>The planning dashboard view model.</returns>
         public PlanningDashboardViewModel GetPlanningDashboard()
         {
             var state = _controller.CurrentState;
             var plan = state.CurrentDayState.CurrentPlan;
 
-            // Calculate costs for currently planned purchases using the shared helper.
             decimal costCoffee = EconomyHelper.CalculateRestockCost(ProductType.Coffee, plan.PlannedCoffeePurchase);
             decimal costBaked = EconomyHelper.CalculateRestockCost(ProductType.BakedGoods, plan.PlannedBakedGoodsPurchase);
             decimal costMerch = EconomyHelper.CalculateRestockCost(ProductType.ThemedMerch, plan.PlannedThemedMerchPurchase);
@@ -8016,11 +7654,10 @@ namespace BirdCafe.Shared
                 ProjectedCost = totalCost
             };
 
-            // Retrieve the last 7 days of history for the graph/table.
             var recentDays = state.PastDayResults
-                .OrderByDescending(d => d.DayNumber) // Sort newest first
-                .Take(7) // Take top 7
-                .OrderBy(d => d.DayNumber) // Re-sort chronologically for display
+                .OrderByDescending(d => d.DayNumber)
+                .Take(7)
+                .OrderBy(d => d.DayNumber)
                 .ToList();
 
             foreach (var day in recentDays)
@@ -8037,7 +7674,6 @@ namespace BirdCafe.Shared
                 });
             }
 
-            // Populate inventory items.
             vm.Inventory.Add(new InventoryItemModel
             {
                 Type = ProductType.Coffee,
@@ -8068,7 +7704,6 @@ namespace BirdCafe.Shared
                 TotalCost = costMerch
             });
 
-            // Populate staff roster.
             foreach (var b in state.Birds)
             {
                 bool isWorking = plan.BirdIdsWorking.Contains(b.Id);
@@ -8085,30 +7720,17 @@ namespace BirdCafe.Shared
                 });
             }
 
-            // Add a warning if user is over budget.
             if (totalCost > vm.CurrentMoney) vm.Warnings.Add("Not enough money!");
 
             return vm;
         }
 
-        /// <summary>
-        /// Updates the planned purchase quantity for a specific product.
-        /// </summary>
-        /// <param name="type">The product type.</param>
-        /// <param name="quantity">The new quantity to buy.</param>
-        /// <returns>True if update was successful.</returns>
         public bool SetInventory(ProductType type, int quantity)
         {
             if (quantity < 0) return false;
             return _controller.Planning.SetInventoryOrder(type, quantity).IsSuccess;
         }
 
-        /// <summary>
-        /// Updates the work status of a bird in the roster.
-        /// </summary>
-        /// <param name="birdId">The ID of the bird.</param>
-        /// <param name="isWorking">True to work, false to rest.</param>
-        /// <returns>True if the update was successful.</returns>
         public bool SetStaffStatus(string birdId, bool isWorking)
         {
             var res = _controller.Planning.SetStaffRoster(birdId, isWorking);
@@ -8116,10 +7738,6 @@ namespace BirdCafe.Shared
             return res.IsSuccess;
         }
 
-        /// <summary>
-        /// Commits the evening plan, purchases inventory, and advances the day.
-        /// </summary>
-        /// <returns>True if the day was finalized successfully.</returns>
         public bool FinalizeDay()
         {
             var res = _controller.Planning.FinalizeDay();
@@ -8129,11 +7747,9 @@ namespace BirdCafe.Shared
                 return false;
             }
 
-            // Clear the cached result since a new day has started.
             _cachedSimResult = null;
             OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
 
-            // Check if we need to show a weekly report or go straight to the next day.
             if (_controller.CurrentPhase == GamePhase.Reporting)
             {
                 if (_controller.Reporting.CheckGameOver()) TransitionTo(GameScreen.GameOver);
@@ -8148,32 +7764,21 @@ namespace BirdCafe.Shared
         }
 
         // =================================================================================
-        // 7. WEEKLY & GAME OVER
+        // WEEKLY & GAME OVER
         // =================================================================================
 
-        /// <summary>
-        /// Gets the weekly report data.
-        /// </summary>
-        /// <returns>The weekly report view model.</returns>
         public WeeklyReportViewModel GetWeeklyReport()
         {
             int currentWeek = _controller.CurrentState.CurrentWeekNumber - 1;
             return _controller.Reporting.GenerateWeeklyReport(currentWeek);
         }
 
-        /// <summary>
-        /// Completes the weekly review and starts the next week loop.
-        /// </summary>
         public void CompleteWeek()
         {
             _controller.SetPhase(GamePhase.DayLoop);
             TransitionTo(GameScreen.DayIntro);
         }
 
-        /// <summary>
-        /// Gets details for the Game Over screen.
-        /// </summary>
-        /// <returns>The game over view model.</returns>
         public GameOverViewModel GetGameOverDetails()
         {
             var state = _controller.CurrentState;
@@ -8185,9 +7790,6 @@ namespace BirdCafe.Shared
             };
         }
 
-        /// <summary>
-        /// Resets the game state by returning to the main menu.
-        /// </summary>
         public void ReturnToMainMenu()
         {
             TransitionTo(GameScreen.MainMenu);
@@ -8195,30 +7797,17 @@ namespace BirdCafe.Shared
 
         // --- Helpers ---
 
-        /// <summary>
-        /// Internal helper to switch screens and fire the event.
-        /// </summary>
-        /// <param name="screen">The new screen to show.</param>
         private void TransitionTo(GameScreen screen)
         {
             _currentScreen = screen;
             OnScreenChanged?.Invoke(screen);
         }
 
-        /// <summary>
-        /// Internal helper to fire a toast message safely.
-        /// </summary>
-        /// <param name="message">The message to display.</param>
         private void FireToast(string message)
         {
             OnToastMessage?.Invoke(message ?? "Unknown error");
         }
 
-        /// <summary>
-        /// Helper to map the internal Bird model to the ViewModel used by the Care UI.
-        /// </summary>
-        /// <param name="b">The bird model.</param>
-        /// <returns>The care view model.</returns>
         private BirdCareViewModel MapBirdToCareModel(Models.Birds.Bird b)
         {
             return new BirdCareViewModel
@@ -8240,7 +7829,7 @@ namespace BirdCafe.Shared
 <file path="package.json">
 {
   "name": "com.birdcafe.shared",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "displayName": "Bird Cafe Shared Library",
   "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
   "unity": "2022.3",
