@@ -1,4 +1,3 @@
-
 using BirdCafe.Shared.ViewModels;
 using System.Collections.Generic;
 using System;
@@ -7,7 +6,7 @@ namespace BirdCafe.Shared.Engine.Utils
 {
     /// <summary>
     /// Static data container for the Oracle's dialogue tree.
-    /// Contains over 64 unique nodes for a deep conversation experience.
+    /// Refactored to ensure no node exceeds 5 options.
     /// </summary>
     public static class ChatData
     {
@@ -42,28 +41,38 @@ namespace BirdCafe.Shared.Engine.Utils
 
         private static void BuildDialogueTree()
         {
-            // --- ROOT ---
-            Add(ROOT_ID, 
+            // --- ROOT (5 Options MAX) ---
+            Add(ROOT_ID,
                 "<size=120%>Greetings, Bird Boss!</size>\nI am the <color=#00AA00>Oracle of the Aviary</color>. I know everything about running a Bird Cafe. What wisdom do you seek today?",
                 "Tell me about Customizing my birds.", "Custom_Intro",
                 "How do I take care of them?", "Care_Intro",
                 "I want to make more money!", "Money_Intro",
-                "How do I win this game?", "Strat_Intro");
+                "How do I win this game?", "Strat_Intro",
+                "Misc Mechanics / Lore", "Mech_Hub");
 
             // =================================================================================
-            // BRANCH 1: CUSTOMIZATION (15 Nodes)
+            // BRANCH 1: CUSTOMIZATION
             // =================================================================================
-            Add("Custom_Intro", 
+            Add("Custom_Intro",
                 "Making the cafe yours starts with your team! You can change names, species, and colors. It's not just about looks; it's about <color=#FF00FF>personality</color>.",
                 "Does species matter?", "Custom_Species",
                 "Tell me about names.", "Custom_Names",
                 "Back to main topics.", ROOT_ID);
 
+            // Refactored to link to Species Hub to save space
             Add("Custom_Species",
-                "Absolutely! A <color=#FFFF00>Canary</color> might be energetic, while an <color=#555555>Owl</color> is wise but sleepy. Choosing the right species changes your cafe's vibe.",
+                "Absolutely! A <color=#FF0000>Cardinal</color> might be energetic, while an <color=#555555>Owl</color> is wise but sleepy. Choosing the right species changes your cafe's vibe.",
+                "Show me specific bird types...", "Species_Hub",
                 "What about visuals?", "Custom_Visuals",
                 "Do they have special skills?", "Custom_Skills",
                 "Back to customization.", "Custom_Intro");
+
+            Add("Species_Hub", "Select a species to learn more:",
+                 "Sparrow Info", "Lore_Sparrow",
+                 "Bluejay Info", "Lore_Bluejay",
+                 "Robin Info", "Lore_Robin",
+                 "Owl Info", "Lore_Owl",
+                 "Back to Species", "Custom_Species");
 
             Add("Custom_Visuals",
                 "You can dye their feathers! Primary and secondary colors. Want a <color=#00FF00>neon green</color> sparrow? Go for it. Customers love unique birds.",
@@ -92,7 +101,6 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Custom_Craft",
                 "Not yet! But maybe a crafty bird could learn... for now, just buy them or unlock them.",
                 "Okay, unlocking info?", "Custom_Unlock",
-                "Back to the start.", ROOT_ID,
                 "Back to accessories.", "Custom_Accessory");
 
             Add("Custom_Skills",
@@ -128,7 +136,6 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Custom_Rename",
                 "Yes! You can rename your birds in the evening menu. Identity theft is not a crime for birds.",
                 "Good to know.", "Custom_Names",
-                "Back to Main Menu.", ROOT_ID,
                 "Back to names.", "Custom_Names");
 
             Add("Custom_CustSeeName",
@@ -138,7 +145,7 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Back to naming.", "Custom_Names");
 
             // =================================================================================
-            // BRANCH 2: CARE (16 Nodes)
+            // BRANCH 2: CARE
             // =================================================================================
             Add("Care_Intro",
                 "Care is the heartbeat of the cafe. You have 4 main tools: <color=#00AA00>Feed, Play, Rest, and Vet</color>.",
@@ -146,11 +153,23 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Tell me about Health.", "Care_Health",
                 "Back to Main Menu.", ROOT_ID);
 
+            // Refactored: Moved deep mechanics to sub-menu to keep option count <= 5
             Add("Care_Feed",
                 "Food fuels the flight! Hunger drops every day. If it hits 0, your bird takes <color=#FF0000>Health Damage</color> from starvation.",
+                "Hunger/Starve Mechanics...", "Care_Food_Deep",
                 "Does food cost money?", "Care_FoodCost",
                 "Do they like specific food?", "Care_FoodPref",
                 "Back to Care.", "Care_Intro");
+
+            Add("Care_Food_Deep", "Details on Hunger Mechanics:",
+                "Hunger Logic", "Care_Deep_Hunger",
+                "Starvation Penalty", "Care_Deep_Starve",
+                "Back to Feed", "Care_Feed");
+
+            Add("Care_Deep_Hunger", "Hunger affects Mood. A hungry bird is a grumpy bird (-Mood/hr). Keep them fed!",
+                "Okay", "Care_Feed", "Back", "Care_Feed");
+            Add("Care_Deep_Starve", "Starvation kicks in at 0 Hunger. It causes massive HP loss. It's cruel. Don't do it.",
+                "I won't", "Care_Feed", "Back", "Care_Feed");
 
             Add("Care_FoodCost",
                 "Yes. Basic seeds are cheap ($5). Premium treats cost more but boost Mood too. Budget for it!",
@@ -161,7 +180,6 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Care_FoodPref",
                 "Currently, they all eat standard cafe bird mix. It's nutritious and delicious.",
                 "Easy enough.", "Care_Feed",
-                "Back to Care.", "Care_Intro",
                 "Back to Food.", "Care_Feed");
 
             Add("Care_Play",
@@ -203,7 +221,6 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Care_RestEat",
                 "Yes, resting birds still get hungry. Never stop feeding them!",
                 "Understood.", "Care_Rest",
-                "Back to Main.", ROOT_ID,
                 "Back to Rest.", "Care_Rest");
 
             Add("Care_LowEnergy",
@@ -224,6 +241,9 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Can they work while sick?", "Care_SickWork",
                 "Back to Energy.", "Care_LowEnergy");
 
+            Add("Care_SickWork", "Technically yes, unless they are Severely Sick. But they will infect others and make customers sad.", "Okay", "Care_Sick", "Back", "Care_Sick");
+            Add("Care_FoodCure", "No. Food helps prevent sickness by keeping stats high, but only the Vet can cure an active illness.", "Okay", "Care_Health", "Back", "Care_Health");
+
             Add("Care_Vet",
                 "Select 'Vet Visit' in the menu. It heals them and cures sickness instantly. Modern medicine is amazing.",
                 "Is it expensive?", "Care_VetCost",
@@ -237,7 +257,7 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Back to Vet.", "Care_Vet");
 
             // =================================================================================
-            // BRANCH 3: MONEY (12 Nodes)
+            // BRANCH 3: MONEY
             // =================================================================================
             Add("Money_Intro",
                 "Cash rules the cafe. You earn by selling Coffee, Baked Goods, and Merch. You lose money on Stock and Care.",
@@ -260,7 +280,6 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Money_MerchStrat",
                 "Merch doesn't spoil! It sits on the shelf until sold. It's a safe investment if you have extra cash.",
                 "I'll stock up.", "Money_Products",
-                "Back to Main.", ROOT_ID,
                 "Back to Products.", "Money_Products");
 
             Add("Money_Loss",
@@ -276,13 +295,14 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Back to previous.", "Money_Intro");
 
             // =================================================================================
-            // BRANCH 4: STRATEGY (12 Nodes)
+            // BRANCH 4: STRATEGY
             // =================================================================================
             Add("Strat_Intro",
                 "Winning requires brain power. Three pillars: <color=#00AA00>Emergency Fund, Vibe Balance, and Data</color>.",
                 "The Emergency Fund?", "Strat_Fund",
                 "Balancing the Vibe?", "Strat_Vibe",
-                "Using Data?", "Strat_Reports");
+                "Using Data?", "Strat_Reports",
+                "Back to Main Menu.", ROOT_ID);
 
             Add("Strat_Fund",
                 "Keep at least $60 in the bank. That covers one Vet visit ($50) plus food ($5) and coffee stock ($5).",
@@ -299,7 +319,6 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Strat_Happy",
                 "Happy birds get tips (maybe) and boost Popularity. High Popularity = More Customers = More Money.",
                 "I want that.", "Strat_Vibe",
-                "Back to Main.", ROOT_ID,
                 "Back to Vibe.", "Strat_Vibe");
 
             Add("Strat_Reports",
@@ -311,12 +330,29 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Strat_History",
                 "Yes! Look at the last 7 days. Is the trend going up? Buy more. Going down? Buy less.",
                 "I feel smart.", "Strat_Reports",
-                "Back to Main.", ROOT_ID,
                 "Back to Reports.", "Strat_Reports");
 
             // =================================================================================
-            // BRANCH 5: RESPONSIBILITY/LORE (Remaining Nodes)
+            // MECHANICS & LORE
             // =================================================================================
+            Add("Mech_Hub", "Here are some loose ends about how the game world works.",
+                "Time Mechanics?", "Mech_Time",
+                "Saving the Game?", "Mech_Save",
+                "Decorations?", "Mech_Decor",
+                "More Topics...", "Mech_Hub2"); // Paging to keep options < 5
+
+            Add("Mech_Hub2", "More mechanics info:",
+                "Weeks & Milestones?", "Mech_Week",
+                "Failure Conditions?", "Mech_Fail",
+                "Lore & Responsibility?", "Lore_Intro",
+                "Back to Hub 1", "Mech_Hub");
+
+            Add("Mech_Time", "Time moves only when the Simulation runs. Take all the time you need to plan in the Evening.", "Okay", "Mech_Hub");
+            Add("Mech_Save", "The game saves automatically in memory, but use 'Save Game' to keep it on disk.", "Okay", "Mech_Hub");
+            Add("Mech_Decor", "Decorations unlock automatically. You don't place them, they just appear to make the cafe pretty.", "Okay", "Mech_Hub");
+            Add("Mech_Week", "Weeks act as milestones. Surviving Week 1 is your first major achievement.", "Okay", "Mech_Hub2");
+            Add("Mech_Fail", "Failure is part of learning. If you go bankrupt, try again with a cheaper strategy.", "Okay", "Mech_Hub2");
+
             Add("Lore_Intro",
                 "Being a Bird Boss is about responsibility. These pixel birds depend on you entirely.",
                 "It's just a game.", "Lore_Game",
@@ -326,67 +362,18 @@ namespace BirdCafe.Shared.Engine.Utils
             Add("Lore_Game",
                 "Is it? You practice budgeting, care, and planning here. Those are real life skills, Boss!",
                 "True.", "Lore_Intro",
-                "I suppose.", "Lore_Intro",
                 "Back to Lore.", "Lore_Intro");
 
             Add("Lore_Love",
                 "That's the spirit! A loved bird works hard. Treat them as partners, not employees.",
                 "They are my friends.", "Lore_Intro",
-                "Back to Main Menu.", ROOT_ID,
                 "Back to Lore.", "Lore_Intro");
 
-            // FILLER NODES TO ENSURE >64
-            // We have roughly 45 nodes above. Let's add specific Q&A about game mechanics to pad it out.
-
-            Add("Mech_Time", "Time moves only when the Simulation runs. Take all the time you need to plan in the Evening.", "Okay", ROOT_ID, "Cool", ROOT_ID, "Back", ROOT_ID);
-            Add("Mech_Save", "The game saves automatically in memory, but use 'Save Game' to keep it on disk.", "Okay", ROOT_ID, "Cool", ROOT_ID, "Back", ROOT_ID);
-            Add("Mech_Decor", "Decorations unlock automatically. You don't place them, they just appear to make the cafe pretty.", "Okay", ROOT_ID, "Cool", ROOT_ID, "Back", ROOT_ID);
-            Add("Mech_Week", "Weeks act as milestones. Surviving Week 1 is your first major achievement.", "Okay", ROOT_ID, "Cool", ROOT_ID, "Back", ROOT_ID);
-            Add("Mech_Fail", "Failure is part of learning. If you go bankrupt, try again with a cheaper strategy.", "Okay", ROOT_ID, "Cool", ROOT_ID, "Back", ROOT_ID);
-            
-            // Link these into ROOT or other places to make them accessible
-            // modifying root to include "Misc"
-             _nodes[ROOT_ID].Options.Insert(4, new ChatResponseOption { ResponseText = "Misc Mechanics", NextStateId = "Mech_Hub", IsExit = false });
-            
-            Add("Mech_Hub", "Here are some loose ends about how the game world works.", 
-                "Time?", "Mech_Time", 
-                "Saving?", "Mech_Save", 
-                "Decor?", "Mech_Decor",
-                "Next Page", "Mech_Hub2");
-
-            Add("Mech_Hub2", "More mechanics info:",
-                "Weeks?", "Mech_Week",
-                "Failure?", "Mech_Fail",
-                "Back to Main", ROOT_ID,
-                "Back to Hub 1", "Mech_Hub");
-
-            // Final node count check: ~55. Let's add some bird species lore.
-            Add("Lore_Sparrow", "Sparrows are the backbone of the workforce. Reliable, standard stats, loves seeds.", "Neat", "Custom_Species", "Back", ROOT_ID, "Back", "Custom_Species");
-            Add("Lore_Bluejay", "Bluejays are loud! High Friendliness but they get Stressed easily by crowds.", "Neat", "Custom_Species", "Back", ROOT_ID, "Back", "Custom_Species");
-            Add("Lore_Robin", "Robins are early birds. High Energy recovery, but lower base Productivity.", "Neat", "Custom_Species", "Back", ROOT_ID, "Back", "Custom_Species");
-            Add("Lore_Owl", "Owls work best at night... wait, we aren't open at night. They are just sleepy but very Wise (High XP gain).", "Neat", "Custom_Species", "Back", ROOT_ID, "Back", "Custom_Species");
-            
-            // Add access to these from Custom_Species
-             _nodes["Custom_Species"].Options.Insert(0, new ChatResponseOption { ResponseText = "Sparrow Info", NextStateId = "Lore_Sparrow", IsExit = false });
-             _nodes["Custom_Species"].Options.Insert(1, new ChatResponseOption { ResponseText = "Bluejay Info", NextStateId = "Lore_Bluejay", IsExit = false });
-             // We are hitting limit on options (UI usually handles 4). The console UI handles N options.
-             
-             // Let's create a dedicated species hub
-             Add("Species_Hub", "Select a species to learn more:",
-                 "Sparrow", "Lore_Sparrow",
-                 "Bluejay", "Lore_Bluejay",
-                 "Robin", "Lore_Robin",
-                 "Owl", "Lore_Owl");
-             // Relink Custom_Species
-             _nodes["Custom_Species"].Options[0] = new ChatResponseOption { ResponseText = "Specific Bird Types", NextStateId = "Species_Hub", IsExit = false };
-
-             // Add deep care nodes
-             Add("Care_Deep_Hunger", "Hunger affects Mood. A hungry bird is a grumpy bird (-Mood/hr).", "Okay", "Care_Feed", "Back", "Care_Feed", "Back", "Care_Feed");
-             Add("Care_Deep_Starve", "Starvation kicks in at 0 Hunger. It's cruel. Don't do it.", "I won't", "Care_Feed", "Back", "Care_Feed", "Back", "Care_Feed");
-             _nodes["Care_Feed"].Options.Insert(0, new ChatResponseOption { ResponseText = "Hunger Mechanics", NextStateId = "Care_Deep_Hunger", IsExit = false });
-             _nodes["Care_Feed"].Options.Insert(1, new ChatResponseOption { ResponseText = "Starvation Penalty", NextStateId = "Care_Deep_Starve", IsExit = false });
-
-             // Current count is safely over 64 nodes including the specific leaves.
+            // --- BIRD SPECIFICS (Leaves) ---
+            Add("Lore_Sparrow", "Sparrows are the backbone of the workforce. Reliable, standard stats, loves seeds.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Bluejay", "Bluejays are loud! High Friendliness but they get Stressed easily by crowds.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Robin", "Robins are early birds. High Energy recovery, but lower base Productivity.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Owl", "Owls work best at night... wait, we aren't open at night. They are just sleepy but very Wise (High XP gain).", "Neat", "Species_Hub", "Back", "Species_Hub");
         }
 
         /// <summary>
@@ -412,6 +399,7 @@ namespace BirdCafe.Shared.Engine.Utils
         /// <summary>
         /// Helper to add a node with arbitrary options (params).
         /// Format: Text, OptionText, TargetId, OptionText, TargetId...
+        /// Automatically adds Exit button ONLY if options < 5 and it's not ROOT.
         /// </summary>
         private static void Add(string id, string text, params string[] args)
         {
@@ -426,30 +414,24 @@ namespace BirdCafe.Shared.Engine.Utils
             {
                 if (i + 1 < args.Length)
                 {
-                    // If this is the last option and it points to ROOT, mark as exit
-                    bool isExit = (args[i+1] == ROOT_ID) && (i >= args.Length - 2) && (id != ROOT_ID); 
-                    // Actually, let's just use the boolean flag logic strictly:
-                    // Only mark IsExit if it's explicitly an exit flow, but for variable args we'll assume navigation unless specified.
-                    // For simplicity in this helper, we won't auto-set IsExit unless it's the specific random exit button we add manually.
-                    
-                    msg.Options.Add(new ChatResponseOption 
-                    { 
-                        ResponseText = args[i], 
+                    msg.Options.Add(new ChatResponseOption
+                    {
+                        ResponseText = args[i],
                         NextStateId = args[i + 1],
-                        IsExit = false 
+                        IsExit = false
                     });
                 }
             }
-            
+
             // Add a dedicated exit button to every node except ROOT if there's room
             if (id != ROOT_ID && msg.Options.Count < 5)
             {
-                 msg.Options.Add(new ChatResponseOption 
-                 { 
-                     ResponseText = GetRandomExitPhrase(), 
-                     NextStateId = ROOT_ID, 
-                     IsExit = true 
-                 });
+                msg.Options.Add(new ChatResponseOption
+                {
+                    ResponseText = GetRandomExitPhrase(),
+                    NextStateId = ROOT_ID,
+                    IsExit = true
+                });
             }
 
             _nodes[id] = msg;
