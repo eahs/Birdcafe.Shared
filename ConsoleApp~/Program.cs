@@ -10,6 +10,7 @@ namespace BirdCafe.ConsoleApp
         // State tracking for the console loop
         private static bool _isRunning = true;
         private static GameScreen _currentScreen = GameScreen.MainMenu;
+        private static GameScreen _previousScreen = GameScreen.MainMenu;
 
         static void Main(string[] args)
         {
@@ -40,12 +41,14 @@ namespace BirdCafe.ConsoleApp
 
             BirdCafeGame.Instance.OnChatPopup += () =>
             {
-                var oldColor = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Cyan;
-                Console.WriteLine($"\n>>> CHAT: (Placeholder for Chat UI) <<<\n");
-                Console.ForegroundColor = oldColor;
-                Console.WriteLine("(Press any key to close chat...)");
-                Console.ReadKey();
+                // In console, we handle this by treating Chat as a distinct screen
+                // We save the previous screen to return to it later if we wanted a stack,
+                // but for now the chat exits back to the current game state via flow logic or we handle it here.
+                // Actually, the easiest way for Console is to just manually invoke the screen
+                // then redraw the current screen when done.
+                
+                Screens.ChatScreens.ShowChatScreen();
+                // After chat loop finishes, we just let the main loop redraw the current screen state
             };
 
             BirdCafeGame.Instance.OnMoneyChanged += (amount) =>
@@ -75,6 +78,7 @@ namespace BirdCafe.ConsoleApp
 
         private static void HandleScreenChange(GameScreen newScreen)
         {
+            _previousScreen = _currentScreen;
             _currentScreen = newScreen;
         }
 
@@ -112,6 +116,13 @@ namespace BirdCafe.ConsoleApp
                     break;
                 case GameScreen.GameOver:
                     Screens.ReportScreens.ShowGameOver();
+                    break;
+                case GameScreen.Chat:
+                    // If state was somehow set to chat directly
+                    Screens.ChatScreens.ShowChatScreen();
+                    // Restore previous screen state logic manually or by just relying on game controller state
+                    // (Since Chat isn't a "GamePhase" in the engine controller, the engine is likely still in DayLoop/Evening etc)
+                    // We just loop back.
                     break;
             }
         }

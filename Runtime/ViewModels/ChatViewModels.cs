@@ -1,32 +1,50 @@
 
 using System;
+using System.Collections.Generic;
 
 namespace BirdCafe.Shared.ViewModels
 {
     /// <summary>
-    /// Represents a single message in the chat interface.
+    /// Represents a single state in the Oracle dialogue tree.
     /// </summary>
     [Serializable]
     public class ChatMessage
     {
         /// <summary>
-        /// The name of the person sending the message.
+        /// The unique ID for this conversation state.
         /// </summary>
-        public string Sender { get; set; }
+        public string StateId { get; set; }
 
         /// <summary>
-        /// The message text.
+        /// The text the Oracle speaks. Supports TextMeshPro formatting.
         /// </summary>
-        public string Content { get; set; }
+        public string OracleText { get; set; }
 
         /// <summary>
-        /// When it was sent.
+        /// The available responses the player can choose from.
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public List<ChatResponseOption> Options { get; set; } = new List<ChatResponseOption>();
+    }
+
+    /// <summary>
+    /// Represents a choice the player can make in the chat.
+    /// </summary>
+    [Serializable]
+    public class ChatResponseOption
+    {
+        /// <summary>
+        /// The text displayed to the player for this option.
+        /// </summary>
+        public string ResponseText { get; set; }
 
         /// <summary>
-        /// True if sent by the human player.
+        /// The ID of the state to transition to if this option is selected.
         /// </summary>
-        public bool IsUser { get; set; }
+        public string NextStateId { get; set; }
+
+        /// <summary>
+        /// If true, choosing this option ends the chat session.
+        /// </summary>
+        public bool IsExit { get; set; }
     }
 }

@@ -56,7 +56,12 @@ namespace BirdCafe.Shared.ViewModels
         /// <summary>
         /// The game over screen.
         /// </summary>
-        GameOver
+        GameOver,
+
+        /// <summary>
+        /// The Oracle Chat interface.
+        /// </summary>
+        Chat
     }
 
     /// <summary>
