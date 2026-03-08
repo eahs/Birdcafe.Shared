@@ -221,8 +221,32 @@ namespace BirdCafe.Shared
             var res = _controller.Simulation.AdvanceFromSimulation();
             if (res.IsSuccess)
             {
-                TransitionTo(GameScreen.EveningSummary);
+                TransitionTo(GameScreen.Hub);
             }
+        }
+
+        // =================================================================================
+        // EVENING HUB NAVIGATION
+        // =================================================================================
+
+        public void GoToHub()
+        {
+            TransitionTo(GameScreen.Hub);
+        }
+
+        public void GoToSummary()
+        {
+            TransitionTo(GameScreen.EveningSummary);
+        }
+
+        public void GoToCare()
+        {
+            TransitionTo(GameScreen.EveningCare);
+        }
+
+        public void GoToPlanning()
+        {
+            TransitionTo(GameScreen.EveningPlanning);
         }
 
         // =================================================================================
@@ -278,11 +302,6 @@ namespace BirdCafe.Shared
             }
 
             return vm;
-        }
-
-        public void AcknowledgeSummary()
-        {
-            TransitionTo(GameScreen.EveningCare);
         }
 
         // =================================================================================
@@ -347,11 +366,6 @@ namespace BirdCafe.Shared
                 return false;
             }
             return true;
-        }
-
-        public void GoToPlanning()
-        {
-            TransitionTo(GameScreen.EveningPlanning);
         }
 
         // =================================================================================

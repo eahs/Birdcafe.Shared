@@ -33,6 +33,8 @@ namespace BirdCafe.Shared.ViewModels
         /// </summary>
         DaySimulation,
 
+        Hub,
+
         /// <summary>
         /// The end-of-day financial summary.
         /// </summary>

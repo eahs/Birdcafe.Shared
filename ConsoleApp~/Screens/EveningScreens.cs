@@ -12,6 +12,42 @@ namespace BirdCafe.ConsoleApp.Screens
     /// </summary>
     public static class EveningScreens
     {
+        public static void ShowHub()
+        {
+            bool stayOnScreen = true;
+            while (stayOnScreen)
+            {
+                Console.Clear();
+                var state = BirdCafeGame.Instance.Controller.CurrentState;
+                Console.WriteLine("=========================================");
+                Console.WriteLine($"   EVENING HUB - Day {state.CurrentDayNumber}");
+                Console.WriteLine("=========================================");
+                Console.WriteLine($"Funds: ${state.Economy.CurrentBalance:F2}  |  Popularity: {(int)state.Cafe.Popularity}");
+                Console.WriteLine("-----------------------------------------");
+                Console.WriteLine("1. View Daily Summary");
+                Console.WriteLine("2. Care for Birds");
+                Console.WriteLine("3. Plan Tomorrow's Shop & Roster");
+                Console.WriteLine("4. Start Next Day (End Evening)");
+                Console.WriteLine("\n[H] Help  [C] Chat");
+                Console.Write("> ");
+
+                var key = Console.ReadKey().KeyChar;
+
+                if (char.ToUpper(key) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Evening Hub"); }
+                else if (char.ToUpper(key) == 'C') { BirdCafeGame.Instance.FireChatPopup(); }
+                else if (key == '1') { BirdCafeGame.Instance.GoToSummary(); stayOnScreen = false; }
+                else if (key == '2') { BirdCafeGame.Instance.GoToCare(); stayOnScreen = false; }
+                else if (key == '3') { BirdCafeGame.Instance.GoToPlanning(); stayOnScreen = false; }
+                else if (key == '4') 
+                { 
+                    if (BirdCafeGame.Instance.FinalizeDay())
+                    {
+                        stayOnScreen = false; 
+                    }
+                }
+            }
+        }
+
         public static void ShowDailySummary()
         {
             Console.Clear();
@@ -43,17 +79,17 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.WriteLine($"- {b.Name}: Served {b.CustomersServed} {(b.BecameSick ? "[GOT SICK!]" : "")}");
             }
 
-            Console.WriteLine("\nPress any key to continue to Care... ([H] Help, [C] Chat)");
+            Console.WriteLine("\nPress any key to return to Hub... ([H] Help, [C] Chat)");
 
             while (true)
             {
                 var k = Console.ReadKey(true);
-                if (char.ToUpper(k.KeyChar) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Daily Summary"); return; } // Returns to main loop, which redraws screen. Good.
+                if (char.ToUpper(k.KeyChar) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Daily Summary"); return; } 
                 if (char.ToUpper(k.KeyChar) == 'C') { BirdCafeGame.Instance.FireChatPopup(); return; }
                 break; // Any other key continues
             }
 
-            BirdCafeGame.Instance.AcknowledgeSummary();
+            BirdCafeGame.Instance.GoToHub();
         }
 
         /// <summary>
@@ -87,7 +123,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.WriteLine($"{b.Id.Substring(0, 2)} | {b.Name.PadRight(14)} | {b.Hunger,6} | {b.Energy,6} | {b.Health,6} | {b.Mood,4} | {status}");
             }
 
-            Console.WriteLine("\n[N] Next Phase (Planning)");
+            Console.WriteLine("\n[B] Back to Hub");
             Console.WriteLine("[Enter ID] to interact with a bird");
             Console.WriteLine("[H] Help  [C] Chat");
             Console.Write("> ");
@@ -100,9 +136,9 @@ namespace BirdCafe.ConsoleApp.Screens
             if (input.ToUpper() == "H") { BirdCafeGame.Instance.FireHelpPopup("Bird Care"); return true; }
             if (input.ToUpper() == "C") { BirdCafeGame.Instance.FireChatPopup(); return true; }
 
-            if (input.ToUpper() == "N")
+            if (input.ToUpper() == "B")
             {
-                BirdCafeGame.Instance.GoToPlanning();
+                BirdCafeGame.Instance.GoToHub();
                 return false; // Exit loop
             }
 
@@ -174,7 +210,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.ResetColor();
             }
 
-            // --- HISTORY TABLE (Added back per requirements) ---
+            // --- HISTORY TABLE ---
             if (vm.RecentHistory.Count > 0)
             {
                 Console.WriteLine("\n--- RECENT SALES HISTORY ---");
@@ -207,7 +243,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.WriteLine($"{i + 4}. {check} {bird.Name} ({bird.StatusText})");
             }
 
-            Console.WriteLine("\n[S] START DAY");
+            Console.WriteLine("\n[B] Back to Hub  |  [S] START DAY");
             Console.WriteLine("[H] Help  [C] Chat");
             Console.Write("> ");
         }
@@ -218,6 +254,12 @@ namespace BirdCafe.ConsoleApp.Screens
 
             if (char.ToUpper(key) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Planning"); return true; }
             if (char.ToUpper(key) == 'C') { BirdCafeGame.Instance.FireChatPopup(); return true; }
+
+            if (char.ToUpper(key) == 'B') 
+            {
+                BirdCafeGame.Instance.GoToHub();
+                return false;
+            }
 
             if (key == 's' || key == 'S')
             {

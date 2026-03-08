@@ -102,6 +102,9 @@ namespace BirdCafe.ConsoleApp
                 case GameScreen.DaySimulation:
                     Screens.SimulationScreens.RunSimulationPlayback();
                     break;
+                case GameScreen.Hub:
+                    Screens.EveningScreens.ShowHub();
+                    break;
                 case GameScreen.EveningSummary:
                     Screens.EveningScreens.ShowDailySummary();
                     break;
