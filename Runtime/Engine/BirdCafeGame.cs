@@ -2,6 +2,7 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Cafe;
 using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.ViewModels;
 using System;
@@ -249,6 +250,21 @@ namespace BirdCafe.Shared
             TransitionTo(GameScreen.EveningPlanning);
         }
 
+        public void GoToPetStore()
+        {
+            TransitionTo(GameScreen.PetStore);
+        }
+
+        public void GoToPetStoreBirds()
+        {
+            TransitionTo(GameScreen.PetStoreBirds);
+        }
+
+        public void GoToPetStoreSupplies()
+        {
+            TransitionTo(GameScreen.PetStoreSupplies);
+        }
+
         // =================================================================================
         // EVENING SUMMARY
         // =================================================================================
@@ -274,6 +290,8 @@ namespace BirdCafe.Shared
 
                 TotalRevenue = eco.TotalRevenue,
                 NetProfit = eco.NetProfit,
+                PetStoreBonusRevenue = eco.PetStoreBonusRevenue,
+                PetStoreBonusCustomers = eco.PetStoreBonusCustomers,
 
                 CoffeeSold = stats.CoffeeSold,
                 BakedSold = stats.BakedGoodsSold,
@@ -496,6 +514,96 @@ namespace BirdCafe.Shared
             }
 
             return true;
+        }
+
+
+        public PetStoreHubViewModel GetPetStoreViewModel()
+        {
+            var petStore = _controller.CurrentState.Cafe.PetStore;
+            return new PetStoreHubViewModel
+            {
+                CurrentMoney = _controller.CurrentState.Economy.CurrentBalance,
+                OwnedEntertainerBirds = petStore.OwnedEntertainerBirds.Count,
+                FoodOwned = petStore.Supplies.BirdFoodOwned,
+                ToysOwned = petStore.Supplies.ToysOwned,
+                CostumesOwned = petStore.Supplies.CostumesOwned,
+                LastEggRewardText = petStore.RewardHistory.LastOrDefault() ?? "No egg rewards yet."
+            };
+        }
+
+        public List<PetBirdStoreItemViewModel> GetPetBirdCatalogViewModel()
+        {
+            var state = _controller.CurrentState;
+            return PetStoreCatalog.Birds.Select(b => new PetBirdStoreItemViewModel
+            {
+                Id = b.Id,
+                Name = b.Name,
+                Price = b.Price,
+                RarityText = b.Rarity.ToString(),
+                EffectText = b.EffectDescription,
+                IsAffordable = state.Economy.CurrentBalance >= b.Price,
+                IsOwned = state.Cafe.PetStore.OwnedEntertainerBirds.Any(x => x.CatalogId == b.Id)
+            }).ToList();
+        }
+
+        public List<PetSupplyStoreItemViewModel> GetPetSupplyCatalogViewModel()
+        {
+            var state = _controller.CurrentState;
+            var inv = state.Cafe.PetStore.Supplies;
+            return PetStoreCatalog.Supplies.Select(s => new PetSupplyStoreItemViewModel
+            {
+                SupplyKey = s.Type.ToString(),
+                Name = s.Name,
+                Price = s.Price,
+                EffectText = s.EffectDescription,
+                IsAffordable = state.Economy.CurrentBalance >= s.Price,
+                QuantityOwned = s.Type == PetStoreSupplyType.BirdFood ? inv.BirdFoodOwned :
+                                s.Type == PetStoreSupplyType.Toys ? inv.ToysOwned :
+                                s.Type == PetStoreSupplyType.Costumes ? inv.CostumesOwned :
+                                state.Cafe.PetStore.MysteryEggsOpened
+            }).ToList();
+        }
+
+        public bool PurchasePetBird(string catalogId)
+        {
+            var res = _controller.Planning.PurchasePetBird(catalogId);
+            if (!res.IsSuccess)
+            {
+                FireToast(res.UserMessage);
+                return false;
+            }
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            return true;
+        }
+
+        public bool PurchasePetStoreItem(PetStoreSupplyType supplyType)
+        {
+            var res = _controller.Planning.PurchasePetSupply(supplyType);
+            if (!res.IsSuccess)
+            {
+                FireToast(res.UserMessage);
+                return false;
+            }
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            return true;
+        }
+
+        public EggRewardViewModel PurchaseMysteryEgg()
+        {
+            var res = _controller.Planning.PurchaseMysteryEgg();
+            if (!res.IsSuccess)
+            {
+                FireToast(res.UserMessage);
+                return null;
+            }
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            var reward = res.Payload as PetEggRewardEntry;
+            return new EggRewardViewModel
+            {
+                RewardName = reward?.Name ?? "Unknown Reward",
+                RewardType = reward?.RewardType ?? "Unknown",
+                Description = reward?.Description ?? string.Empty
+            };
         }
 
         // =================================================================================

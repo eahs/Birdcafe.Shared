@@ -35,5 +35,10 @@ namespace BirdCafe.Shared.Models.Cafe
         /// IDs of unlocked cafe decorations.
         /// </summary>
         public List<string> UnlockedDecorationIds { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Persistent ownership/progression state for Rick's Pet Store.
+        /// </summary>
+        public PetStoreState PetStore { get; set; } = new PetStoreState();
     }
 }

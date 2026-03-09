@@ -100,6 +100,30 @@ namespace BirdCafe.Shared.Enums
     }
 
     /// <summary>
+    /// Rarity tiers used for Rick's Pet Store offerings.
+    /// </summary>
+    [Serializable]
+    public enum PetBirdRarityTier
+    {
+        Common = 0,
+        Uncommon = 1,
+        Rare = 2,
+        Legendary = 3
+    }
+
+    /// <summary>
+    /// Supply categories sold in Rick's Pet Store.
+    /// </summary>
+    [Serializable]
+    public enum PetStoreSupplyType
+    {
+        BirdFood = 0,
+        Toys = 1,
+        Costumes = 2,
+        MysteryEgg = 3
+    }
+
+    /// <summary>
     /// Defines generic types of care actions.
     /// </summary>
     [Serializable]

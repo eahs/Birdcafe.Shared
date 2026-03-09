@@ -1,5 +1,7 @@
+using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
+using BirdCafe.Shared.Models.Cafe;
 using BirdCafe.Shared.Models.Meta;
 using BirdCafe.Shared.Models.Simulation;
 using System;
@@ -46,6 +48,9 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // --- Step 1: Initialize Result Object ---
             var result = InitializeDayResult(state);
+            var petStoreEffects = ResolvePetStoreEffects(state);
+            result.Economy.PetStoreBonusCustomers = petStoreEffects.BonusCustomers;
+            result.Economy.PetStoreBonusRevenue = petStoreEffects.FlatRevenueBonus;
 
             // --- Step 2: Snapshot Bird State ---
             // Use LINQ Where to filter the birds list:
@@ -74,7 +79,7 @@ namespace BirdCafe.Shared.Engine.Managers
             }
 
             // --- Step 3: Generate Customer Queue ---
-            var customers = GenerateDailyCustomers(state, rng);
+            var customers = GenerateDailyCustomers(state, rng, petStoreEffects.BonusCustomers);
             result.Customers.CustomersArrived = customers.Count;
 
             // --- Step 4: Process Simulation Loop ---
@@ -85,7 +90,7 @@ namespace BirdCafe.Shared.Engine.Managers
             }
 
             // --- Step 5: End of Day Cleanup (Decay, Waste, Profit) ---
-            FinalizeDayStats(state, result, rng);
+            FinalizeDayStats(state, result, rng, petStoreEffects);
 
             // Add the final result to the history list.
             state.PastDayResults.Add(result);
@@ -136,14 +141,14 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <param name="state">The game state.</param>
         /// <param name="rng">The random number generator.</param>
         /// <returns>A list of customer transaction records.</returns>
-        private List<CustomerTransactionRecord> GenerateDailyCustomers(GameSave state, Random rng)
+        private List<CustomerTransactionRecord> GenerateDailyCustomers(GameSave state, Random rng, int bonusCustomers)
         {
             var config = state.Config;
 
             // Calculate count: Base + (Popularity * Factor).
             int count = (int)(config.BaseCustomersPerDay + (state.Cafe.Popularity * config.PopularityToCustomerFactor));
             // Add slight randomness (-2 to +2 customers).
-            count = Math.Max(1, count + rng.Next(-2, 3));
+            count = Math.Max(1, count + rng.Next(-2, 3) + bonusCustomers);
 
             var customers = new List<CustomerTransactionRecord>();
 
@@ -359,7 +364,7 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <summary>
         /// Calculates final totals, applies waste logic, and handles bird daily decay.
         /// </summary>
-        private void FinalizeDayStats(GameSave state, DaySimulationResult result, Random rng)
+        private void FinalizeDayStats(GameSave state, DaySimulationResult result, Random rng, PetStoreSimulationEffects petStoreEffects)
         {
             var config = state.Config;
 
@@ -390,10 +395,13 @@ namespace BirdCafe.Shared.Engine.Managers
             // Cost of wasted items.
             result.Economy.WasteCost = (result.Customers.CoffeeWasted * 1.0m) + (result.Customers.BakedGoodsWasted * 2.0m);
             // Net Profit = Revenue - Expenses.
+            result.Economy.TotalRevenue += petStoreEffects.FlatRevenueBonus;
+            state.Economy.CurrentBalance += petStoreEffects.FlatRevenueBonus;
+
             result.Economy.NetProfit = result.Economy.TotalRevenue - (result.Economy.InventoryCost + result.Economy.WasteCost);
 
             // 3. Update Popularity.
-            float popDelta = result.CustomerTransactions.Sum(t => t.PopularityDelta);
+            float popDelta = result.CustomerTransactions.Sum(t => t.PopularityDelta) + petStoreEffects.EndOfDayPopularityBonus;
             // Clamp popularity between 0 and 100.
             state.Cafe.Popularity = Math.Clamp(state.Cafe.Popularity + popDelta, 0, 100);
             result.Popularity.PopularityAtEnd = state.Cafe.Popularity;
@@ -459,6 +467,52 @@ namespace BirdCafe.Shared.Engine.Managers
                 // Reduce health.
                 bird.Health = Math.Clamp(bird.Health - 20, 0, 100);
             }
+        }
+
+
+        private PetStoreSimulationEffects ResolvePetStoreEffects(GameSave state)
+        {
+            var petStore = state.Cafe.PetStore;
+            int bonusCustomers = petStore.OwnedEntertainerBirds.Sum(b => b.CustomerBonus);
+            decimal flatRevenue = petStore.OwnedEntertainerBirds.Sum(b => b.FlatRevenueBonus);
+
+            foreach (var reward in PetStoreCatalog.EggRewards.Where(r => petStore.UnlockedRewardIds.Contains(r.Id)))
+            {
+                bonusCustomers += reward.BonusCustomers;
+                flatRevenue += reward.FlatRevenueBonus;
+            }
+
+            if (petStore.Supplies.BirdFoodOwned > 0)
+            {
+                petStore.Supplies.BirdFoodOwned--;
+                bonusCustomers += 1;
+            }
+            if (petStore.Supplies.ToysOwned > 0)
+            {
+                petStore.Supplies.ToysOwned--;
+                flatRevenue += 4m;
+            }
+
+            int endPopularity = 0;
+            if (petStore.Supplies.CostumesOwned > 0)
+            {
+                petStore.Supplies.CostumesOwned--;
+                endPopularity += 1;
+            }
+
+            return new PetStoreSimulationEffects
+            {
+                BonusCustomers = bonusCustomers,
+                FlatRevenueBonus = flatRevenue,
+                EndOfDayPopularityBonus = endPopularity
+            };
+        }
+
+        private class PetStoreSimulationEffects
+        {
+            public int BonusCustomers { get; set; }
+            public decimal FlatRevenueBonus { get; set; }
+            public int EndOfDayPopularityBonus { get; set; }
         }
 
         // --- Trivial Helpers ---

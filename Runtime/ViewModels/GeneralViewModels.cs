@@ -51,6 +51,21 @@ namespace BirdCafe.Shared.ViewModels
         EveningPlanning,
 
         /// <summary>
+        /// Rick's Pet Store root screen.
+        /// </summary>
+        PetStore,
+
+        /// <summary>
+        /// Rick's Pet Store bird catalog.
+        /// </summary>
+        PetStoreBirds,
+
+        /// <summary>
+        /// Rick's Pet Store supplies catalog.
+        /// </summary>
+        PetStoreSupplies,
+
+        /// <summary>
         /// The weekly performance report.
         /// </summary>
         WeeklySummary,

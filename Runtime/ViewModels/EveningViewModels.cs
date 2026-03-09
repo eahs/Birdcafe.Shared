@@ -62,6 +62,10 @@ namespace BirdCafe.Shared.ViewModels
         /// </summary>
         public decimal NetProfit { get; set; }
 
+        public decimal PetStoreBonusRevenue { get; set; }
+
+        public int PetStoreBonusCustomers { get; set; }
+
         /// <summary>
         /// The player's total liquid cash balance after all daily calculations.
         /// </summary>
@@ -409,4 +413,47 @@ namespace BirdCafe.Shared.ViewModels
         /// </summary>
         public bool CanWork { get; set; }
     }
+
+    [Serializable]
+    public class PetStoreHubViewModel
+    {
+        public decimal CurrentMoney { get; set; }
+        public int OwnedEntertainerBirds { get; set; }
+        public int FoodOwned { get; set; }
+        public int ToysOwned { get; set; }
+        public int CostumesOwned { get; set; }
+        public string LastEggRewardText { get; set; }
+    }
+
+    [Serializable]
+    public class PetBirdStoreItemViewModel
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string RarityText { get; set; }
+        public decimal Price { get; set; }
+        public string EffectText { get; set; }
+        public bool IsAffordable { get; set; }
+        public bool IsOwned { get; set; }
+    }
+
+    [Serializable]
+    public class PetSupplyStoreItemViewModel
+    {
+        public string SupplyKey { get; set; }
+        public string Name { get; set; }
+        public decimal Price { get; set; }
+        public string EffectText { get; set; }
+        public bool IsAffordable { get; set; }
+        public int QuantityOwned { get; set; }
+    }
+
+    [Serializable]
+    public class EggRewardViewModel
+    {
+        public string RewardName { get; set; }
+        public string RewardType { get; set; }
+        public string Description { get; set; }
+    }
+
 }
