@@ -18,16 +18,17 @@ namespace BirdCafe.ConsoleApp.Screens
             while (stayOnScreen)
             {
                 Console.Clear();
-                var state = BirdCafeGame.Instance.Controller.CurrentState;
+                var hub = BirdCafeGame.Instance.GetEveningHub();
                 Console.WriteLine("=========================================");
-                Console.WriteLine($"   EVENING HUB - Day {state.CurrentDayNumber}");
+                Console.WriteLine($"   EVENING HUB - Day {hub.DayNumber}");
                 Console.WriteLine("=========================================");
-                Console.WriteLine($"Funds: ${state.Economy.CurrentBalance:F2}  |  Popularity: {(int)state.Cafe.Popularity}");
+                Console.WriteLine($"Funds: ${hub.CurrentMoney:F2}  |  Popularity: {hub.CurrentPopularity}");
                 Console.WriteLine("-----------------------------------------");
                 Console.WriteLine("1. View Daily Summary");
                 Console.WriteLine("2. Care for Birds");
                 Console.WriteLine("3. Plan Tomorrow's Shop & Roster");
-                Console.WriteLine("4. Start Next Day (End Evening)");
+                Console.WriteLine("4. Rick's Pet Store");
+                Console.WriteLine("5. Start Next Day (End Evening)");
                 Console.WriteLine("\n[H] Help  [C] Chat");
                 Console.Write("> ");
 
@@ -38,7 +39,8 @@ namespace BirdCafe.ConsoleApp.Screens
                 else if (key == '1') { BirdCafeGame.Instance.GoToSummary(); stayOnScreen = false; }
                 else if (key == '2') { BirdCafeGame.Instance.GoToCare(); stayOnScreen = false; }
                 else if (key == '3') { BirdCafeGame.Instance.GoToPlanning(); stayOnScreen = false; }
-                else if (key == '4') 
+                else if (key == '4') { BirdCafeGame.Instance.GoToPetStore(); stayOnScreen = false; }
+                else if (key == '5') 
                 { 
                     if (BirdCafeGame.Instance.FinalizeDay())
                     {
@@ -289,6 +291,106 @@ namespace BirdCafe.ConsoleApp.Screens
             if (int.TryParse(Console.ReadLine(), out int qty))
             {
                 BirdCafeGame.Instance.SetInventory(type, qty);
+            }
+        }
+
+        public static void ShowPetStore()
+        {
+            bool stayOnScreen = true;
+            while (stayOnScreen)
+            {
+                Console.Clear();
+                var vm = BirdCafeGame.Instance.GetPetStoreDashboard();
+                Console.WriteLine("=== RICK'S PET STORE ===");
+                Console.WriteLine($"Funds: ${vm.CurrentMoney:F2} | Birds Owned: {vm.OwnedBirdCount}");
+                Console.WriteLine($"Bird Food: {vm.BirdFoodUnits} | Special Egg Toys: {vm.SpecialEggToysOwned}");
+                Console.WriteLine(vm.LastEggRewardText);
+                Console.WriteLine("\n1. Buy Birds");
+                Console.WriteLine("2. Buy Supplies");
+                Console.WriteLine("B. Back to Hub");
+                Console.Write("> ");
+
+                var key = Console.ReadKey().KeyChar;
+                if (char.ToUpper(key) == 'B') { BirdCafeGame.Instance.GoToHub(); stayOnScreen = false; }
+                else if (key == '1') { BirdCafeGame.Instance.GoToPetStoreBirds(); stayOnScreen = false; }
+                else if (key == '2') { BirdCafeGame.Instance.GoToPetStoreSupplies(); stayOnScreen = false; }
+            }
+        }
+
+        public static void ShowPetStoreBirds()
+        {
+            bool stayOnScreen = true;
+            while (stayOnScreen)
+            {
+                Console.Clear();
+                var offers = BirdCafeGame.Instance.GetPetStoreBirdOffers();
+                Console.WriteLine("=== RICK'S PET STORE / BUY BIRDS ===");
+                for (int i = 0; i < offers.Count; i++)
+                {
+                    var offer = offers[i];
+                    Console.WriteLine($"{i + 1}. {offer.Name} [{offer.RarityText}] - ${offer.Price:F2}");
+                    Console.WriteLine($"   {offer.EffectText} {(offer.IsAffordable ? "" : "[Cannot Afford]")}");
+                }
+                Console.WriteLine("B. Back");
+                Console.Write("> ");
+                var key = Console.ReadKey().KeyChar;
+                if (char.ToUpper(key) == 'B') { BirdCafeGame.Instance.GoToPetStore(); stayOnScreen = false; }
+                else if (char.IsDigit(key))
+                {
+                    int idx = int.Parse(key.ToString()) - 1;
+                    if (idx >= 0 && idx < offers.Count)
+                    {
+                        BirdCafeGame.Instance.BuyPetStoreBird(offers[idx].SpeciesId);
+                    }
+                }
+            }
+        }
+
+        public static void ShowPetStoreSupplies()
+        {
+            bool stayOnScreen = true;
+            while (stayOnScreen)
+            {
+                Console.Clear();
+                var offers = BirdCafeGame.Instance.GetPetStoreSupplyOffers();
+                Console.WriteLine("=== RICK'S PET STORE / BUY SUPPLIES ===");
+                Console.WriteLine("1. Bird Food");
+                Console.WriteLine("2. Toys");
+                Console.WriteLine("3. Costumes");
+                Console.WriteLine("4. Special Egg Toy");
+                Console.WriteLine("O. Open owned Special Egg Toy");
+                Console.WriteLine("B. Back");
+                Console.Write("> ");
+
+                var key = Console.ReadKey().KeyChar;
+                if (char.ToUpper(key) == 'B') { BirdCafeGame.Instance.GoToPetStore(); stayOnScreen = false; }
+                else if (char.ToUpper(key) == 'O')
+                {
+                    var reward = BirdCafeGame.Instance.OpenSpecialEggToy();
+                    if (reward.HasReward)
+                    {
+                        Console.WriteLine($"\nEgg Reward: {reward.RewardName} ({reward.RewardTypeText})");
+                        Console.WriteLine(reward.RewardDescription);
+                        Console.ReadKey();
+                    }
+                }
+                else if (key == '1')
+                {
+                    var food = offers.First(o => o.ItemId == "BirdFoodBag");
+                    BirdCafeGame.Instance.BuyPetStoreSupply(food.ItemId, PetStoreSupplyType.BirdFood);
+                }
+                else if (key == '2')
+                {
+                    BirdCafeGame.Instance.BuyPetStoreSupply("Toy_FeatherWand", PetStoreSupplyType.Toy);
+                }
+                else if (key == '3')
+                {
+                    BirdCafeGame.Instance.BuyPetStoreSupply("Costume_Bandana", PetStoreSupplyType.Costume);
+                }
+                else if (key == '4')
+                {
+                    BirdCafeGame.Instance.BuyPetStoreSupply("SpecialEggToy", PetStoreSupplyType.SpecialEggToy);
+                }
             }
         }
     }

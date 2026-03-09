@@ -409,4 +409,74 @@ namespace BirdCafe.Shared.ViewModels
         /// </summary>
         public bool CanWork { get; set; }
     }
+
+    [Serializable]
+    public class EveningHubViewModel
+    {
+        public int DayNumber { get; set; }
+
+        public decimal CurrentMoney { get; set; }
+
+        public int CurrentPopularity { get; set; }
+    }
+
+    [Serializable]
+    public class PetStoreDashboardViewModel
+    {
+        public decimal CurrentMoney { get; set; }
+
+        public int OwnedBirdCount { get; set; }
+
+        public int BirdFoodUnits { get; set; }
+
+        public int SpecialEggToysOwned { get; set; }
+
+        public string LastEggRewardText { get; set; }
+    }
+
+    [Serializable]
+    public class PetStoreBirdOfferViewModel
+    {
+        public string SpeciesId { get; set; }
+
+        public string Name { get; set; }
+
+        public string RarityText { get; set; }
+
+        public decimal Price { get; set; }
+
+        public string EffectText { get; set; }
+
+        public bool IsAffordable { get; set; }
+    }
+
+    [Serializable]
+    public class PetStoreSupplyOfferViewModel
+    {
+        public string ItemId { get; set; }
+
+        public string Name { get; set; }
+
+        public string CategoryText { get; set; }
+
+        public decimal Price { get; set; }
+
+        public int OwnedQuantity { get; set; }
+
+        public string EffectText { get; set; }
+
+        public bool IsAffordable { get; set; }
+    }
+
+    [Serializable]
+    public class EggRewardResultViewModel
+    {
+        public bool HasReward { get; set; }
+
+        public string RewardTypeText { get; set; }
+
+        public string RewardName { get; set; }
+
+        public string RewardDescription { get; set; }
+    }
 }

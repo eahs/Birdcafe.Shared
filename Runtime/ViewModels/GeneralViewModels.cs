@@ -50,6 +50,12 @@ namespace BirdCafe.Shared.ViewModels
         /// </summary>
         EveningPlanning,
 
+        EveningPetStore,
+
+        EveningPetStoreBirds,
+
+        EveningPetStoreSupplies,
+
         /// <summary>
         /// The weekly performance report.
         /// </summary>

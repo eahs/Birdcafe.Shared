@@ -114,6 +114,15 @@ namespace BirdCafe.ConsoleApp
                 case GameScreen.EveningPlanning:
                     Screens.EveningScreens.ShowPlanning();
                     break;
+                case GameScreen.EveningPetStore:
+                    Screens.EveningScreens.ShowPetStore();
+                    break;
+                case GameScreen.EveningPetStoreBirds:
+                    Screens.EveningScreens.ShowPetStoreBirds();
+                    break;
+                case GameScreen.EveningPetStoreSupplies:
+                    Screens.EveningScreens.ShowPetStoreSupplies();
+                    break;
                 case GameScreen.WeeklySummary:
                     Screens.ReportScreens.ShowWeeklyReport();
                     break;

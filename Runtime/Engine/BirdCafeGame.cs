@@ -2,6 +2,7 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.ViewModels;
 using System;
@@ -247,6 +248,175 @@ namespace BirdCafe.Shared
         public void GoToPlanning()
         {
             TransitionTo(GameScreen.EveningPlanning);
+        }
+
+        public void GoToPetStore()
+        {
+            TransitionTo(GameScreen.EveningPetStore);
+        }
+
+        public void GoToPetStoreBirds()
+        {
+            TransitionTo(GameScreen.EveningPetStoreBirds);
+        }
+
+        public void GoToPetStoreSupplies()
+        {
+            TransitionTo(GameScreen.EveningPetStoreSupplies);
+        }
+
+        public EveningHubViewModel GetEveningHub()
+        {
+            var state = _controller.CurrentState;
+            return new EveningHubViewModel
+            {
+                DayNumber = state.CurrentDayNumber,
+                CurrentMoney = state.Economy.CurrentBalance,
+                CurrentPopularity = (int)state.Cafe.Popularity
+            };
+        }
+
+        public PetStoreDashboardViewModel GetPetStoreDashboard()
+        {
+            var state = _controller.CurrentState;
+            var lastReward = state.PetStore.EggRewardHistory.LastOrDefault();
+            return new PetStoreDashboardViewModel
+            {
+                CurrentMoney = state.Economy.CurrentBalance,
+                OwnedBirdCount = state.Birds.Count,
+                BirdFoodUnits = state.PetStore.BirdFoodUnits,
+                SpecialEggToysOwned = state.PetStore.SpecialEggToysOwned,
+                LastEggRewardText = lastReward == null ? "No egg reward opened yet." : $"Last egg reward: {lastReward.RewardName}"
+            };
+        }
+
+        public List<PetStoreBirdOfferViewModel> GetPetStoreBirdOffers()
+        {
+            var money = _controller.CurrentState.Economy.CurrentBalance;
+            return PetStoreCatalog.BirdOffers.Select(o => new PetStoreBirdOfferViewModel
+            {
+                SpeciesId = o.SpeciesId,
+                Name = o.DisplayName,
+                RarityText = o.Rarity.ToString(),
+                Price = o.Price,
+                EffectText = o.FlavorDescription,
+                IsAffordable = money >= o.Price
+            }).ToList();
+        }
+
+        public List<PetStoreSupplyOfferViewModel> GetPetStoreSupplyOffers()
+        {
+            var money = _controller.CurrentState.Economy.CurrentBalance;
+            var store = _controller.CurrentState.PetStore;
+
+            return new List<PetStoreSupplyOfferViewModel>
+            {
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.BirdFoodItemId,
+                    Name = "Bird Food",
+                    CategoryText = "Bird Food",
+                    Price = PetStoreCatalog.BirdFoodPrice,
+                    OwnedQuantity = store.BirdFoodUnits,
+                    EffectText = "Consumed by Feed care actions before money is spent.",
+                    IsAffordable = money >= PetStoreCatalog.BirdFoodPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.ToyFeatherWandId,
+                    Name = "Feather Wand",
+                    CategoryText = "Toy",
+                    Price = PetStoreCatalog.FeatherWandPrice,
+                    OwnedQuantity = store.OwnedToyQuantities.TryGetValue(PetStoreCatalog.ToyFeatherWandId, out var w) ? w : 0,
+                    EffectText = "Owned toy collection item.",
+                    IsAffordable = money >= PetStoreCatalog.FeatherWandPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.ToyBellOrbId,
+                    Name = "Bell Orb",
+                    CategoryText = "Toy",
+                    Price = PetStoreCatalog.BellOrbPrice,
+                    OwnedQuantity = store.OwnedToyQuantities.TryGetValue(PetStoreCatalog.ToyBellOrbId, out var b) ? b : 0,
+                    EffectText = "Owned toy collection item.",
+                    IsAffordable = money >= PetStoreCatalog.BellOrbPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.CostumeBandanaId,
+                    Name = "Cafe Bandana",
+                    CategoryText = "Costume",
+                    Price = PetStoreCatalog.BandanaPrice,
+                    OwnedQuantity = store.OwnedCostumeQuantities.TryGetValue(PetStoreCatalog.CostumeBandanaId, out var c) ? c : 0,
+                    EffectText = "Owned costume unlock.",
+                    IsAffordable = money >= PetStoreCatalog.BandanaPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.CostumeRoyalCapeId,
+                    Name = "Royal Cape",
+                    CategoryText = "Costume",
+                    Price = PetStoreCatalog.RoyalCapePrice,
+                    OwnedQuantity = store.OwnedCostumeQuantities.TryGetValue(PetStoreCatalog.CostumeRoyalCapeId, out var rc) ? rc : 0,
+                    EffectText = "Rare costume unlock.",
+                    IsAffordable = money >= PetStoreCatalog.RoyalCapePrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = "SpecialEggToy",
+                    Name = "Special Egg Toy",
+                    CategoryText = "Special Egg Toy",
+                    Price = PetStoreCatalog.SpecialEggToyPrice,
+                    OwnedQuantity = store.SpecialEggToysOwned,
+                    EffectText = "Open to receive one deterministic reward.",
+                    IsAffordable = money >= PetStoreCatalog.SpecialEggToyPrice
+                }
+            };
+        }
+
+        public bool BuyPetStoreBird(string speciesId)
+        {
+            var result = _controller.PetStore.BuyBird(speciesId);
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return false;
+            }
+
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            return true;
+        }
+
+        public bool BuyPetStoreSupply(string itemId, PetStoreSupplyType supplyType)
+        {
+            var result = _controller.PetStore.BuySupply(itemId, supplyType);
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return false;
+            }
+
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            return true;
+        }
+
+        public EggRewardResultViewModel OpenSpecialEggToy()
+        {
+            var result = _controller.PetStore.OpenSpecialEggToy();
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return new EggRewardResultViewModel { HasReward = false };
+            }
+
+            var reward = (EggRewardRecord)result.Payload;
+            return new EggRewardResultViewModel
+            {
+                HasReward = true,
+                RewardTypeText = reward.RewardType.ToString(),
+                RewardName = reward.RewardName,
+                RewardDescription = reward.RewardDescription
+            };
         }
 
         // =================================================================================

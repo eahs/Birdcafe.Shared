@@ -49,12 +49,18 @@ namespace BirdCafe.Shared.Engine.Managers
             var template = GetTemplate(actionId, _controller.CurrentState.Config);
             if (template == null) return EngineResult.Failure("InvalidAction", "Unknown care action.");
 
+            bool consumesStoredBirdFood = actionId == CareActionIds.Feed && _controller.CurrentState.PetStore.BirdFoodUnits > 0;
+
             // Check if the player has enough money.
-            if (_controller.CurrentState.Economy.CurrentBalance < template.MoneyCost)
+            if (!consumesStoredBirdFood && _controller.CurrentState.Economy.CurrentBalance < template.MoneyCost)
                 return EngineResult.Failure("InsufficientFunds", "Not enough money.");
 
+            if (consumesStoredBirdFood)
+            {
+                _controller.CurrentState.PetStore.BirdFoodUnits -= 1;
+            }
             // If the action costs money, process the payment.
-            if (template.MoneyCost > 0)
+            else if (template.MoneyCost > 0)
             {
                 // Subtract cost from balance.
                 _controller.CurrentState.Economy.CurrentBalance -= template.MoneyCost;
