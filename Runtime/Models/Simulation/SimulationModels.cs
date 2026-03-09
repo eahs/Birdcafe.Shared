@@ -105,6 +105,11 @@ namespace BirdCafe.Shared.Models.Simulation
         /// Operational Profit: Revenue - (InventoryCost + WasteCost).
         /// </summary>
         public decimal NetProfit { get; set; }
+
+        /// <summary>
+        /// Revenue gained from entertainer birds and unlocked rewards.
+        /// </summary>
+        public decimal PassiveBonusRevenue { get; set; }
     }
 
     /// <summary>

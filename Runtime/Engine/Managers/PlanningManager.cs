@@ -2,9 +2,11 @@
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.PetStore;
 using BirdCafe.Shared.Models.Simulation;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BirdCafe.Shared.Engine.Managers
 {
@@ -121,6 +123,106 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success();
         }
 
+        /// <summary>
+        /// Purchases an entertainer bird from Rick's Pet Store.
+        /// </summary>
+        public EngineResult PurchaseEntertainerBird(string birdId)
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure("InvalidPhase", "Rick's Pet Store is only open during evening.");
+
+            var state = _controller.CurrentState;
+            var definition = PetStoreCatalog.EntertainerBirds.FirstOrDefault(b => b.BirdId == birdId);
+            if (definition == null)
+                return EngineResult.Failure("InvalidPetBird", "That bird is not sold in Rick's Pet Store.");
+
+            if (state.PetStore.OwnedEntertainerBirdIds.Contains(birdId))
+                return EngineResult.Failure("AlreadyOwned", "You already own this entertainer bird.");
+
+            if (state.Economy.CurrentBalance < definition.Price)
+                return EngineResult.Failure("InsufficientFunds", "Not enough money for that bird.");
+
+            state.Economy.CurrentBalance -= definition.Price;
+            state.PetStore.OwnedEntertainerBirdIds.Add(birdId);
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                Amount = -definition.Price,
+                Reason = $"Rick's Pet Store Bird: {definition.SpeciesName}",
+                ShortDescription = definition.EffectDescription,
+                Timestamp = DateTime.Now,
+                Category = ExpenseCategory.ToysAndActivities
+            });
+
+            return EngineResult.Success(definition);
+        }
+
+        /// <summary>
+        /// Purchases a store supply item.
+        /// </summary>
+        public EngineResult PurchaseSupply(PetStoreSupplyType supplyType)
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure("InvalidPhase", "Rick's Pet Store is only open during evening.");
+
+            if (supplyType == PetStoreSupplyType.MysteryEgg)
+                return PurchaseMysteryEgg();
+
+            var state = _controller.CurrentState;
+            var def = PetStoreCatalog.Supplies.FirstOrDefault(s => s.SupplyType == supplyType);
+            if (def == null)
+                return EngineResult.Failure("InvalidSupply", "That item is not sold in the store.");
+
+            if (state.Economy.CurrentBalance < def.Price)
+                return EngineResult.Failure("InsufficientFunds", "Not enough money for that supply.");
+
+            state.Economy.CurrentBalance -= def.Price;
+            AddSupplyToInventory(state.PetStore.Supplies, supplyType);
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                Amount = -def.Price,
+                Reason = $"Rick's Supply: {def.DisplayName}",
+                ShortDescription = def.EffectDescription,
+                Timestamp = DateTime.Now,
+                Category = ResolveCategoryForSupply(supplyType)
+            });
+
+            return EngineResult.Success(def);
+        }
+
+        /// <summary>
+        /// Purchases and opens one mystery egg using deterministic seeded selection.
+        /// </summary>
+        public EngineResult PurchaseMysteryEgg()
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure("InvalidPhase", "Rick's Pet Store is only open during evening.");
+
+            var state = _controller.CurrentState;
+            var eggDef = PetStoreCatalog.Supplies.First(s => s.SupplyType == PetStoreSupplyType.MysteryEgg);
+            if (state.Economy.CurrentBalance < eggDef.Price)
+                return EngineResult.Failure("InsufficientFunds", "Not enough money for a mystery egg.");
+
+            state.Economy.CurrentBalance -= eggDef.Price;
+            var reward = ResolveDeterministicEggReward(state);
+
+            if (!state.PetStore.UnlockedEggRewardIds.Contains(reward.RewardId))
+                state.PetStore.UnlockedEggRewardIds.Add(reward.RewardId);
+
+            state.PetStore.LastUnlockedEggRewardId = reward.RewardId;
+            state.PetStore.MysteryEggOpenCount++;
+
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                Amount = -eggDef.Price,
+                Reason = "Rick's Supply: Mystery Egg Toy",
+                ShortDescription = $"Unlocked: {reward.DisplayName}",
+                Timestamp = DateTime.Now,
+                Category = ExpenseCategory.UpgradesAndCustomization
+            });
+
+            return EngineResult.Success(reward);
+        }
+
         // --- Private Helpers for Readability ---
 
         /// <summary>
@@ -201,6 +303,28 @@ namespace BirdCafe.Shared.Engine.Managers
                 // Otherwise, go straight to the Day Loop.
                 _controller.SetPhase(GamePhase.DayLoop);
             }
+        }
+
+        private static void AddSupplyToInventory(SupplyInventory inventory, PetStoreSupplyType supplyType)
+        {
+            if (supplyType == PetStoreSupplyType.BirdFood) inventory.BirdFoodCount++;
+            if (supplyType == PetStoreSupplyType.Toys) inventory.ToyCount++;
+            if (supplyType == PetStoreSupplyType.Costumes) inventory.CostumeCount++;
+        }
+
+        private static ExpenseCategory ResolveCategoryForSupply(PetStoreSupplyType supplyType)
+        {
+            if (supplyType == PetStoreSupplyType.BirdFood) return ExpenseCategory.FoodAndSupplies;
+            if (supplyType == PetStoreSupplyType.Toys) return ExpenseCategory.ToysAndActivities;
+            return ExpenseCategory.UpgradesAndCustomization;
+        }
+
+        private static EggRewardDefinition ResolveDeterministicEggReward(GameSave state)
+        {
+            var seed = state.CurrentDayState.CurrentPlan.DaySeed + (state.PetStore.MysteryEggOpenCount * 97) + (state.CurrentDayNumber * 31);
+            var rng = new Random(seed);
+            int index = rng.Next(PetStoreCatalog.EggRewards.Count);
+            return PetStoreCatalog.EggRewards[index];
         }
     }
 }

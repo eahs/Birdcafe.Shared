@@ -3,6 +3,7 @@ using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Cafe;
 using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Models.Meta;
+using BirdCafe.Shared.Models.PetStore;
 using BirdCafe.Shared.Models.Simulation;
 using System;
 using System.Collections.Generic;
@@ -105,5 +106,10 @@ namespace BirdCafe.Shared
         /// The active state for the current day, including the daily plan.
         /// </summary>
         public DayState CurrentDayState { get; set; } = new DayState();
+
+        /// <summary>
+        /// Persistent ownership/unlock state for Rick's Pet Store.
+        /// </summary>
+        public PetStoreState PetStore { get; set; } = new PetStoreState();
     }
 }

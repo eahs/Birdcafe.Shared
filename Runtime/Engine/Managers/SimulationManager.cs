@@ -1,7 +1,9 @@
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Meta;
+using BirdCafe.Shared.Models.PetStore;
 using BirdCafe.Shared.Models.Simulation;
+using BirdCafe.Shared.Engine.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -382,6 +384,9 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // 2. Calculate Money Stats.
             result.Economy.TotalRevenue = result.CustomerTransactions.Sum(t => t.Revenue);
+
+            float passivePopularityBonus = ApplyPetStorePassives(state, result);
+
             state.Economy.CurrentBalance += result.Economy.TotalRevenue;
             result.Economy.EndingMoney = state.Economy.CurrentBalance;
 
@@ -393,7 +398,7 @@ namespace BirdCafe.Shared.Engine.Managers
             result.Economy.NetProfit = result.Economy.TotalRevenue - (result.Economy.InventoryCost + result.Economy.WasteCost);
 
             // 3. Update Popularity.
-            float popDelta = result.CustomerTransactions.Sum(t => t.PopularityDelta);
+            float popDelta = result.CustomerTransactions.Sum(t => t.PopularityDelta) + passivePopularityBonus;
             // Clamp popularity between 0 and 100.
             state.Cafe.Popularity = Math.Clamp(state.Cafe.Popularity + popDelta, 0, 100);
             result.Popularity.PopularityAtEnd = state.Cafe.Popularity;
@@ -438,6 +443,53 @@ namespace BirdCafe.Shared.Engine.Managers
                 summary.HealthAtEnd = bird.Health;
                 summary.EnergyAtEnd = bird.Energy;
             }
+        }
+
+        /// <summary>
+        /// Applies deterministic passive effects from Rick's Pet Store ownership.
+        /// </summary>
+        private float ApplyPetStorePassives(GameSave state, DaySimulationResult result)
+        {
+            decimal passiveRevenue = 0m;
+            float passivePopularity = 0f;
+
+            foreach (var ownedBirdId in state.PetStore.OwnedEntertainerBirdIds)
+            {
+                var def = PetStoreCatalog.EntertainerBirds.FirstOrDefault(b => b.BirdId == ownedBirdId);
+                if (def == null) continue;
+                passiveRevenue += def.DailyRevenueBonus;
+                passivePopularity += def.DailyPopularityBonus;
+            }
+
+            var supplies = state.PetStore.Supplies;
+            if (supplies.BirdFoodCount > 0)
+            {
+                passiveRevenue += 5m;
+                supplies.BirdFoodCount--;
+            }
+
+            if (supplies.ToyCount > 0)
+            {
+                passivePopularity += 0.5f;
+                supplies.ToyCount--;
+            }
+
+            if (supplies.CostumeCount > 0)
+            {
+                passivePopularity += supplies.CostumeCount * 0.25f;
+            }
+
+            foreach (var rewardId in state.PetStore.UnlockedEggRewardIds)
+            {
+                var reward = PetStoreCatalog.EggRewards.FirstOrDefault(r => r.RewardId == rewardId);
+                if (reward == null) continue;
+                passiveRevenue += reward.DailyRevenueBonus;
+                passivePopularity += reward.DailyPopularityBonus;
+            }
+
+            result.Economy.PassiveBonusRevenue = passiveRevenue;
+            result.Economy.TotalRevenue += passiveRevenue;
+            return passivePopularity;
         }
 
         /// <summary>

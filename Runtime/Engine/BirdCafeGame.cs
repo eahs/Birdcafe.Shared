@@ -2,6 +2,7 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.PetStore;
 using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.ViewModels;
 using System;
@@ -249,6 +250,32 @@ namespace BirdCafe.Shared
             TransitionTo(GameScreen.EveningPlanning);
         }
 
+        public void GoToPetStore()
+        {
+            TransitionTo(GameScreen.PetStore);
+        }
+
+        public void GoToPetStoreBirds()
+        {
+            TransitionTo(GameScreen.PetStoreBirds);
+        }
+
+        public void GoToPetStoreSupplies()
+        {
+            TransitionTo(GameScreen.PetStoreSupplies);
+        }
+
+        public EveningHubViewModel GetEveningHub()
+        {
+            var state = _controller.CurrentState;
+            return new EveningHubViewModel
+            {
+                DayNumber = state.CurrentDayNumber,
+                Funds = state.Economy.CurrentBalance,
+                Popularity = (int)state.Cafe.Popularity
+            };
+        }
+
         // =================================================================================
         // EVENING SUMMARY
         // =================================================================================
@@ -274,6 +301,7 @@ namespace BirdCafe.Shared
 
                 TotalRevenue = eco.TotalRevenue,
                 NetProfit = eco.NetProfit,
+                PassiveBonusRevenue = eco.PassiveBonusRevenue,
 
                 CoffeeSold = stats.CoffeeSold,
                 BakedSold = stats.BakedGoodsSold,
@@ -302,6 +330,116 @@ namespace BirdCafe.Shared
             }
 
             return vm;
+        }
+
+        public PetStoreViewModel GetPetStoreViewModel()
+        {
+            var state = _controller.CurrentState;
+            var vm = new PetStoreViewModel
+            {
+                CurrentMoney = state.Economy.CurrentBalance,
+                Supplies = new SupplyInventoryViewModel
+                {
+                    BirdFoodCount = state.PetStore.Supplies.BirdFoodCount,
+                    ToyCount = state.PetStore.Supplies.ToyCount,
+                    CostumeCount = state.PetStore.Supplies.CostumeCount,
+                    EggRewardsUnlocked = state.PetStore.UnlockedEggRewardIds.Count
+                }
+            };
+
+            foreach (var ownedId in state.PetStore.OwnedEntertainerBirdIds)
+            {
+                var def = PetStoreCatalog.EntertainerBirds.FirstOrDefault(x => x.BirdId == ownedId);
+                if (def == null) continue;
+                vm.OwnedBirds.Add(new OwnedEntertainerBirdViewModel
+                {
+                    DisplayName = def.SpeciesName,
+                    EffectText = def.EffectDescription
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(state.PetStore.LastUnlockedEggRewardId))
+            {
+                var reward = PetStoreCatalog.EggRewards.FirstOrDefault(r => r.RewardId == state.PetStore.LastUnlockedEggRewardId);
+                vm.LastEggRewardText = reward == null ? null : $"Last egg reward: {reward.DisplayName} ({reward.Description})";
+            }
+
+            return vm;
+        }
+
+        public PetBirdCatalogViewModel GetPetBirdCatalogViewModel()
+        {
+            var state = _controller.CurrentState;
+            return new PetBirdCatalogViewModel
+            {
+                CurrentMoney = state.Economy.CurrentBalance,
+                Birds = PetStoreCatalog.EntertainerBirds.Select(b => new PetBirdListingViewModel
+                {
+                    BirdId = b.BirdId,
+                    DisplayName = b.SpeciesName,
+                    Price = b.Price,
+                    RarityText = b.Rarity.ToString(),
+                    EffectText = b.EffectDescription,
+                    IsAffordable = state.Economy.CurrentBalance >= b.Price,
+                    IsOwned = state.PetStore.OwnedEntertainerBirdIds.Contains(b.BirdId)
+                }).ToList()
+            };
+        }
+
+        public PetSupplyCatalogViewModel GetPetSupplyCatalogViewModel()
+        {
+            var state = _controller.CurrentState;
+            return new PetSupplyCatalogViewModel
+            {
+                CurrentMoney = state.Economy.CurrentBalance,
+                Supplies = PetStoreCatalog.Supplies.Select(s => new PetSupplyListingViewModel
+                {
+                    SupplyTypeId = s.SupplyType.ToString(),
+                    DisplayName = s.DisplayName,
+                    Price = s.Price,
+                    EffectText = s.EffectDescription,
+                    IsAffordable = state.Economy.CurrentBalance >= s.Price,
+                    QuantityOwned = ResolveSupplyOwnedQuantity(state.PetStore, s.SupplyType)
+                }).ToList()
+            };
+        }
+
+        public bool PurchasePetBird(string birdId)
+        {
+            var res = _controller.Planning.PurchaseEntertainerBird(birdId);
+            if (!res.IsSuccess)
+            {
+                FireToast(res.UserMessage);
+                return false;
+            }
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            return true;
+        }
+
+        public bool PurchasePetStoreItem(PetStoreSupplyType supplyType)
+        {
+            var res = _controller.Planning.PurchaseSupply(supplyType);
+            if (!res.IsSuccess)
+            {
+                FireToast(res.UserMessage);
+                return false;
+            }
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            return true;
+        }
+
+        public string PurchaseMysteryEgg()
+        {
+            var res = _controller.Planning.PurchaseMysteryEgg();
+            if (!res.IsSuccess)
+            {
+                FireToast(res.UserMessage);
+                return null;
+            }
+
+            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            var reward = (EggRewardDefinition)res.Payload;
+            return $"You unlocked {reward.DisplayName}! {reward.Description}";
         }
 
         // =================================================================================
@@ -556,6 +694,14 @@ namespace BirdCafe.Shared
                 IsSick = b.IsSick,
                 WillRestTomorrow = b.AssignedDayOffNextDay
             };
+        }
+
+        private static int ResolveSupplyOwnedQuantity(Models.PetStore.PetStoreState state, PetStoreSupplyType supplyType)
+        {
+            if (supplyType == PetStoreSupplyType.BirdFood) return state.Supplies.BirdFoodCount;
+            if (supplyType == PetStoreSupplyType.Toys) return state.Supplies.ToyCount;
+            if (supplyType == PetStoreSupplyType.Costumes) return state.Supplies.CostumeCount;
+            return state.MysteryEggOpenCount;
         }
     }
 }

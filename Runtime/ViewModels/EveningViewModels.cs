@@ -63,6 +63,11 @@ namespace BirdCafe.Shared.ViewModels
         public decimal NetProfit { get; set; }
 
         /// <summary>
+        /// Revenue from entertainer passives/rewards.
+        /// </summary>
+        public decimal PassiveBonusRevenue { get; set; }
+
+        /// <summary>
         /// The player's total liquid cash balance after all daily calculations.
         /// </summary>
         public decimal CurrentMoney { get; set; }
@@ -296,6 +301,79 @@ namespace BirdCafe.Shared.ViewModels
         /// A list of validation warnings (e.g., "Not enough money!") to display to the user.
         /// </summary>
         public List<string> Warnings { get; set; } = new List<string>();
+    }
+
+    /// <summary>
+    /// Minimal evening hub header data.
+    /// </summary>
+    [Serializable]
+    public class EveningHubViewModel
+    {
+        public int DayNumber { get; set; }
+        public decimal Funds { get; set; }
+        public int Popularity { get; set; }
+    }
+
+    [Serializable]
+    public class PetStoreViewModel
+    {
+        public decimal CurrentMoney { get; set; }
+        public List<OwnedEntertainerBirdViewModel> OwnedBirds { get; set; } = new List<OwnedEntertainerBirdViewModel>();
+        public SupplyInventoryViewModel Supplies { get; set; } = new SupplyInventoryViewModel();
+        public string LastEggRewardText { get; set; }
+    }
+
+    [Serializable]
+    public class PetBirdCatalogViewModel
+    {
+        public decimal CurrentMoney { get; set; }
+        public List<PetBirdListingViewModel> Birds { get; set; } = new List<PetBirdListingViewModel>();
+    }
+
+    [Serializable]
+    public class PetSupplyCatalogViewModel
+    {
+        public decimal CurrentMoney { get; set; }
+        public List<PetSupplyListingViewModel> Supplies { get; set; } = new List<PetSupplyListingViewModel>();
+    }
+
+    [Serializable]
+    public class PetBirdListingViewModel
+    {
+        public string BirdId { get; set; }
+        public string DisplayName { get; set; }
+        public decimal Price { get; set; }
+        public string RarityText { get; set; }
+        public string EffectText { get; set; }
+        public bool IsAffordable { get; set; }
+        public bool IsOwned { get; set; }
+    }
+
+    [Serializable]
+    public class OwnedEntertainerBirdViewModel
+    {
+        public string DisplayName { get; set; }
+        public string EffectText { get; set; }
+    }
+
+    [Serializable]
+    public class PetSupplyListingViewModel
+    {
+        public string SupplyTypeId { get; set; }
+        public string DisplayName { get; set; }
+        public decimal Price { get; set; }
+        public string EffectText { get; set; }
+        public bool IsAffordable { get; set; }
+        public int QuantityOwned { get; set; }
+    }
+
+    [Serializable]
+    public class SupplyInventoryViewModel
+    {
+        public int BirdFoodCount { get; set; }
+        public int ToyCount { get; set; }
+        public int CostumeCount { get; set; }
+        public int EggRewardsUnlocked { get; set; }
     }
 
     /// <summary>
