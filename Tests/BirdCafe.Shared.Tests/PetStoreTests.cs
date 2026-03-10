@@ -62,7 +62,7 @@ namespace BirdCafe.Shared.Tests
         [Test]
         public void SupplyPurchasesPersist()
         {
-            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodItemId, PetStoreSupplyType.BirdFood).IsSuccess);
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood).IsSuccess);
             Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.ToyFeatherWandId, PetStoreSupplyType.Toy).IsSuccess);
             Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
 

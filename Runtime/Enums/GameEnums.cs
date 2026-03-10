@@ -272,4 +272,15 @@ namespace BirdCafe.Shared.Enums
         UniqueToy = 1,
         RareCostume = 2
     }
+
+    /// <summary>
+    /// Food types used by bird care and trust progression.
+    /// </summary>
+    [Serializable]
+    public enum BirdFoodType
+    {
+        SeedMix = 0,
+        FruitBlend = 1,
+        NutTreat = 2
+    }
 }

@@ -261,7 +261,7 @@ namespace BirdCafe.Shared.Engine.Managers
             else
             {
                 // Outcome: Success (At least partially).
-                RecordSuccessfulService(state, cust, result, candidate, birdAvailability, fulfillableItems);
+                RecordSuccessfulService(state, cust, result, candidate, workingBirds, birdAvailability, fulfillableItems);
             }
         }
 
@@ -292,6 +292,7 @@ namespace BirdCafe.Shared.Engine.Managers
             CustomerTransactionRecord cust,
             DaySimulationResult result,
             Bird bird,
+            List<Bird> workingBirds,
             Dictionary<string, float> birdAvailability,
             List<ProductType> servedItems)
         {
@@ -325,9 +326,13 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // Process each item sold.
             decimal totalRevenue = 0;
+            decimal trustRevenueBonus = GetTrustRevenueBonusMultiplier(bird);
+            decimal friendshipRevenueBonus = GetFriendshipRevenueBonusMultiplier(bird, workingBirds);
+            decimal revenueMultiplier = 1m + trustRevenueBonus + friendshipRevenueBonus;
+
             foreach (var item in servedItems)
             {
-                decimal price = GetProductPrice(state, item);
+                decimal price = decimal.Round(GetProductPrice(state, item) * revenueMultiplier, 2);
                 totalRevenue += price;
 
                 // Bird gets tired.
@@ -400,6 +405,8 @@ namespace BirdCafe.Shared.Engine.Managers
             state.Cafe.Popularity = Math.Clamp(state.Cafe.Popularity + popDelta, 0, 100);
             result.Popularity.PopularityAtEnd = state.Cafe.Popularity;
 
+            GrowWorkingBirdFriendships(result, state);
+
             // 4. Bird Decay & Sickness.
             foreach (var summary in result.BirdSummaries)
             {
@@ -460,6 +467,51 @@ namespace BirdCafe.Shared.Engine.Managers
                 summary.BecameSick = true;
                 // Reduce health.
                 bird.Health = Math.Clamp(bird.Health - 20, 0, 100);
+            }
+        }
+
+        private decimal GetTrustRevenueBonusMultiplier(Bird bird)
+        {
+            // Max +30% at 100 trust.
+            return Math.Min(0.30m, bird.Trust * 0.003m);
+        }
+
+        private decimal GetFriendshipRevenueBonusMultiplier(Bird bird, List<Bird> workingBirds)
+        {
+            if (workingBirds.Count <= 1)
+            {
+                return 0m;
+            }
+
+            decimal bonus = 0m;
+            foreach (var teammate in workingBirds)
+            {
+                if (teammate.Id == bird.Id)
+                {
+                    continue;
+                }
+
+                int friendshipScore = bird.GetFriendshipScore(teammate.Id);
+                bonus += friendshipScore * 0.001m;
+            }
+
+            return Math.Min(0.20m, bonus);
+        }
+
+        private void GrowWorkingBirdFriendships(DaySimulationResult result, GameSave state)
+        {
+            var workingBirds = result.BirdSummaries
+                .Where(s => s.WorkedToday)
+                .Select(s => state.Birds.First(b => b.Id == s.BirdId))
+                .ToList();
+
+            for (int i = 0; i < workingBirds.Count; i++)
+            {
+                for (int j = i + 1; j < workingBirds.Count; j++)
+                {
+                    workingBirds[i].GrowFriendship(workingBirds[j].Id, 4);
+                    workingBirds[j].GrowFriendship(workingBirds[i].Id, 4);
+                }
             }
         }
 

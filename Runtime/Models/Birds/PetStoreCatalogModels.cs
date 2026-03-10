@@ -1,5 +1,6 @@
 using BirdCafe.Shared.Enums;
 using System;
+using System.Collections.Generic;
 
 namespace BirdCafe.Shared.Models.Birds
 {
@@ -24,5 +25,7 @@ namespace BirdCafe.Shared.Models.Birds
         public float Friendliness { get; set; }
 
         public float Reliability { get; set; }
+
+        public List<BirdFoodType> PreferredFoodTypes { get; set; } = new List<BirdFoodType>();
     }
 }

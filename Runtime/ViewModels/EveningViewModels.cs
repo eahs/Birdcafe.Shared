@@ -169,6 +169,8 @@ namespace BirdCafe.Shared.ViewModels
         /// </summary>
         public int CurrentPopularity { get; set; }
 
+        public int StoredBirdFoodUnits { get; set; }
+
         /// <summary>
         /// A list of all birds owned by the player, formatted for the care UI cards.
         /// </summary>
@@ -221,6 +223,12 @@ namespace BirdCafe.Shared.ViewModels
         /// Indicates if the player has toggled this bird to take a day off tomorrow.
         /// </summary>
         public bool WillRestTomorrow { get; set; }
+
+        public int Trust { get; set; }
+
+        public string PreferredFoodText { get; set; }
+
+        public int FriendshipCount { get; set; }
     }
 
     /// <summary>

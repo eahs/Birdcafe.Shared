@@ -46,8 +46,15 @@ namespace BirdCafe.Shared.Engine.Managers
                 Mood = 75,
                 Hunger = 100,
                 Energy = 100,
-                Health = 100
+                Health = 100,
+                PreferredFoods = offer.PreferredFoodTypes.ToList()
             };
+
+            foreach (var existingBird in state.Birds)
+            {
+                createdBird.GrowFriendship(existingBird.Id, 5);
+                existingBird.GrowFriendship(createdBird.Id, 5);
+            }
 
             state.Birds.Add(createdBird);
             state.CurrentDayState.CurrentPlan.BirdIdsWorking.Add(createdBird.Id);
@@ -76,7 +83,8 @@ namespace BirdCafe.Shared.Engine.Managers
             var store = _controller.CurrentState.PetStore;
             if (supplyType == PetStoreSupplyType.BirdFood)
             {
-                store.BirdFoodUnits += quantity;
+                var foodType = PetStoreCatalog.ResolveBirdFoodType(itemId);
+                store.AddBirdFood(foodType, quantity);
             }
             else if (supplyType == PetStoreSupplyType.Toy)
             {
@@ -151,7 +159,9 @@ namespace BirdCafe.Shared.Engine.Managers
         {
             return (itemId, supplyType) switch
             {
-                (_, PetStoreSupplyType.BirdFood) => PetStoreCatalog.BirdFoodPrice,
+                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodSeedMixItemId => PetStoreCatalog.BirdFoodPrice,
+                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodFruitBlendItemId => PetStoreCatalog.BirdFoodPrice,
+                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodNutTreatItemId => PetStoreCatalog.BirdFoodPrice,
                 (var s, PetStoreSupplyType.Toy) when s == PetStoreCatalog.ToyFeatherWandId => PetStoreCatalog.FeatherWandPrice,
                 (var s, PetStoreSupplyType.Toy) when s == PetStoreCatalog.ToyBellOrbId => PetStoreCatalog.BellOrbPrice,
                 (var s, PetStoreSupplyType.Costume) when s == PetStoreCatalog.CostumeBandanaId => PetStoreCatalog.BandanaPrice,

@@ -2,6 +2,7 @@
 using BirdCafe.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BirdCafe.Shared.Models.Birds
 {
@@ -91,6 +92,22 @@ namespace BirdCafe.Shared.Models.Birds
         /// Represents the bird's ability to avoid mistakes or spills.
         /// </summary>
         public float Reliability { get; set; } = 10f;
+
+
+        /// <summary>
+        /// Tracks long-term trust with the player (0-100).
+        /// </summary>
+        public int Trust { get; set; }
+
+        /// <summary>
+        /// Food types this bird prefers when being fed.
+        /// </summary>
+        public List<BirdFoodType> PreferredFoods { get; set; } = new List<BirdFoodType>();
+
+        /// <summary>
+        /// Friendship score with other birds keyed by bird ID (0-100).
+        /// </summary>
+        public Dictionary<string, int> FriendshipScores { get; set; } = new Dictionary<string, int>();
 
         #endregion
 
@@ -182,6 +199,63 @@ namespace BirdCafe.Shared.Models.Birds
             // Reduce stats but clamp to 0.
             Hunger = Math.Max(0, Hunger - hungerDecay);
             Mood = Math.Max(0, Mood - moodDecay);
+        }
+
+
+        /// <summary>
+        /// Increases trust and clamps the value to 0-100.
+        /// </summary>
+        public void GainTrust(int amount)
+        {
+            Trust = Math.Clamp(Trust + amount, 0, 100);
+        }
+
+        /// <summary>
+        /// Returns true if the provided food type is preferred by this bird.
+        /// </summary>
+        public bool PrefersFood(BirdFoodType foodType)
+        {
+            return PreferredFoods != null && PreferredFoods.Contains(foodType);
+        }
+
+        /// <summary>
+        /// Increases friendship with another bird and clamps score to 0-100.
+        /// </summary>
+        public void GrowFriendship(string otherBirdId, int amount)
+        {
+            if (string.IsNullOrWhiteSpace(otherBirdId) || otherBirdId == Id)
+            {
+                return;
+            }
+
+            if (!FriendshipScores.ContainsKey(otherBirdId))
+            {
+                FriendshipScores[otherBirdId] = 0;
+            }
+
+            FriendshipScores[otherBirdId] = Math.Clamp(FriendshipScores[otherBirdId] + amount, 0, 100);
+        }
+
+        /// <summary>
+        /// Gets the friendship score for another bird ID.
+        /// </summary>
+        public int GetFriendshipScore(string otherBirdId)
+        {
+            if (string.IsNullOrWhiteSpace(otherBirdId)) return 0;
+            return FriendshipScores.TryGetValue(otherBirdId, out var score) ? score : 0;
+        }
+
+        /// <summary>
+        /// Returns the names of preferred foods for UI display.
+        /// </summary>
+        public string GetPreferredFoodDisplayText()
+        {
+            if (PreferredFoods == null || PreferredFoods.Count == 0)
+            {
+                return BirdFoodType.SeedMix.ToString();
+            }
+
+            return string.Join(", ", PreferredFoods.Select(f => f.ToString()));
         }
 
         /// <summary>

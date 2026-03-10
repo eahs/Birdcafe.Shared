@@ -113,16 +113,16 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.Clear();
             var vm = BirdCafeGame.Instance.GetCareDashboard();
 
-            Console.WriteLine($"=== BIRD CARE (Funds: ${vm.CurrentMoney:F2}) | Pop: {vm.CurrentPopularity} ===");
-            Console.WriteLine("ID | Name           | Hunger | Energy | Health | Mood | Status");
-            Console.WriteLine("---|----------------|--------|--------|--------|------|-------");
+            Console.WriteLine($"=== BIRD CARE (Funds: ${vm.CurrentMoney:F2}) | Pop: {vm.CurrentPopularity} | Stored Food: {vm.StoredBirdFoodUnits} ===");
+            Console.WriteLine("ID | Name           | Hunger | Energy | Health | Mood | Trust | Pref Food       | Friends | Status");
+            Console.WriteLine("---|----------------|--------|--------|--------|------|-------|-----------------|---------|-------");
 
             foreach (var b in vm.Birds)
             {
                 string status = b.IsSick ? "SICK" : "OK";
                 if (b.WillRestTomorrow) status += " (REST)";
 
-                Console.WriteLine($"{b.Id.Substring(0, 2)} | {b.Name.PadRight(14)} | {b.Hunger,6} | {b.Energy,6} | {b.Health,6} | {b.Mood,4} | {status}");
+                Console.WriteLine($"{b.Id.Substring(0, 2)} | {b.Name.PadRight(14)} | {b.Hunger,6} | {b.Energy,6} | {b.Health,6} | {b.Mood,4} | {b.Trust,5} | {b.PreferredFoodText.PadRight(15)} | {b.FriendshipCount,7} | {status}");
             }
 
             Console.WriteLine("\n[B] Back to Hub");

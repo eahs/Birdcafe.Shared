@@ -49,17 +49,18 @@ namespace BirdCafe.Shared.Engine.Managers
             var template = GetTemplate(actionId, _controller.CurrentState.Config);
             if (template == null) return EngineResult.Failure("InvalidAction", "Unknown care action.");
 
-            bool consumesStoredBirdFood = actionId == CareActionIds.Feed && _controller.CurrentState.PetStore.BirdFoodUnits > 0;
-
-            // Check if the player has enough money.
-            if (!consumesStoredBirdFood && _controller.CurrentState.Economy.CurrentBalance < template.MoneyCost)
-                return EngineResult.Failure("InsufficientFunds", "Not enough money.");
-
-            if (consumesStoredBirdFood)
+            BirdFoodType consumedFoodType = BirdFoodType.SeedMix;
+            if (actionId == CareActionIds.Feed)
             {
-                _controller.CurrentState.PetStore.BirdFoodUnits -= 1;
+                if (!TryConsumeFoodForBird(bird, out consumedFoodType))
+                {
+                    return EngineResult.Failure("NoStoredBirdFood", "You need bird food from Rick's Pet Store before feeding.");
+                }
             }
-            // If the action costs money, process the payment.
+            else if (_controller.CurrentState.Economy.CurrentBalance < template.MoneyCost)
+            {
+                return EngineResult.Failure("InsufficientFunds", "Not enough money.");
+            }
             else if (template.MoneyCost > 0)
             {
                 // Subtract cost from balance.
@@ -78,6 +79,12 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // Apply the statistical changes (Health, Mood, etc.) to the bird object.
             bird.ApplyCareEffect(template);
+
+            if (actionId == CareActionIds.Feed)
+            {
+                var trustGain = bird.PrefersFood(consumedFoodType) ? 8 : 2;
+                bird.GainTrust(trustGain);
+            }
 
             // If this was a Vet visit, clear the sickness flags so the bird is healthy again.
             if (actionId == CareActionIds.Vet)
@@ -110,6 +117,26 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success(bird);
         }
 
+
+        private bool TryConsumeFoodForBird(Bird bird, out BirdFoodType consumedType)
+        {
+            var store = _controller.CurrentState.PetStore;
+
+            if (bird.PreferredFoods != null)
+            {
+                foreach (var preferredFood in bird.PreferredFoods)
+                {
+                    if (store.TryConsumeBirdFood(preferredFood))
+                    {
+                        consumedType = preferredFood;
+                        return true;
+                    }
+                }
+            }
+
+            return store.TryConsumeAnyBirdFood(out consumedType);
+        }
+
         /// <summary>
         /// Look up the details/costs for an action ID based on configuration.
         /// </summary>
@@ -124,7 +151,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 {
                     ActionId = CareActionIds.Feed,
                     DisplayName = "Feed",
-                    MoneyCost = config.BaselineBirdFoodCost,
+                    MoneyCost = 0,
                     HungerChange = 30,
                     MoodChange = 5
                 };

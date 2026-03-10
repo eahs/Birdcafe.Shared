@@ -313,12 +313,32 @@ namespace BirdCafe.Shared
             {
                 new PetStoreSupplyOfferViewModel
                 {
-                    ItemId = PetStoreCatalog.BirdFoodItemId,
-                    Name = "Bird Food",
+                    ItemId = PetStoreCatalog.BirdFoodSeedMixItemId,
+                    Name = "Seed Mix",
                     CategoryText = "Bird Food",
                     Price = PetStoreCatalog.BirdFoodPrice,
-                    OwnedQuantity = store.BirdFoodUnits,
-                    EffectText = "Consumed by Feed care actions before money is spent.",
+                    OwnedQuantity = store.BirdFoodInventory.TryGetValue(BirdFoodType.SeedMix, out var sf) ? sf : 0,
+                    EffectText = "Preferred by some birds. Consumed by Feed care actions.",
+                    IsAffordable = money >= PetStoreCatalog.BirdFoodPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.BirdFoodFruitBlendItemId,
+                    Name = "Fruit Blend",
+                    CategoryText = "Bird Food",
+                    Price = PetStoreCatalog.BirdFoodPrice,
+                    OwnedQuantity = store.BirdFoodInventory.TryGetValue(BirdFoodType.FruitBlend, out var ff) ? ff : 0,
+                    EffectText = "Preferred by fruit-loving birds.",
+                    IsAffordable = money >= PetStoreCatalog.BirdFoodPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.BirdFoodNutTreatItemId,
+                    Name = "Nut Treat",
+                    CategoryText = "Bird Food",
+                    Price = PetStoreCatalog.BirdFoodPrice,
+                    OwnedQuantity = store.BirdFoodInventory.TryGetValue(BirdFoodType.NutTreat, out var nf) ? nf : 0,
+                    EffectText = "Preferred by high-energy birds.",
                     IsAffordable = money >= PetStoreCatalog.BirdFoodPrice
                 },
                 new PetStoreSupplyOfferViewModel
@@ -483,7 +503,8 @@ namespace BirdCafe.Shared
             var vm = new CareDashboardViewModel
             {
                 CurrentMoney = _controller.CurrentState.Economy.CurrentBalance,
-                CurrentPopularity = (int)_controller.CurrentState.Cafe.Popularity
+                CurrentPopularity = (int)_controller.CurrentState.Cafe.Popularity,
+                StoredBirdFoodUnits = _controller.CurrentState.PetStore.BirdFoodUnits
             };
 
             foreach (var b in _controller.CurrentState.Birds)
@@ -501,14 +522,15 @@ namespace BirdCafe.Shared
 
             var actions = new List<CareActionViewModel>
             {
-                new CareActionViewModel { ActionId = CareActionIds.Feed, Label = "Feed Snack", Cost = config.BaselineBirdFoodCost },
+                new CareActionViewModel { ActionId = CareActionIds.Feed, Label = "Feed Snack", Cost = 0 },
                 new CareActionViewModel { ActionId = CareActionIds.Play, Label = "Play (Mood)", Cost = config.BaselinePlayCost },
                 new CareActionViewModel { ActionId = CareActionIds.Vet, Label = "Vet Visit", Cost = config.BaselineVetCost }
             };
 
+            var storedBirdFood = _controller.CurrentState.PetStore.BirdFoodUnits;
             foreach (var a in actions)
             {
-                a.IsAffordable = money >= a.Cost;
+                a.IsAffordable = a.ActionId == CareActionIds.Feed ? storedBirdFood > 0 : money >= a.Cost;
             }
 
             return actions;
@@ -724,7 +746,10 @@ namespace BirdCafe.Shared
                 Energy = (int)b.Energy,
                 Health = (int)b.Health,
                 IsSick = b.IsSick,
-                WillRestTomorrow = b.AssignedDayOffNextDay
+                WillRestTomorrow = b.AssignedDayOffNextDay,
+                Trust = b.Trust,
+                PreferredFoodText = b.GetPreferredFoodDisplayText(),
+                FriendshipCount = b.FriendshipScores.Count(kvp => kvp.Value > 0)
             };
         }
     }
