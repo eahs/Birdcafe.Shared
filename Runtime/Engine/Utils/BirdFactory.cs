@@ -1,4 +1,6 @@
+using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
+using System.Collections.Generic;
 
 namespace BirdCafe.Shared.Engine.Utils
 {
@@ -25,7 +27,9 @@ namespace BirdCafe.Shared.Engine.Utils
                 Mood = 80,
                 Hunger = 100,
                 Friendliness = 15,
-                Reliability = 10
+                Reliability = 10,
+                Trust = 10,
+                PreferredFoods = new List<BirdFoodType> { BirdFoodType.SeedMix }
             };
         }
     }

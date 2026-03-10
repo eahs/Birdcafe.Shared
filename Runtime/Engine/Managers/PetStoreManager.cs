@@ -46,8 +46,17 @@ namespace BirdCafe.Shared.Engine.Managers
                 Mood = 75,
                 Hunger = 100,
                 Energy = 100,
-                Health = 100
+                Health = 100,
+                Trust = 0,
+                PreferredFoods = offer.PreferredFoods.ToList()
             };
+
+            var existingFriend = state.Birds.FirstOrDefault();
+            if (existingFriend != null)
+            {
+                existingFriend.AddFriend(createdBird.Id);
+                createdBird.AddFriend(existingFriend.Id);
+            }
 
             state.Birds.Add(createdBird);
             state.CurrentDayState.CurrentPlan.BirdIdsWorking.Add(createdBird.Id);
@@ -76,7 +85,11 @@ namespace BirdCafe.Shared.Engine.Managers
             var store = _controller.CurrentState.PetStore;
             if (supplyType == PetStoreSupplyType.BirdFood)
             {
-                store.BirdFoodUnits += quantity;
+                var foodType = PetStoreCatalog.GetFoodTypeForItem(itemId);
+                if (foodType == null)
+                    return EngineResult.Failure("InvalidBirdFoodType", "That food type is unavailable.");
+
+                store.AddFood(foodType.Value, quantity);
             }
             else if (supplyType == PetStoreSupplyType.Toy)
             {
@@ -151,7 +164,9 @@ namespace BirdCafe.Shared.Engine.Managers
         {
             return (itemId, supplyType) switch
             {
-                (_, PetStoreSupplyType.BirdFood) => PetStoreCatalog.BirdFoodPrice,
+                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodSeedMixItemId || s == PetStoreCatalog.BirdFoodItemId => PetStoreCatalog.BirdFoodSeedMixPrice,
+                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodFruitMedleyItemId => PetStoreCatalog.BirdFoodFruitMedleyPrice,
+                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodNutriPelletsItemId => PetStoreCatalog.BirdFoodNutriPelletsPrice,
                 (var s, PetStoreSupplyType.Toy) when s == PetStoreCatalog.ToyFeatherWandId => PetStoreCatalog.FeatherWandPrice,
                 (var s, PetStoreSupplyType.Toy) when s == PetStoreCatalog.ToyBellOrbId => PetStoreCatalog.BellOrbPrice,
                 (var s, PetStoreSupplyType.Costume) when s == PetStoreCatalog.CostumeBandanaId => PetStoreCatalog.BandanaPrice,

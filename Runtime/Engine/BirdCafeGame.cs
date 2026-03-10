@@ -284,7 +284,7 @@ namespace BirdCafe.Shared
             {
                 CurrentMoney = state.Economy.CurrentBalance,
                 OwnedBirdCount = state.Birds.Count,
-                BirdFoodUnits = state.PetStore.BirdFoodUnits,
+                BirdFoodUnits = state.PetStore.GetTotalFoodUnits(),
                 SpecialEggToysOwned = state.PetStore.SpecialEggToysOwned,
                 LastEggRewardText = lastReward == null ? "No egg reward opened yet." : $"Last egg reward: {lastReward.RewardName}"
             };
@@ -313,13 +313,33 @@ namespace BirdCafe.Shared
             {
                 new PetStoreSupplyOfferViewModel
                 {
-                    ItemId = PetStoreCatalog.BirdFoodItemId,
-                    Name = "Bird Food",
+                    ItemId = PetStoreCatalog.BirdFoodSeedMixItemId,
+                    Name = "Seed Mix",
                     CategoryText = "Bird Food",
-                    Price = PetStoreCatalog.BirdFoodPrice,
-                    OwnedQuantity = store.BirdFoodUnits,
-                    EffectText = "Consumed by Feed care actions before money is spent.",
-                    IsAffordable = money >= PetStoreCatalog.BirdFoodPrice
+                    Price = PetStoreCatalog.BirdFoodSeedMixPrice,
+                    OwnedQuantity = store.GetFoodUnits(BirdFoodType.SeedMix),
+                    EffectText = "Basic food for flock birds. Feeding uses stored inventory only.",
+                    IsAffordable = money >= PetStoreCatalog.BirdFoodSeedMixPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.BirdFoodFruitMedleyItemId,
+                    Name = "Fruit Medley",
+                    CategoryText = "Bird Food",
+                    Price = PetStoreCatalog.BirdFoodFruitMedleyPrice,
+                    OwnedQuantity = store.GetFoodUnits(BirdFoodType.FruitMedley),
+                    EffectText = "Preferred by fruit-loving birds; boosts trust faster when matched.",
+                    IsAffordable = money >= PetStoreCatalog.BirdFoodFruitMedleyPrice
+                },
+                new PetStoreSupplyOfferViewModel
+                {
+                    ItemId = PetStoreCatalog.BirdFoodNutriPelletsItemId,
+                    Name = "Nutri Pellets",
+                    CategoryText = "Bird Food",
+                    Price = PetStoreCatalog.BirdFoodNutriPelletsPrice,
+                    OwnedQuantity = store.GetFoodUnits(BirdFoodType.NutriPellets),
+                    EffectText = "Dense nutrition favored by high-performance birds.",
+                    IsAffordable = money >= PetStoreCatalog.BirdFoodNutriPelletsPrice
                 },
                 new PetStoreSupplyOfferViewModel
                 {
@@ -483,7 +503,8 @@ namespace BirdCafe.Shared
             var vm = new CareDashboardViewModel
             {
                 CurrentMoney = _controller.CurrentState.Economy.CurrentBalance,
-                CurrentPopularity = (int)_controller.CurrentState.Cafe.Popularity
+                CurrentPopularity = (int)_controller.CurrentState.Cafe.Popularity,
+                StoredBirdFoodUnits = _controller.CurrentState.PetStore.GetTotalFoodUnits()
             };
 
             foreach (var b in _controller.CurrentState.Birds)
@@ -498,15 +519,16 @@ namespace BirdCafe.Shared
         {
             var config = _controller.CurrentState.Config;
             var money = _controller.CurrentState.Economy.CurrentBalance;
+            var foodInStorage = _controller.CurrentState.PetStore.GetTotalFoodUnits();
 
             var actions = new List<CareActionViewModel>
             {
-                new CareActionViewModel { ActionId = CareActionIds.Feed, Label = "Feed Snack", Cost = config.BaselineBirdFoodCost },
+                new CareActionViewModel { ActionId = CareActionIds.Feed, Label = "Feed (Use Stored Food)", Cost = 0, IsAffordable = foodInStorage > 0 },
                 new CareActionViewModel { ActionId = CareActionIds.Play, Label = "Play (Mood)", Cost = config.BaselinePlayCost },
                 new CareActionViewModel { ActionId = CareActionIds.Vet, Label = "Vet Visit", Cost = config.BaselineVetCost }
             };
 
-            foreach (var a in actions)
+            foreach (var a in actions.Where(a => a.ActionId != CareActionIds.Feed))
             {
                 a.IsAffordable = money >= a.Cost;
             }
@@ -723,6 +745,9 @@ namespace BirdCafe.Shared
                 Mood = (int)b.Mood,
                 Energy = (int)b.Energy,
                 Health = (int)b.Health,
+                Trust = (int)b.Trust,
+                PreferredFoodsText = b.PreferredFoods.Count == 0 ? "None" : string.Join(", ", b.PreferredFoods),
+                FriendshipCount = b.FriendBirdIds.Count,
                 IsSick = b.IsSick,
                 WillRestTomorrow = b.AssignedDayOffNextDay
             };

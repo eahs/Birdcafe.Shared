@@ -132,7 +132,55 @@ namespace BirdCafe.Shared.Models.Birds
 
         #endregion
 
+        #region Social & Preference Data
+
+        /// <summary>
+        /// Ongoing trust the bird has in the cafe team (0-100).
+        /// </summary>
+        public float Trust { get; set; } = 0f;
+
+        /// <summary>
+        /// Preferred food types that provide stronger trust gains when fed.
+        /// </summary>
+        public List<BirdFoodType> PreferredFoods { get; set; } = new List<BirdFoodType>();
+
+        /// <summary>
+        /// Other bird IDs this bird has bonded friendships with.
+        /// </summary>
+        public List<string> FriendBirdIds { get; set; } = new List<string>();
+
+        #endregion
+
         #region Domain Logic
+
+
+        /// <summary>
+        /// Increases trust by a value while clamping to 0..100.
+        /// </summary>
+        public void IncreaseTrust(float amount)
+        {
+            Trust = ClampStat(Trust + amount);
+        }
+
+        /// <summary>
+        /// Returns true if this bird prefers the specified food type.
+        /// </summary>
+        public bool PrefersFood(BirdFoodType foodType)
+        {
+            return PreferredFoods != null && PreferredFoods.Contains(foodType);
+        }
+
+        /// <summary>
+        /// Creates a mutual friendship relationship between this bird and another bird ID.
+        /// </summary>
+        public void AddFriend(string otherBirdId)
+        {
+            if (string.IsNullOrWhiteSpace(otherBirdId) || otherBirdId == Id)
+                return;
+
+            if (!FriendBirdIds.Contains(otherBirdId))
+                FriendBirdIds.Add(otherBirdId);
+        }
 
         /// <summary>
         /// Applies a care template to this bird.
@@ -146,20 +194,20 @@ namespace BirdCafe.Shared.Models.Birds
             // Math.Min ensures we never go above 100.
 
             // Hunger (Add, clamp to 100)
-            Hunger = Math.Min(100, Hunger + template.HungerChange);
+            Hunger = ClampStat(Hunger + template.HungerChange);
 
             // Mood (Add, clamp to 100)
-            Mood = Math.Min(100, Mood + template.MoodChange);
+            Mood = ClampStat(Mood + template.MoodChange);
 
             // Health (Add, clamp to 100)
-            Health = Math.Min(100, Health + template.HealthChange);
+            Health = ClampStat(Health + template.HealthChange);
 
             // Energy (Add, clamp to 100)
-            Energy = Math.Min(100, Energy + template.EnergyChange);
+            Energy = ClampStat(Energy + template.EnergyChange);
 
             // Stress (Add [usually negative], clamp to 0 minimum)
             // Math.Max ensures we never go below 0.
-            Stress = Math.Max(0, Stress + template.StressChange);
+            Stress = ClampStat(Stress + template.StressChange);
         }
 
         /// <summary>
@@ -169,7 +217,7 @@ namespace BirdCafe.Shared.Models.Birds
         public void ConsumeEnergy(float amount)
         {
             // Reduce energy but ensure it doesn't drop below 0.
-            Energy = Math.Max(0, Energy - amount);
+            Energy = ClampStat(Energy - amount);
         }
 
         /// <summary>
@@ -180,8 +228,13 @@ namespace BirdCafe.Shared.Models.Birds
         public void ApplyDailyDecay(float hungerDecay, float moodDecay)
         {
             // Reduce stats but clamp to 0.
-            Hunger = Math.Max(0, Hunger - hungerDecay);
-            Mood = Math.Max(0, Mood - moodDecay);
+            Hunger = ClampStat(Hunger - hungerDecay);
+            Mood = ClampStat(Mood - moodDecay);
+        }
+
+        private static float ClampStat(float value)
+        {
+            return Math.Max(0, Math.Min(100, value));
         }
 
         /// <summary>

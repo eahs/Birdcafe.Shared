@@ -21,7 +21,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 FlavorDescription = "Friendly starter flock bird. Solid cafe helper.",
                 Productivity = 22,
                 Friendliness = 16,
-                Reliability = 13
+                Reliability = 13,
+                PreferredFoods = new List<BirdFoodType> { BirdFoodType.SeedMix }
             },
             new BirdSpeciesOffer
             {
@@ -32,7 +33,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 FlavorDescription = "Charismatic whistler that improves customer vibes.",
                 Productivity = 27,
                 Friendliness = 22,
-                Reliability = 17
+                Reliability = 17,
+                PreferredFoods = new List<BirdFoodType> { BirdFoodType.FruitMedley }
             },
             new BirdSpeciesOffer
             {
@@ -43,7 +45,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 FlavorDescription = "Large rare macaw with excellent service pace.",
                 Productivity = 35,
                 Friendliness = 24,
-                Reliability = 21
+                Reliability = 21,
+                PreferredFoods = new List<BirdFoodType> { BirdFoodType.NutriPellets, BirdFoodType.FruitMedley }
             },
             new BirdSpeciesOffer
             {
@@ -54,16 +57,23 @@ namespace BirdCafe.Shared.Engine.Utils
                 FlavorDescription = "A rare real-world species. Elite all-around cafe performer.",
                 Productivity = 42,
                 Friendliness = 30,
-                Reliability = 28
+                Reliability = 28,
+                PreferredFoods = new List<BirdFoodType> { BirdFoodType.NutriPellets }
             }
         };
 
         public const string BirdFoodItemId = "BirdFoodBag";
+        public const string BirdFoodSeedMixItemId = "BirdFood_SeedMix";
+        public const string BirdFoodFruitMedleyItemId = "BirdFood_FruitMedley";
+        public const string BirdFoodNutriPelletsItemId = "BirdFood_NutriPellets";
         public const string ToyFeatherWandId = "Toy_FeatherWand";
         public const string ToyBellOrbId = "Toy_BellOrb";
         public const string CostumeBandanaId = "Costume_Bandana";
         public const string CostumeRoyalCapeId = "Costume_RoyalCape";
         public const decimal BirdFoodPrice = 18m;
+        public const decimal BirdFoodSeedMixPrice = 18m;
+        public const decimal BirdFoodFruitMedleyPrice = 20m;
+        public const decimal BirdFoodNutriPelletsPrice = 22m;
         public const decimal FeatherWandPrice = 45m;
         public const decimal BellOrbPrice = 70m;
         public const decimal BandanaPrice = 50m;
@@ -78,6 +88,17 @@ namespace BirdCafe.Shared.Engine.Utils
         public static string BuildBirdName(string speciesName, int dayNumber, int existingBirdCount)
         {
             return $"{speciesName} #{dayNumber}-{existingBirdCount + 1}";
+        }
+
+        public static BirdFoodType? GetFoodTypeForItem(string itemId)
+        {
+            return itemId switch
+            {
+                var s when s == BirdFoodSeedMixItemId || s == BirdFoodItemId => BirdFoodType.SeedMix,
+                var s when s == BirdFoodFruitMedleyItemId => BirdFoodType.FruitMedley,
+                var s when s == BirdFoodNutriPelletsItemId => BirdFoodType.NutriPellets,
+                _ => null
+            };
         }
 
         public static ExpenseCategory GetCategoryForSupply(PetStoreSupplyType supplyType)

@@ -263,6 +263,17 @@ namespace BirdCafe.Shared.Enums
     }
 
     /// <summary>
+    /// Food categories birds can consume during evening care.
+    /// </summary>
+    [Serializable]
+    public enum BirdFoodType
+    {
+        SeedMix = 0,
+        FruitMedley = 1,
+        NutriPellets = 2
+    }
+
+    /// <summary>
     /// Reward categories granted from the special egg toy.
     /// </summary>
     [Serializable]

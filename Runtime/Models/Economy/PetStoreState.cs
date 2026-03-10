@@ -1,6 +1,7 @@
 using BirdCafe.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BirdCafe.Shared.Models.Economy
 {
@@ -10,7 +11,19 @@ namespace BirdCafe.Shared.Models.Economy
     [Serializable]
     public class PetStoreState
     {
-        public int BirdFoodUnits { get; set; }
+        /// <summary>
+        /// Legacy total bird food units (kept for compatibility, mapped to SeedMix).
+        /// </summary>
+        public int BirdFoodUnits
+        {
+            get => GetFoodUnits(BirdFoodType.SeedMix);
+            set => BirdFoodByType[BirdFoodType.SeedMix] = Math.Max(0, value);
+        }
+
+        /// <summary>
+        /// Owned bird food quantities by food type.
+        /// </summary>
+        public Dictionary<BirdFoodType, int> BirdFoodByType { get; set; } = new Dictionary<BirdFoodType, int>();
 
         public Dictionary<string, int> OwnedToyQuantities { get; set; } = new Dictionary<string, int>();
 
@@ -21,6 +34,37 @@ namespace BirdCafe.Shared.Models.Economy
         public List<EggRewardRecord> EggRewardHistory { get; set; } = new List<EggRewardRecord>();
 
         public int TotalBirdBuffStacks { get; set; }
+
+        public int GetFoodUnits(BirdFoodType type)
+        {
+            return BirdFoodByType.TryGetValue(type, out var qty) ? qty : 0;
+        }
+
+        public int GetTotalFoodUnits()
+        {
+            return BirdFoodByType.Values.Sum(v => Math.Max(0, v));
+        }
+
+        public void AddFood(BirdFoodType type, int quantity)
+        {
+            if (quantity <= 0)
+                return;
+
+            BirdFoodByType[type] = GetFoodUnits(type) + quantity;
+        }
+
+        public bool TryConsumeFood(BirdFoodType type, int quantity)
+        {
+            if (quantity <= 0)
+                return false;
+
+            var current = GetFoodUnits(type);
+            if (current < quantity)
+                return false;
+
+            BirdFoodByType[type] = current - quantity;
+            return true;
+        }
     }
 
     /// <summary>
