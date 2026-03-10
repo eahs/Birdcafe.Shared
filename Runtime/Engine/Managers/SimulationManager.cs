@@ -336,6 +336,8 @@ namespace BirdCafe.Shared.Engine.Managers
                 // Update aggregate counts.
                 UpdateProductSales(result.Customers, item);
 
+                float friendlinessBonus = (bird.Friendliness / 100f) + (state.PetStore.TotalBirdBuffStacks * 0.02f);
+
                 // Log completion event for this specific item.
                 result.Timeline.Add(new SimulationTimelineEvent
                 {
@@ -345,12 +347,12 @@ namespace BirdCafe.Shared.Engine.Managers
                     BirdId = bird.Id,
                     Product = item,
                     MoneyDelta = price,
-                    PopularityDelta = 1f / servedItems.Count // Split popularity gain evenly.
+                    PopularityDelta = (1f / servedItems.Count) + friendlinessBonus // Split base popularity gain and add bird-based charm bonus.
                 });
             }
 
             cust.Revenue = totalRevenue;
-            cust.PopularityDelta = 1; // Flat bonus for successful service.
+            cust.PopularityDelta = 1 + (bird.Friendliness / 100f) + (state.PetStore.TotalBirdBuffStacks * 0.02f);
             result.Customers.CustomersServed++;
 
             result.CustomerTransactions.Add(cust);

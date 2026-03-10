@@ -47,6 +47,11 @@ namespace BirdCafe.Shared.Engine
         public ReportingManager Reporting { get; private set; }
 
         /// <summary>
+        /// Manager responsible for Rick's Pet Store actions.
+        /// </summary>
+        public PetStoreManager PetStore { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BirdCafeController"/> class.
         /// Sets up all the sub-managers with a reference to this controller.
         /// </summary>
@@ -58,6 +63,7 @@ namespace BirdCafe.Shared.Engine
             Care = new CareManager(this);
             Planning = new PlanningManager(this);
             Reporting = new ReportingManager(this);
+            PetStore = new PetStoreManager(this);
 
             Meta.StartNewGame("FBLA Judge", "FBLA Cafe");
         }
