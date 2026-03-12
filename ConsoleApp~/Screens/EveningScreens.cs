@@ -354,7 +354,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.Clear();
                 var offers = BirdCafeGame.Instance.GetPetStoreSupplyOffers();
                 Console.WriteLine("=== RICK'S PET STORE / BUY SUPPLIES ===");
-                Console.WriteLine("1. Seed Mix");
+                Console.WriteLine("1. Seed Mix ($18.00)");
                 Console.WriteLine("2. Fruit Medley");
                 Console.WriteLine("3. Nutri Pellets");
                 Console.WriteLine("4. Feather Wand");
