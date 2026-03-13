@@ -34,42 +34,52 @@ namespace BirdCafe.Shared.Models.Birds
     /// An item equipped by a bird that provides stat bonuses.
     /// </summary>
     [Serializable]
-    public class EquippedItem
+    public class CostumeStats
     {
         /// <summary>
-        /// Unique identifier for the item.
+        /// Unique identifier for the costume.
         /// </summary>
-        public string ItemId { get; set; }
+        public string CostumeId { get; set; }
 
         /// <summary>
-        /// Display name of the item.
+        /// Display name of the costume.
         /// </summary>
         public string DisplayName { get; set; }
 
         /// <summary>
-        /// Category of the item (e.g., "Cosmetic", "Booster").
+        /// Bonus applied to the bird's Productivity stat.
         /// </summary>
-        public string Category { get; set; }
+        public float ProductivityMultiplier { get; set; }
 
         /// <summary>
-        /// Bonus added to the bird's Productivity stat.
+        /// Bonus applied to the bird's Friendliness stat.
         /// </summary>
-        public float ProductivityBonus { get; set; }
+        public float FriendlinessMultiplier { get; set; }
 
         /// <summary>
-        /// Bonus added to the bird's Friendliness stat.
+        /// Bonus applied to the bird's Reliability stat.
         /// </summary>
-        public float FriendlinessBonus { get; set; }
+        public float ReliabilityMultiplier { get; set; }
 
         /// <summary>
-        /// Bonus added to the bird's Reliability stat.
+        /// Bonus applied that effects daily hunger loss.
         /// </summary>
-        public float ReliabilityBonus { get; set; }
+        public float HungerDecayMultiplier { get; set; }
 
         /// <summary>
-        /// Description of any special activation conditions.
+        /// Bonus applied that effects daily mood loss 
         /// </summary>
-        public string SpecialConditions { get; set; }
+        public float MoodDecayMultiplier { get; set; }
+
+        /// <summary>
+        /// Bonus applied to the amount of energy gained each night
+        /// </summary>
+        public float NightlyEnergyRecoveryMultiplier { get; set; }
+
+
+
+        
+
     }
 
     /// <summary>
