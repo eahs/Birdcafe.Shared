@@ -33,6 +33,8 @@ namespace BirdCafe.Shared.ViewModels
         /// </summary>
         DaySimulation,
 
+        Hub,
+
         /// <summary>
         /// The end-of-day financial summary.
         /// </summary>
@@ -47,6 +49,12 @@ namespace BirdCafe.Shared.ViewModels
         /// The shop and staffing planning interface.
         /// </summary>
         EveningPlanning,
+
+        EveningPetStore,
+
+        EveningPetStoreBirds,
+
+        EveningPetStoreSupplies,
 
         /// <summary>
         /// The weekly performance report.

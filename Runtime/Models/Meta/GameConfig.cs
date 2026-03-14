@@ -66,6 +66,16 @@ namespace BirdCafe.Shared.Models.Meta
         /// </summary>
         public float EnergyCostPerService { get; set; } = 2f;
 
+        /// <summary>
+        /// Additional revenue multiplier per trust point (100 trust => +20% at default).
+        /// </summary>
+        public decimal TrustRevenueBonusPerPoint { get; set; } = 0.002m;
+
+        /// <summary>
+        /// Additional revenue multiplier for each active friendship with a working bird.
+        /// </summary>
+        public decimal FriendshipRevenueBonusPerActiveFriend { get; set; } = 0.03m;
+
         // --- Sickness & Starvation ---
 
         /// <summary>

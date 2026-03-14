@@ -170,6 +170,11 @@ namespace BirdCafe.Shared.ViewModels
         public int CurrentPopularity { get; set; }
 
         /// <summary>
+        /// Total bird food currently stored from Rick's Pet Store purchases.
+        /// </summary>
+        public int StoredBirdFoodUnits { get; set; }
+
+        /// <summary>
         /// A list of all birds owned by the player, formatted for the care UI cards.
         /// </summary>
         public List<BirdCareViewModel> Birds { get; set; } = new List<BirdCareViewModel>();
@@ -211,6 +216,21 @@ namespace BirdCafe.Shared.ViewModels
         /// Physical health level (0-100).
         /// </summary>
         public int Health { get; set; }
+
+        /// <summary>
+        /// Trust level (0-100) built by feeding preferred foods.
+        /// </summary>
+        public int Trust { get; set; }
+
+        /// <summary>
+        /// Display-friendly preferred food list for this bird.
+        /// </summary>
+        public string PreferredFoodsText { get; set; }
+
+        /// <summary>
+        /// Number of friendship bonds this bird currently has.
+        /// </summary>
+        public int FriendshipCount { get; set; }
 
         /// <summary>
         /// Indicates if the bird has a minor illness requiring Vet attention.
@@ -408,5 +428,75 @@ namespace BirdCafe.Shared.ViewModels
         /// Should disable the toggle in the UI if false.
         /// </summary>
         public bool CanWork { get; set; }
+    }
+
+    [Serializable]
+    public class EveningHubViewModel
+    {
+        public int DayNumber { get; set; }
+
+        public decimal CurrentMoney { get; set; }
+
+        public int CurrentPopularity { get; set; }
+    }
+
+    [Serializable]
+    public class PetStoreDashboardViewModel
+    {
+        public decimal CurrentMoney { get; set; }
+
+        public int OwnedBirdCount { get; set; }
+
+        public int BirdFoodUnits { get; set; }
+
+        public int SpecialEggToysOwned { get; set; }
+
+        public string LastEggRewardText { get; set; }
+    }
+
+    [Serializable]
+    public class PetStoreBirdOfferViewModel
+    {
+        public string SpeciesId { get; set; }
+
+        public string Name { get; set; }
+
+        public string RarityText { get; set; }
+
+        public decimal Price { get; set; }
+
+        public string EffectText { get; set; }
+
+        public bool IsAffordable { get; set; }
+    }
+
+    [Serializable]
+    public class PetStoreSupplyOfferViewModel
+    {
+        public string ItemId { get; set; }
+
+        public string Name { get; set; }
+
+        public string CategoryText { get; set; }
+
+        public decimal Price { get; set; }
+
+        public int OwnedQuantity { get; set; }
+
+        public string EffectText { get; set; }
+
+        public bool IsAffordable { get; set; }
+    }
+
+    [Serializable]
+    public class EggRewardResultViewModel
+    {
+        public bool HasReward { get; set; }
+
+        public string RewardTypeText { get; set; }
+
+        public string RewardName { get; set; }
+
+        public string RewardDescription { get; set; }
     }
 }

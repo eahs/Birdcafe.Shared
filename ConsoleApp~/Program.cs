@@ -102,6 +102,9 @@ namespace BirdCafe.ConsoleApp
                 case GameScreen.DaySimulation:
                     Screens.SimulationScreens.RunSimulationPlayback();
                     break;
+                case GameScreen.Hub:
+                    Screens.EveningScreens.ShowHub();
+                    break;
                 case GameScreen.EveningSummary:
                     Screens.EveningScreens.ShowDailySummary();
                     break;
@@ -110,6 +113,15 @@ namespace BirdCafe.ConsoleApp
                     break;
                 case GameScreen.EveningPlanning:
                     Screens.EveningScreens.ShowPlanning();
+                    break;
+                case GameScreen.EveningPetStore:
+                    Screens.EveningScreens.ShowPetStore();
+                    break;
+                case GameScreen.EveningPetStoreBirds:
+                    Screens.EveningScreens.ShowPetStoreBirds();
+                    break;
+                case GameScreen.EveningPetStoreSupplies:
+                    Screens.EveningScreens.ShowPetStoreSupplies();
                     break;
                 case GameScreen.WeeklySummary:
                     Screens.ReportScreens.ShowWeeklyReport();

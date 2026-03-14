@@ -237,4 +237,50 @@ namespace BirdCafe.Shared.Enums
         /// </summary>
         LeftNoStock
     }
+
+    /// <summary>
+    /// Rarity bands for birds sold in Rick's Pet Store.
+    /// </summary>
+    [Serializable]
+    public enum BirdRarity
+    {
+        Common = 0,
+        Uncommon = 1,
+        Rare = 2,
+        Exotic = 3
+    }
+
+    /// <summary>
+    /// Categories for Rick's Pet Store supplies.
+    /// </summary>
+    [Serializable]
+    public enum PetStoreSupplyType
+    {
+        BirdFood = 0,
+        Toy = 1,
+        Costume = 2,
+        SpecialEggToy = 3
+    }
+
+    /// <summary>
+    /// Food categories birds can consume during evening care.
+    /// </summary>
+    [Serializable]
+    public enum BirdFoodType
+    {
+        SeedMix = 0,
+        FruitMedley = 1,
+        NutriPellets = 2
+    }
+
+    /// <summary>
+    /// Reward categories granted from the special egg toy.
+    /// </summary>
+    [Serializable]
+    public enum EggRewardType
+    {
+        BirdBuff = 0,
+        UniqueToy = 1,
+        RareCostume = 2
+    }
 }

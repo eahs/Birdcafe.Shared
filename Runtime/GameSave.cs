@@ -83,6 +83,11 @@ namespace BirdCafe.Shared
         public EconomyState Economy { get; set; } = new EconomyState();
 
         /// <summary>
+        /// Persistent inventory and unlock data for Rick's Pet Store.
+        /// </summary>
+        public PetStoreState PetStore { get; set; } = new PetStoreState();
+
+        /// <summary>
         /// List of all birds owned by the player.
         /// </summary>
         public List<Bird> Birds { get; set; } = new List<Bird>();
