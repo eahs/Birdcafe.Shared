@@ -113,16 +113,16 @@ namespace BirdCafe.ConsoleApp.Screens
             Console.Clear();
             var vm = BirdCafeGame.Instance.GetCareDashboard();
 
-            Console.WriteLine($"=== BIRD CARE (Funds: ${vm.CurrentMoney:F2}) | Pop: {vm.CurrentPopularity} ===");
-            Console.WriteLine("ID | Name           | Hunger | Energy | Health | Mood | Status");
-            Console.WriteLine("---|----------------|--------|--------|--------|------|-------");
+            Console.WriteLine($"=== BIRD CARE (Funds: ${vm.CurrentMoney:F2}) | Pop: {vm.CurrentPopularity} | Stored Food: {vm.StoredBirdFoodUnits} ===");
+            Console.WriteLine("ID | Name           | Hunger | Energy | Health | Mood | Trust | Friends | Pref Food         | Status");
+            Console.WriteLine("---|----------------|--------|--------|--------|------|-------|---------|-------------------|-------");
 
             foreach (var b in vm.Birds)
             {
                 string status = b.IsSick ? "SICK" : "OK";
                 if (b.WillRestTomorrow) status += " (REST)";
 
-                Console.WriteLine($"{b.Id.Substring(0, 2)} | {b.Name.PadRight(14)} | {b.Hunger,6} | {b.Energy,6} | {b.Health,6} | {b.Mood,4} | {status}");
+                Console.WriteLine($"{b.Id.Substring(0, 2)} | {b.Name.PadRight(14)} | {b.Hunger,6} | {b.Energy,6} | {b.Health,6} | {b.Mood,4} | {b.Trust,5} | {b.FriendshipCount,7} | {b.PreferredFoodsText.PadRight(17)} | {status}");
             }
 
             Console.WriteLine("\n[B] Back to Hub");
@@ -162,7 +162,7 @@ namespace BirdCafe.ConsoleApp.Screens
             for (int i = 0; i < actions.Count; i++)
             {
                 var a = actions[i];
-                string costColor = a.IsAffordable ? "" : "(EXPENSIVE)";
+                string costColor = a.IsAffordable ? "" : "(UNAVAILABLE)";
                 Console.WriteLine($"{i + 1}. {a.Label} (${a.Cost}) {costColor}");
             }
             Console.WriteLine("R. Toggle Rest Next Day");
@@ -354,10 +354,12 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.Clear();
                 var offers = BirdCafeGame.Instance.GetPetStoreSupplyOffers();
                 Console.WriteLine("=== RICK'S PET STORE / BUY SUPPLIES ===");
-                Console.WriteLine("1. Bird Food");
-                Console.WriteLine("2. Toys");
-                Console.WriteLine("3. Costumes");
-                Console.WriteLine("4. Special Egg Toy");
+                Console.WriteLine("1. Seed Mix ($18.00)");
+                Console.WriteLine("2. Fruit Medley");
+                Console.WriteLine("3. Nutri Pellets");
+                Console.WriteLine("4. Feather Wand");
+                Console.WriteLine("5. Cafe Bandana");
+                Console.WriteLine("6. Special Egg Toy");
                 Console.WriteLine("O. Open owned Special Egg Toy");
                 Console.WriteLine("B. Back");
                 Console.Write("> ");
@@ -376,18 +378,25 @@ namespace BirdCafe.ConsoleApp.Screens
                 }
                 else if (key == '1')
                 {
-                    var food = offers.First(o => o.ItemId == "BirdFoodBag");
-                    BirdCafeGame.Instance.BuyPetStoreSupply(food.ItemId, PetStoreSupplyType.BirdFood);
+                    BirdCafeGame.Instance.BuyPetStoreSupply("BirdFood_SeedMix", PetStoreSupplyType.BirdFood);
                 }
                 else if (key == '2')
                 {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("Toy_FeatherWand", PetStoreSupplyType.Toy);
+                    BirdCafeGame.Instance.BuyPetStoreSupply("BirdFood_FruitMedley", PetStoreSupplyType.BirdFood);
                 }
                 else if (key == '3')
                 {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("Costume_Bandana", PetStoreSupplyType.Costume);
+                    BirdCafeGame.Instance.BuyPetStoreSupply("BirdFood_NutriPellets", PetStoreSupplyType.BirdFood);
                 }
                 else if (key == '4')
+                {
+                    BirdCafeGame.Instance.BuyPetStoreSupply("Toy_FeatherWand", PetStoreSupplyType.Toy);
+                }
+                else if (key == '5')
+                {
+                    BirdCafeGame.Instance.BuyPetStoreSupply("Costume_Bandana", PetStoreSupplyType.Costume);
+                }
+                else if (key == '6')
                 {
                     BirdCafeGame.Instance.BuyPetStoreSupply("SpecialEggToy", PetStoreSupplyType.SpecialEggToy);
                 }

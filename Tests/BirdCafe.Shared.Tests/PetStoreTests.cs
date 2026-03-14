@@ -120,6 +120,97 @@ namespace BirdCafe.Shared.Tests
             var careVm = game.GetCareDashboard();
             Assert.IsTrue(careVm.Birds.Any(b => b.Name.Contains("Budgerigar")));
         }
+
+
+        [Test]
+        public void BuyingBirdFood_DeductsMoney_AndAddsStoredFoodInventory()
+        {
+            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
+
+            var result = _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood, 2);
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual(startMoney - (PetStoreCatalog.BirdFoodSeedMixPrice * 2), _controller.CurrentState.Economy.CurrentBalance);
+            Assert.AreEqual(2, _controller.CurrentState.PetStore.GetFoodUnits(BirdFoodType.SeedMix));
+            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Supply Purchase"));
+        }
+
+        [Test]
+        public void FeedConsumesStoredFood_InsteadOfChargingMoney()
+        {
+            _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood, 1);
+            var bird = _controller.CurrentState.Birds.First();
+            decimal moneyBeforeFeed = _controller.CurrentState.Economy.CurrentBalance;
+
+            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
+
+            Assert.IsTrue(feedResult.IsSuccess);
+            Assert.AreEqual(0, _controller.CurrentState.PetStore.GetTotalFoodUnits());
+            Assert.AreEqual(moneyBeforeFeed, _controller.CurrentState.Economy.CurrentBalance);
+        }
+
+        [Test]
+        public void FeedFailsWhenNoStoredFoodExists()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            _controller.CurrentState.PetStore.BirdFoodByType.Clear();
+
+            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
+
+            Assert.IsFalse(feedResult.IsSuccess);
+            Assert.AreEqual("NoStoredFood", feedResult.ErrorCode);
+        }
+
+        [Test]
+        public void FeedingPreferredFood_IncreasesTrust()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            bird.PreferredFoods.Clear();
+            bird.PreferredFoods.Add(BirdFoodType.FruitMedley);
+            bird.Trust = 0;
+            _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodFruitMedleyItemId, PetStoreSupplyType.BirdFood, 1);
+
+            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
+
+            Assert.IsTrue(feedResult.IsSuccess);
+            Assert.AreEqual(10, bird.Trust);
+        }
+
+        [Test]
+        public void TrustAndFriendshipPersistThroughLoad()
+        {
+            var birdA = _controller.CurrentState.Birds[0];
+            _controller.PetStore.BuyBird("Budgerigar");
+            var birdB = _controller.CurrentState.Birds.Last();
+
+            birdA.Trust = 33;
+            birdA.AddFriend(birdB.Id);
+            birdB.AddFriend(birdA.Id);
+
+            var save = _controller.CurrentState;
+            var fresh = new BirdCafeController();
+            var loadResult = fresh.Meta.LoadGame(save);
+
+            Assert.IsTrue(loadResult.IsSuccess);
+            Assert.AreEqual(33, fresh.CurrentState.Birds.First(b => b.Id == birdA.Id).Trust);
+            Assert.IsTrue(fresh.CurrentState.Birds.First(b => b.Id == birdA.Id).FriendBirdIds.Contains(birdB.Id));
+        }
+
+        [Test]
+        public void MultipleBirdsCanMaintainFriendships()
+        {
+            _controller.PetStore.BuyBird("Budgerigar");
+            _controller.PetStore.BuyBird("Cockatiel");
+
+            var birds = _controller.CurrentState.Birds;
+            birds[0].AddFriend(birds[1].Id);
+            birds[1].AddFriend(birds[2].Id);
+            birds[2].AddFriend(birds[0].Id);
+
+            Assert.IsTrue(birds[0].FriendBirdIds.Contains(birds[1].Id));
+            Assert.IsTrue(birds[1].FriendBirdIds.Contains(birds[2].Id));
+            Assert.IsTrue(birds[2].FriendBirdIds.Contains(birds[0].Id));
+        }
     }
 
     internal static class ControllerTestExtensions

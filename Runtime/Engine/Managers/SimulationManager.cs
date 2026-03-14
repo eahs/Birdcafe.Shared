@@ -327,8 +327,9 @@ namespace BirdCafe.Shared.Engine.Managers
             decimal totalRevenue = 0;
             foreach (var item in servedItems)
             {
-                decimal price = GetProductPrice(state, item);
-                totalRevenue += price;
+                decimal basePrice = GetProductPrice(state, item);
+                decimal adjustedPrice = ApplyBirdRevenueBonuses(state, bird, basePrice);
+                totalRevenue += adjustedPrice;
 
                 // Bird gets tired.
                 bird.ConsumeEnergy(state.Config.EnergyCostPerService);
@@ -346,7 +347,7 @@ namespace BirdCafe.Shared.Engine.Managers
                     CustomerId = cust.CustomerId,
                     BirdId = bird.Id,
                     Product = item,
-                    MoneyDelta = price,
+                    MoneyDelta = adjustedPrice,
                     PopularityDelta = (1f / servedItems.Count) + friendlinessBonus // Split base popularity gain and add bird-based charm bonus.
                 });
             }
@@ -484,6 +485,23 @@ namespace BirdCafe.Shared.Engine.Managers
                     break;
             }
             return false;
+        }
+
+        private decimal ApplyBirdRevenueBonuses(GameSave state, Bird bird, decimal basePrice)
+        {
+            var workingBirdIds = state.CurrentDayState.CurrentPlan.BirdIdsWorking;
+            int activeFriendships = bird.FriendBirdIds
+                .Distinct()
+                .Count(friendId => workingBirdIds.Contains(friendId));
+
+            decimal trustBonus = (decimal)bird.Trust * state.Config.TrustRevenueBonusPerPoint;
+            decimal friendshipBonus = activeFriendships * state.Config.FriendshipRevenueBonusPerActiveFriend;
+            decimal multiplier = 1m + trustBonus + friendshipBonus;
+
+            if (multiplier < 1m)
+                multiplier = 1m;
+
+            return decimal.Round(basePrice * multiplier, 2, MidpointRounding.AwayFromZero);
         }
 
         /// <summary>

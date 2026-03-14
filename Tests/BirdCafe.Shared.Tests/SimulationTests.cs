@@ -92,5 +92,100 @@ namespace BirdCafe.Shared.Tests
             Assert.AreEqual(-5.0m, lastEntry.Amount);
             Assert.AreEqual("Inventory Restock", lastEntry.Reason);
         }
+
+
+        [Test]
+        public void TrustIncreasesSimulationCashOutput()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            var bird = _controller.CurrentState.Birds.First();
+            bird.Trust = 0;
+
+            var noTrust = _controller.Simulation.RunDaySimulation();
+            var noTrustRevenue = ((Models.Simulation.DaySimulationResult)noTrust.Payload).Economy.TotalRevenue;
+
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            bird = _controller.CurrentState.Birds.First();
+            bird.Trust = 100;
+
+            var highTrust = _controller.Simulation.RunDaySimulation();
+            var highTrustRevenue = ((Models.Simulation.DaySimulationResult)highTrust.Payload).Economy.TotalRevenue;
+
+            Assert.Greater(highTrustRevenue, noTrustRevenue);
+        }
+
+        [Test]
+        public void FriendshipIncreasesSimulationCashOutput()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            _controller.SetPhaseForTests(GamePhase.EveningLoop);
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
+            _controller.PetStore.BuyBird("Budgerigar");
+
+            var birdA = _controller.CurrentState.Birds[0];
+            var birdB = _controller.CurrentState.Birds[1];
+            birdA.FriendBirdIds.Clear();
+            birdB.FriendBirdIds.Clear();
+            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
+
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+            var noFriend = _controller.Simulation.RunDaySimulation();
+            var noFriendRevenue = ((Models.Simulation.DaySimulationResult)noFriend.Payload).Economy.TotalRevenue;
+
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            _controller.SetPhaseForTests(GamePhase.EveningLoop);
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
+            _controller.PetStore.BuyBird("Budgerigar");
+
+            birdA = _controller.CurrentState.Birds[0];
+            birdB = _controller.CurrentState.Birds[1];
+            birdA.AddFriend(birdB.Id);
+            birdB.AddFriend(birdA.Id);
+            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
+
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+            var withFriend = _controller.Simulation.RunDaySimulation();
+            var withFriendRevenue = ((Models.Simulation.DaySimulationResult)withFriend.Payload).Economy.TotalRevenue;
+
+            Assert.Greater(withFriendRevenue, noFriendRevenue);
+        }
+
+        [Test]
+        public void TrustAndFriendshipRevenueBonuses_AreDeterministicForSameSeed()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            _controller.SetPhaseForTests(GamePhase.EveningLoop);
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
+            _controller.PetStore.BuyBird("Budgerigar");
+            var birdA = _controller.CurrentState.Birds[0];
+            var birdB = _controller.CurrentState.Birds[1];
+            birdA.Trust = 80;
+            birdB.Trust = 60;
+            birdA.AddFriend(birdB.Id);
+            birdB.AddFriend(birdA.Id);
+            var seed = _controller.CurrentState.CurrentDayState.CurrentPlan.DaySeed;
+            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
+
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+            var first = (Models.Simulation.DaySimulationResult)_controller.Simulation.RunDaySimulation().Payload;
+
+            var secondController = new BirdCafeController();
+            secondController.Meta.StartNewGame("TestPlayer", "TestCafe");
+            secondController.SetPhaseForTests(GamePhase.EveningLoop);
+            secondController.CurrentState.Economy.CurrentBalance = 5000m;
+            secondController.PetStore.BuyBird("Budgerigar");
+            var secondBirdA = secondController.CurrentState.Birds[0];
+            var secondBirdB = secondController.CurrentState.Birds[1];
+            secondBirdA.Trust = 80;
+            secondBirdB.Trust = 60;
+            secondBirdA.AddFriend(secondBirdB.Id);
+            secondBirdB.AddFriend(secondBirdA.Id);
+            secondController.CurrentState.CurrentDayState.CurrentPlan.DaySeed = seed;
+            secondController.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { secondBirdA.Id, secondBirdB.Id };
+            secondController.SetPhaseForTests(GamePhase.DayLoop);
+            var second = (Models.Simulation.DaySimulationResult)secondController.Simulation.RunDaySimulation().Payload;
+
+            Assert.AreEqual(first.Economy.TotalRevenue, second.Economy.TotalRevenue);
+        }
     }
 }
