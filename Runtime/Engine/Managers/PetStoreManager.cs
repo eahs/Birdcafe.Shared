@@ -13,6 +13,12 @@ namespace BirdCafe.Shared.Engine.Managers
     /// </summary>
     public class PetStoreManager
     {
+        private const string InvalidPhaseCode = "InvalidPhase";
+        private const string InvalidItemCode = "InvalidItem";
+        private const string InvalidBirdFoodTypeCode = "InvalidBirdFoodType";
+        private const string InsufficientFundsCode = "InsufficientFunds";
+        private const string InvalidQuantityCode = "InvalidQuantity";
+
         private readonly BirdCafeController _controller;
 
         public PetStoreManager(BirdCafeController controller)
@@ -23,14 +29,14 @@ namespace BirdCafe.Shared.Engine.Managers
         public EngineResult BuyBird(string speciesId)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure("InvalidPhase", "Rick's Pet Store is only open in the evening.");
+                return EngineResult.Failure(InvalidPhaseCode, "Rick's Pet Store is only open in the evening.");
 
             var offer = PetStoreCatalog.FindBirdOffer(speciesId);
             if (offer == null)
                 return EngineResult.Failure("InvalidBird", "That bird is not sold in Rick's Pet Store.");
 
             if (_controller.CurrentState.Economy.CurrentBalance < offer.Price)
-                return EngineResult.Failure("InsufficientFunds", "Not enough money to buy this bird.");
+                return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy this bird.");
 
             SpendMoney(offer.Price, $"Rick's Pet Store Bird Purchase: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization);
 
@@ -67,42 +73,24 @@ namespace BirdCafe.Shared.Engine.Managers
         public EngineResult BuySupply(string itemId, PetStoreSupplyType supplyType, int quantity = 1)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure("InvalidPhase", "Rick's Pet Store is only open in the evening.");
+                return EngineResult.Failure(InvalidPhaseCode, "Rick's Pet Store is only open in the evening.");
 
             if (quantity <= 0)
-                return EngineResult.Failure("InvalidQuantity", "Quantity must be at least 1.");
+                return EngineResult.Failure(InvalidQuantityCode, "Quantity must be at least 1.");
 
-            decimal unitPrice = GetSupplyUnitPrice(itemId, supplyType);
-            if (unitPrice <= 0)
-                return EngineResult.Failure("InvalidItem", "That store item is unavailable.");
+            var supply = PetStoreCatalog.FindSupplyOffer(itemId, supplyType);
+            if (supply == null)
+                return EngineResult.Failure(InvalidItemCode, "That store item is unavailable.");
 
-            decimal totalCost = unitPrice * quantity;
+            if (supply.SupplyType == PetStoreSupplyType.BirdFood && supply.BirdFoodType == null)
+                return EngineResult.Failure(InvalidBirdFoodTypeCode, "That food type is unavailable.");
+
+            var totalCost = supply.Price * quantity;
             if (_controller.CurrentState.Economy.CurrentBalance < totalCost)
-                return EngineResult.Failure("InsufficientFunds", "Not enough money to buy that item.");
+                return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy that item.");
 
-            SpendMoney(totalCost, $"Rick's Pet Store Supply Purchase: {itemId} x{quantity}", PetStoreCatalog.GetCategoryForSupply(supplyType));
-
-            var store = _controller.CurrentState.PetStore;
-            if (supplyType == PetStoreSupplyType.BirdFood)
-            {
-                var foodType = PetStoreCatalog.GetFoodTypeForItem(itemId);
-                if (foodType == null)
-                    return EngineResult.Failure("InvalidBirdFoodType", "That food type is unavailable.");
-
-                store.AddFood(foodType.Value, quantity);
-            }
-            else if (supplyType == PetStoreSupplyType.Toy)
-            {
-                AddQuantity(store.OwnedToyQuantities, itemId, quantity);
-            }
-            else if (supplyType == PetStoreSupplyType.Costume)
-            {
-                AddQuantity(store.OwnedCostumeQuantities, itemId, quantity);
-            }
-            else
-            {
-                store.SpecialEggToysOwned += quantity;
-            }
+            SpendMoney(totalCost, $"Rick's Pet Store Supply Purchase: {itemId} x{quantity}", supply.ExpenseCategory);
+            ApplySupplyPurchase(supply, quantity);
 
             return EngineResult.Success();
         }
@@ -110,7 +98,7 @@ namespace BirdCafe.Shared.Engine.Managers
         public EngineResult OpenSpecialEggToy()
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure("InvalidPhase", "Rick's Pet Store is only open in the evening.");
+                return EngineResult.Failure(InvalidPhaseCode, "Rick's Pet Store is only open in the evening.");
 
             var state = _controller.CurrentState;
             if (state.PetStore.SpecialEggToysOwned <= 0)
@@ -129,6 +117,31 @@ namespace BirdCafe.Shared.Engine.Managers
             state.PetStore.EggRewardHistory.Add(reward);
 
             return EngineResult.Success(reward);
+        }
+
+        private void ApplySupplyPurchase(PetStoreSupplyDefinition supply, int quantity)
+        {
+            var store = _controller.CurrentState.PetStore;
+
+            if (supply.SupplyType == PetStoreSupplyType.BirdFood)
+            {
+                store.AddFood(supply.BirdFoodType.Value, quantity);
+                return;
+            }
+
+            if (supply.SupplyType == PetStoreSupplyType.Toy)
+            {
+                AddQuantity(store.OwnedToyQuantities, supply.ItemId, quantity);
+                return;
+            }
+
+            if (supply.SupplyType == PetStoreSupplyType.Costume)
+            {
+                AddQuantity(store.OwnedCostumeQuantities, supply.ItemId, quantity);
+                return;
+            }
+
+            store.SpecialEggToysOwned += quantity;
         }
 
         private List<EggRewardRecord> BuildRewardTable()
@@ -158,22 +171,6 @@ namespace BirdCafe.Shared.Engine.Managers
             }
 
             AddQuantity(store.OwnedCostumeQuantities, reward.RewardId, 1);
-        }
-
-        private decimal GetSupplyUnitPrice(string itemId, PetStoreSupplyType supplyType)
-        {
-            return (itemId, supplyType) switch
-            {
-                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodSeedMixItemId || s == PetStoreCatalog.BirdFoodItemId => PetStoreCatalog.BirdFoodSeedMixPrice,
-                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodFruitMedleyItemId => PetStoreCatalog.BirdFoodFruitMedleyPrice,
-                (var s, PetStoreSupplyType.BirdFood) when s == PetStoreCatalog.BirdFoodNutriPelletsItemId => PetStoreCatalog.BirdFoodNutriPelletsPrice,
-                (var s, PetStoreSupplyType.Toy) when s == PetStoreCatalog.ToyFeatherWandId => PetStoreCatalog.FeatherWandPrice,
-                (var s, PetStoreSupplyType.Toy) when s == PetStoreCatalog.ToyBellOrbId => PetStoreCatalog.BellOrbPrice,
-                (var s, PetStoreSupplyType.Costume) when s == PetStoreCatalog.CostumeBandanaId => PetStoreCatalog.BandanaPrice,
-                (var s, PetStoreSupplyType.Costume) when s == PetStoreCatalog.CostumeRoyalCapeId => PetStoreCatalog.RoyalCapePrice,
-                (_, PetStoreSupplyType.SpecialEggToy) => PetStoreCatalog.SpecialEggToyPrice,
-                _ => 0
-            };
         }
 
         private void SpendMoney(decimal amount, string reason, ExpenseCategory category)

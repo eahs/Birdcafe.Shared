@@ -28,4 +28,27 @@ namespace BirdCafe.Shared.Models.Birds
 
         public List<BirdFoodType> PreferredFoods { get; set; } = new List<BirdFoodType>();
     }
+
+    /// <summary>
+    /// Definition for a purchasable supply in Rick's Pet Store.
+    /// </summary>
+    [Serializable]
+    public class PetStoreSupplyDefinition
+    {
+        public string ItemId { get; set; }
+
+        public string DisplayName { get; set; }
+
+        public PetStoreSupplyType SupplyType { get; set; }
+
+        public string CategoryText { get; set; }
+
+        public decimal Price { get; set; }
+
+        public string EffectText { get; set; }
+
+        public ExpenseCategory ExpenseCategory { get; set; }
+
+        public BirdFoodType? BirdFoodType { get; set; }
+    }
 }

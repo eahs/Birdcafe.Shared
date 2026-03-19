@@ -1,6 +1,7 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Economy;
 using NUnit.Framework;
 using System.Linq;
@@ -60,21 +61,74 @@ namespace BirdCafe.Shared.Tests
         }
 
         [Test]
-        public void SupplyPurchasesPersist()
+        public void SupplyCatalogLookup_ResolvesSharedDefinitions()
         {
-            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodItemId, PetStoreSupplyType.BirdFood).IsSuccess);
+            var fruitMedley = PetStoreCatalog.FindSupplyOffer(PetStoreCatalog.BirdFoodFruitMedleyItemId, PetStoreSupplyType.BirdFood);
+            var specialEggToy = PetStoreCatalog.FindSupplyOffer(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
+
+            Assert.NotNull(fruitMedley);
+            Assert.AreEqual(BirdFoodType.FruitMedley, fruitMedley.BirdFoodType);
+            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, fruitMedley.ExpenseCategory);
+            Assert.NotNull(specialEggToy);
+            Assert.AreEqual(PetStoreSupplyType.SpecialEggToy, specialEggToy.SupplyType);
+        }
+
+        [Test]
+        public void BuySupply_DoesNotDeductMoney_WhenBirdFoodValidationFails()
+        {
+            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
+            var startingLedgerCount = _controller.CurrentState.Economy.Ledger.Count;
+
+            var result = _controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.BirdFood, 1);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("InvalidItem", result.ErrorCode);
+            Assert.AreEqual(startMoney, _controller.CurrentState.Economy.CurrentBalance);
+            Assert.AreEqual(startingLedgerCount, _controller.CurrentState.Economy.Ledger.Count);
+        }
+
+        [Test]
+        public void BuyingBirdFood_DeductsMoney_AndAddsStoredFoodInventory()
+        {
+            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
+
+            var result = _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood, 2);
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual(startMoney - (PetStoreCatalog.BirdFoodSeedMixPrice * 2), _controller.CurrentState.Economy.CurrentBalance);
+            Assert.AreEqual(2, _controller.CurrentState.PetStore.GetFoodUnits(BirdFoodType.SeedMix));
+            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Supply Purchase"));
+        }
+
+        [Test]
+        public void BuyingNonFoodSupplies_GrantsCorrectOwnership()
+        {
             Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.ToyFeatherWandId, PetStoreSupplyType.Toy).IsSuccess);
             Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy).IsSuccess);
 
-            Assert.AreEqual(1, _controller.CurrentState.PetStore.BirdFoodUnits);
             Assert.AreEqual(1, _controller.CurrentState.PetStore.OwnedToyQuantities[PetStoreCatalog.ToyFeatherWandId]);
             Assert.AreEqual(1, _controller.CurrentState.PetStore.OwnedCostumeQuantities[PetStoreCatalog.CostumeBandanaId]);
+            Assert.AreEqual(1, _controller.CurrentState.PetStore.SpecialEggToysOwned);
+        }
+
+        [Test]
+        public void SpecialEggToyOffer_UsesCorrectSupplyType()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("Tester", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+
+            var offer = game.GetPetStoreSupplyOffers().Single(o => o.ItemId == PetStoreCatalog.SpecialEggToyItemId);
+
+            Assert.AreEqual(PetStoreSupplyType.SpecialEggToy, offer.SupplyType);
         }
 
         [Test]
         public void EggRewardResolution_IsDeterministicAndPersisted()
         {
-            _controller.PetStore.BuySupply("SpecialEggToy", PetStoreSupplyType.SpecialEggToy);
+            _controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
             var first = _controller.PetStore.OpenSpecialEggToy();
 
             Assert.IsTrue(first.IsSuccess);
@@ -88,7 +142,7 @@ namespace BirdCafe.Shared.Tests
             fresh.Simulation.AdvanceFromSimulation();
             fresh.CurrentState.Economy.CurrentBalance = 5000m;
             fresh.CurrentState.CurrentDayState.CurrentPlan.DaySeed = _controller.CurrentState.CurrentDayState.CurrentPlan.DaySeed;
-            fresh.PetStore.BuySupply("SpecialEggToy", PetStoreSupplyType.SpecialEggToy);
+            fresh.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
             var second = fresh.PetStore.OpenSpecialEggToy();
             var rewardB = second.Payload as EggRewardRecord;
 
@@ -119,20 +173,6 @@ namespace BirdCafe.Shared.Tests
             Assert.IsTrue(game.BuyPetStoreBird("Budgerigar"));
             var careVm = game.GetCareDashboard();
             Assert.IsTrue(careVm.Birds.Any(b => b.Name.Contains("Budgerigar")));
-        }
-
-
-        [Test]
-        public void BuyingBirdFood_DeductsMoney_AndAddsStoredFoodInventory()
-        {
-            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
-
-            var result = _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood, 2);
-
-            Assert.IsTrue(result.IsSuccess);
-            Assert.AreEqual(startMoney - (PetStoreCatalog.BirdFoodSeedMixPrice * 2), _controller.CurrentState.Economy.CurrentBalance);
-            Assert.AreEqual(2, _controller.CurrentState.PetStore.GetFoodUnits(BirdFoodType.SeedMix));
-            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Supply Purchase"));
         }
 
         [Test]
