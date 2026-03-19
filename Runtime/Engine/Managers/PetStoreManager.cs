@@ -9,7 +9,7 @@ using System.Linq;
 namespace BirdCafe.Shared.Engine.Managers
 {
     /// <summary>
-    /// Handles Rick's Pet Store purchases and deterministic egg rewards.
+    /// Handles Pete's Pet Store purchases and deterministic egg rewards.
     /// </summary>
     public class PetStoreManager
     {
@@ -29,16 +29,16 @@ namespace BirdCafe.Shared.Engine.Managers
         public EngineResult BuyBird(string speciesId)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure(InvalidPhaseCode, "Rick's Pet Store is only open in the evening.");
+                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
 
             var offer = PetStoreCatalog.FindBirdOffer(speciesId);
             if (offer == null)
-                return EngineResult.Failure("InvalidBird", "That bird is not sold in Rick's Pet Store.");
+                return EngineResult.Failure("InvalidBird", "That bird is not sold in Pete's Pet Store.");
 
             if (_controller.CurrentState.Economy.CurrentBalance < offer.Price)
                 return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy this bird.");
 
-            SpendMoney(offer.Price, $"Rick's Pet Store Bird Purchase: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization);
+            SpendMoney(offer.Price, $"Pete's Pet Store Bird Purchase: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization);
 
             var state = _controller.CurrentState;
             var createdBird = new Bird
@@ -73,7 +73,7 @@ namespace BirdCafe.Shared.Engine.Managers
         public EngineResult BuySupply(string itemId, PetStoreSupplyType supplyType, int quantity = 1)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure(InvalidPhaseCode, "Rick's Pet Store is only open in the evening.");
+                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
 
             if (quantity <= 0)
                 return EngineResult.Failure(InvalidQuantityCode, "Quantity must be at least 1.");
@@ -89,7 +89,7 @@ namespace BirdCafe.Shared.Engine.Managers
             if (_controller.CurrentState.Economy.CurrentBalance < totalCost)
                 return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy that item.");
 
-            SpendMoney(totalCost, $"Rick's Pet Store Supply Purchase: {itemId} x{quantity}", supply.ExpenseCategory);
+            SpendMoney(totalCost, $"Pete's Pet Store Supply Purchase: {itemId} x{quantity}", supply.ExpenseCategory);
             ApplySupplyPurchase(supply, quantity);
 
             return EngineResult.Success();
@@ -98,7 +98,7 @@ namespace BirdCafe.Shared.Engine.Managers
         public EngineResult OpenSpecialEggToy()
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure(InvalidPhaseCode, "Rick's Pet Store is only open in the evening.");
+                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
 
             var state = _controller.CurrentState;
             if (state.PetStore.SpecialEggToysOwned <= 0)

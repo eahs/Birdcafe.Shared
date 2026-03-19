@@ -47,7 +47,7 @@ namespace BirdCafe.Shared.Engine
         public ReportingManager Reporting { get; private set; }
 
         /// <summary>
-        /// Manager responsible for Rick's Pet Store actions.
+        /// Manager responsible for Pete's Pet Store actions.
         /// </summary>
         public PetStoreManager PetStore { get; private set; }
 

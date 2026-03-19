@@ -82,14 +82,14 @@ namespace BirdCafe.Shared.Engine.Managers
         {
             var store = _controller.CurrentState.PetStore;
             if (store.GetTotalFoodUnits() <= 0)
-                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Rick's Pet Store first.");
+                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
 
             var selectedFoodType = SelectFoodTypeForBird(bird, store);
             if (selectedFoodType == null)
-                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Rick's Pet Store first.");
+                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
 
             if (!store.TryConsumeFood(selectedFoodType.Value, 1))
-                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Rick's Pet Store first.");
+                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
 
             bird.ApplyCareEffect(template);
 

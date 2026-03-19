@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace BirdCafe.Shared.Engine.Utils
 {
     /// <summary>
-    /// Static definitions used by Rick's Pet Store.
+    /// Static definitions used by Pete's Pet Store.
     /// </summary>
     public static class PetStoreCatalog
     {

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace BirdCafe.Shared.Models.Birds
 {
     /// <summary>
-    /// Definition for a purchasable bird species in Rick's Pet Store.
+    /// Definition for a purchasable bird species in Pete's Pet Store.
     /// </summary>
     [Serializable]
     public class BirdSpeciesOffer
@@ -30,7 +30,7 @@ namespace BirdCafe.Shared.Models.Birds
     }
 
     /// <summary>
-    /// Definition for a purchasable supply in Rick's Pet Store.
+    /// Definition for a purchasable supply in Pete's Pet Store.
     /// </summary>
     [Serializable]
     public class PetStoreSupplyDefinition
