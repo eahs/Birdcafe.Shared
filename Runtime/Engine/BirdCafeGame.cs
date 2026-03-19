@@ -2,6 +2,7 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.ViewModels;
@@ -308,98 +309,44 @@ namespace BirdCafe.Shared
         {
             var money = _controller.CurrentState.Economy.CurrentBalance;
             var store = _controller.CurrentState.PetStore;
+            var offers = new List<PetStoreSupplyOfferViewModel>();
 
-            return new List<PetStoreSupplyOfferViewModel>
+            foreach (var supply in PetStoreCatalog.GetSupplyOffers())
             {
-                new PetStoreSupplyOfferViewModel
+                offers.Add(new PetStoreSupplyOfferViewModel
                 {
-                    ItemId = PetStoreCatalog.BirdFoodSeedMixItemId,
-                    Name = "Seed Mix",
-                    CategoryText = "Bird Food",
-                    SupplyType = PetStoreSupplyType.BirdFood,
-                    Price = PetStoreCatalog.BirdFoodSeedMixPrice,
-                    OwnedQuantity = store.GetFoodUnits(BirdFoodType.SeedMix),
-                    EffectText = "Basic food for flock birds. Feeding uses stored inventory only.",
-                    IsAffordable = money >= PetStoreCatalog.BirdFoodSeedMixPrice
-                },
-                new PetStoreSupplyOfferViewModel
-                {
-                    ItemId = PetStoreCatalog.BirdFoodFruitMedleyItemId,
-                    Name = "Fruit Medley",
-                    CategoryText = "Bird Food",
-                    SupplyType = PetStoreSupplyType.BirdFood,
-                    Price = PetStoreCatalog.BirdFoodFruitMedleyPrice,
-                    OwnedQuantity = store.GetFoodUnits(BirdFoodType.FruitMedley),
-                    EffectText = "Preferred by fruit-loving birds; boosts trust faster when matched.",
-                    IsAffordable = money >= PetStoreCatalog.BirdFoodFruitMedleyPrice
-                },
-                new PetStoreSupplyOfferViewModel
-                {
-                    ItemId = PetStoreCatalog.BirdFoodNutriPelletsItemId,
-                    Name = "Nutri Pellets",
-                    CategoryText = "Bird Food",
-                    SupplyType = PetStoreSupplyType.BirdFood,
-                    Price = PetStoreCatalog.BirdFoodNutriPelletsPrice,
-                    OwnedQuantity = store.GetFoodUnits(BirdFoodType.NutriPellets),
-                    EffectText = "Dense nutrition favored by high-performance birds.",
-                    IsAffordable = money >= PetStoreCatalog.BirdFoodNutriPelletsPrice
-                },
-                new PetStoreSupplyOfferViewModel
-                {
-                    ItemId = PetStoreCatalog.ToyFeatherWandId,
-                    Name = "Feather Wand",
-                    CategoryText = "Toy",
-                    SupplyType = PetStoreSupplyType.Toy,
-                    Price = PetStoreCatalog.FeatherWandPrice,
-                    OwnedQuantity = store.OwnedToyQuantities.TryGetValue(PetStoreCatalog.ToyFeatherWandId, out var w) ? w : 0,
-                    EffectText = "Owned toy collection item.",
-                    IsAffordable = money >= PetStoreCatalog.FeatherWandPrice
-                },
-                new PetStoreSupplyOfferViewModel
-                {
-                    ItemId = PetStoreCatalog.ToyBellOrbId,
-                    Name = "Bell Orb",
-                    CategoryText = "Toy",
-                    SupplyType = PetStoreSupplyType.Toy,
-                    Price = PetStoreCatalog.BellOrbPrice,
-                    OwnedQuantity = store.OwnedToyQuantities.TryGetValue(PetStoreCatalog.ToyBellOrbId, out var b) ? b : 0,
-                    EffectText = "Owned toy collection item.",
-                    IsAffordable = money >= PetStoreCatalog.BellOrbPrice
-                },
-                new PetStoreSupplyOfferViewModel
-                {
-                    ItemId = PetStoreCatalog.CostumeBandanaId,
-                    Name = "Cafe Bandana",
-                    CategoryText = "Costume",
-                    SupplyType = PetStoreSupplyType.Costume,
-                    Price = PetStoreCatalog.BandanaPrice,
-                    OwnedQuantity = store.OwnedCostumeQuantities.TryGetValue(PetStoreCatalog.CostumeBandanaId, out var c) ? c : 0,
-                    EffectText = "Owned costume unlock.",
-                    IsAffordable = money >= PetStoreCatalog.BandanaPrice
-                },
-                new PetStoreSupplyOfferViewModel
-                {
-                    ItemId = PetStoreCatalog.CostumeRoyalCapeId,
-                    Name = "Royal Cape",
-                    CategoryText = "Costume",
-                    SupplyType = PetStoreSupplyType.Costume,
-                    Price = PetStoreCatalog.RoyalCapePrice,
-                    OwnedQuantity = store.OwnedCostumeQuantities.TryGetValue(PetStoreCatalog.CostumeRoyalCapeId, out var rc) ? rc : 0,
-                    EffectText = "Rare costume unlock.",
-                    IsAffordable = money >= PetStoreCatalog.RoyalCapePrice
-                },
-                new PetStoreSupplyOfferViewModel
-                {
-                    ItemId = "SpecialEggToy",
-                    Name = "Special Egg Toy",
-                    CategoryText = "Special Egg Toy",
-                    SupplyType = PetStoreSupplyType.Costume,
-                    Price = PetStoreCatalog.SpecialEggToyPrice,
-                    OwnedQuantity = store.SpecialEggToysOwned,
-                    EffectText = "Open to receive one deterministic reward.",
-                    IsAffordable = money >= PetStoreCatalog.SpecialEggToyPrice
-                }
-            };
+                    ItemId = supply.ItemId,
+                    Name = supply.DisplayName,
+                    CategoryText = supply.CategoryText,
+                    SupplyType = supply.SupplyType,
+                    Price = supply.Price,
+                    OwnedQuantity = GetOwnedSupplyQuantity(store, supply),
+                    EffectText = supply.EffectText,
+                    IsAffordable = money >= supply.Price
+                });
+            }
+
+            return offers;
+        }
+
+        private int GetOwnedSupplyQuantity(PetStoreState store, PetStoreSupplyDefinition supply)
+        {
+            if (supply.SupplyType == PetStoreSupplyType.BirdFood && supply.BirdFoodType.HasValue)
+            {
+                return store.GetFoodUnits(supply.BirdFoodType.Value);
+            }
+
+            if (supply.SupplyType == PetStoreSupplyType.Toy)
+            {
+                return store.OwnedToyQuantities.TryGetValue(supply.ItemId, out var toyCount) ? toyCount : 0;
+            }
+
+            if (supply.SupplyType == PetStoreSupplyType.Costume)
+            {
+                return store.OwnedCostumeQuantities.TryGetValue(supply.ItemId, out var costumeCount) ? costumeCount : 0;
+            }
+
+            return store.SpecialEggToysOwned;
         }
 
         public bool BuyPetStoreBird(string speciesId)

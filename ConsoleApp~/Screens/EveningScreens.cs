@@ -355,27 +355,32 @@ namespace BirdCafe.ConsoleApp.Screens
                 var offers = BirdCafeGame.Instance.GetPetStoreSupplyOffers();
                 Console.WriteLine("=== PETE'S PET STORE / BUY SUPPLIES ===");
 
-                /*
-                int optionNum = 0;
-                char[] options = { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
-
-                foreach (var offer in offers)
+                string currentCategory = null;
+                for (int i = 0; i < offers.Count; i++)
                 {
-                    Console.WriteLine($"{options[optionNum]}. {offer.Name} ({offer.Price.ToString("C")})");
-                    optionNum++;
-                }
-                */
+                    var offer = offers[i];
+                    if (offer.CategoryText != currentCategory)
+                    {
+                        if (currentCategory != null)
+                        {
+                            Console.WriteLine();
+                        }
 
-                Console.WriteLine("FOOD");
-                Console.WriteLine("1. Seed Mix ($" + offers[0].Price + ")"); 
-                Console.WriteLine("2. Fruit Medley ($" + offers[1].Price + ")");
-                Console.WriteLine("3. Nutri Pellets ($" + offers[2].Price + ")");
-                Console.WriteLine();
-                Console.WriteLine("OTHERS");
-                Console.WriteLine("4. Feather Wand ($" + offers[3].Price + ")");
-                Console.WriteLine("5. Cafe Bandana ($" + offers[5].Price + ")");
-                Console.WriteLine("6. Special Egg Toy ($" + offers[7].Price + ")");
-                Console.WriteLine("O. Open owned Special Egg Toy (x" + offers[7].OwnedQuantity + ")");
+                        currentCategory = offer.CategoryText;
+                        Console.WriteLine(currentCategory.ToUpperInvariant());
+                    }
+
+                    Console.WriteLine($"{i + 1}. {offer.Name} (${offer.Price:F2}) - Owned: {offer.OwnedQuantity}");
+                    Console.WriteLine($"   {offer.EffectText} {(offer.IsAffordable ? string.Empty : "[Cannot Afford]")}");
+                }
+
+                var specialEggOffer = offers.FirstOrDefault(offer => offer.SupplyType == PetStoreSupplyType.SpecialEggToy);
+                if (specialEggOffer != null)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine($"O. Open owned Special Egg Toy (x{specialEggOffer.OwnedQuantity})");
+                }
+
                 Console.WriteLine("B. Back");
                 Console.Write("> ");
 
@@ -391,29 +396,14 @@ namespace BirdCafe.ConsoleApp.Screens
                         Console.ReadKey();
                     }
                 }
-                else if (key == '1')
+                else if (char.IsDigit(key))
                 {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("BirdFood_SeedMix", PetStoreSupplyType.BirdFood);
-                }
-                else if (key == '2')
-                {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("BirdFood_FruitMedley", PetStoreSupplyType.BirdFood);
-                }
-                else if (key == '3')
-                {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("BirdFood_NutriPellets", PetStoreSupplyType.BirdFood);
-                }
-                else if (key == '4')
-                {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("Toy_FeatherWand", PetStoreSupplyType.Toy);
-                }
-                else if (key == '5')
-                {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("Costume_Bandana", PetStoreSupplyType.Costume);
-                }
-                else if (key == '6')
-                {
-                    BirdCafeGame.Instance.BuyPetStoreSupply("SpecialEggToy", PetStoreSupplyType.SpecialEggToy);
+                    int idx = int.Parse(key.ToString()) - 1;
+                    if (idx >= 0 && idx < offers.Count)
+                    {
+                        var selectedOffer = offers[idx];
+                        BirdCafeGame.Instance.BuyPetStoreSupply(selectedOffer.ItemId, selectedOffer.SupplyType);
+                    }
                 }
             }
         }

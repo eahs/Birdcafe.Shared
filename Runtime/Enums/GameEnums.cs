@@ -239,7 +239,7 @@ namespace BirdCafe.Shared.Enums
     }
 
     /// <summary>
-    /// Rarity bands for birds sold in Rick's Pet Store.
+    /// Rarity bands for birds sold in Pete's Pet Store.
     /// </summary>
     [Serializable]
     public enum BirdRarity
@@ -251,7 +251,7 @@ namespace BirdCafe.Shared.Enums
     }
 
     /// <summary>
-    /// Categories for Rick's Pet Store supplies.
+    /// Categories for Pete's Pet Store supplies.
     /// </summary>
     [Serializable]
     public enum PetStoreSupplyType

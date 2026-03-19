@@ -170,7 +170,7 @@ namespace BirdCafe.Shared.ViewModels
         public int CurrentPopularity { get; set; }
 
         /// <summary>
-        /// Total bird food currently stored from Rick's Pet Store purchases.
+        /// Total bird food currently stored from Pete's Pet Store purchases.
         /// </summary>
         public int StoredBirdFoodUnits { get; set; }
 

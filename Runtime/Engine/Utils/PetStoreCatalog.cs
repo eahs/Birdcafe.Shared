@@ -1,15 +1,34 @@
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
-using System;
 using System.Collections.Generic;
 
 namespace BirdCafe.Shared.Engine.Utils
 {
     /// <summary>
-    /// Static definitions used by Rick's Pet Store.
+    /// Static definitions used by Pete's Pet Store.
     /// </summary>
     public static class PetStoreCatalog
     {
+        public const string BirdFoodItemId = "BirdFoodBag";
+        public const string BirdFoodSeedMixItemId = "BirdFood_SeedMix";
+        public const string BirdFoodFruitMedleyItemId = "BirdFood_FruitMedley";
+        public const string BirdFoodNutriPelletsItemId = "BirdFood_NutriPellets";
+        public const string ToyFeatherWandId = "Toy_FeatherWand";
+        public const string ToyBellOrbId = "Toy_BellOrb";
+        public const string CostumeBandanaId = "Costume_Bandana";
+        public const string CostumeRoyalCapeId = "Costume_RoyalCape";
+        public const string SpecialEggToyItemId = "SpecialEggToy";
+
+        public const decimal BirdFoodPrice = 18m;
+        public const decimal BirdFoodSeedMixPrice = 18m;
+        public const decimal BirdFoodFruitMedleyPrice = 20m;
+        public const decimal BirdFoodNutriPelletsPrice = 22m;
+        public const decimal FeatherWandPrice = 45m;
+        public const decimal BellOrbPrice = 70m;
+        public const decimal BandanaPrice = 50m;
+        public const decimal RoyalCapePrice = 110m;
+        public const decimal SpecialEggToyPrice = 300m;
+
         public static readonly List<BirdSpeciesOffer> BirdOffers = new List<BirdSpeciesOffer>
         {
             new BirdSpeciesOffer
@@ -62,27 +81,111 @@ namespace BirdCafe.Shared.Engine.Utils
             }
         };
 
-        public const string BirdFoodItemId = "BirdFoodBag";
-        public const string BirdFoodSeedMixItemId = "BirdFood_SeedMix";
-        public const string BirdFoodFruitMedleyItemId = "BirdFood_FruitMedley";
-        public const string BirdFoodNutriPelletsItemId = "BirdFood_NutriPellets";
-        public const string ToyFeatherWandId = "Toy_FeatherWand";
-        public const string ToyBellOrbId = "Toy_BellOrb";
-        public const string CostumeBandanaId = "Costume_Bandana";
-        public const string CostumeRoyalCapeId = "Costume_RoyalCape";
-        public const decimal BirdFoodPrice = 18m;
-        public const decimal BirdFoodSeedMixPrice = 18m;
-        public const decimal BirdFoodFruitMedleyPrice = 20m;
-        public const decimal BirdFoodNutriPelletsPrice = 22m;
-        public const decimal FeatherWandPrice = 45m;
-        public const decimal BellOrbPrice = 70m;
-        public const decimal BandanaPrice = 50m;
-        public const decimal RoyalCapePrice = 110m;
-        public const decimal SpecialEggToyPrice = 300m;
+        public static readonly List<PetStoreSupplyDefinition> SupplyOffers = new List<PetStoreSupplyDefinition>
+        {
+            new PetStoreSupplyDefinition
+            {
+                ItemId = BirdFoodSeedMixItemId,
+                DisplayName = "Seed Mix",
+                SupplyType = PetStoreSupplyType.BirdFood,
+                CategoryText = "Bird Food",
+                Price = BirdFoodSeedMixPrice,
+                EffectText = "Basic food for flock birds. Feeding uses stored inventory only.",
+                ExpenseCategory = ExpenseCategory.FoodAndSupplies,
+                BirdFoodType = BirdFoodType.SeedMix
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = BirdFoodFruitMedleyItemId,
+                DisplayName = "Fruit Medley",
+                SupplyType = PetStoreSupplyType.BirdFood,
+                CategoryText = "Bird Food",
+                Price = BirdFoodFruitMedleyPrice,
+                EffectText = "Preferred by fruit-loving birds; boosts trust faster when matched.",
+                ExpenseCategory = ExpenseCategory.FoodAndSupplies,
+                BirdFoodType = BirdFoodType.FruitMedley
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = BirdFoodNutriPelletsItemId,
+                DisplayName = "Nutri Pellets",
+                SupplyType = PetStoreSupplyType.BirdFood,
+                CategoryText = "Bird Food",
+                Price = BirdFoodNutriPelletsPrice,
+                EffectText = "Dense nutrition favored by high-performance birds.",
+                ExpenseCategory = ExpenseCategory.FoodAndSupplies,
+                BirdFoodType = BirdFoodType.NutriPellets
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = ToyFeatherWandId,
+                DisplayName = "Feather Wand",
+                SupplyType = PetStoreSupplyType.Toy,
+                CategoryText = "Toy",
+                Price = FeatherWandPrice,
+                EffectText = "Owned toy collection item.",
+                ExpenseCategory = ExpenseCategory.ToysAndActivities
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = ToyBellOrbId,
+                DisplayName = "Bell Orb",
+                SupplyType = PetStoreSupplyType.Toy,
+                CategoryText = "Toy",
+                Price = BellOrbPrice,
+                EffectText = "Owned toy collection item.",
+                ExpenseCategory = ExpenseCategory.ToysAndActivities
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = CostumeBandanaId,
+                DisplayName = "Cafe Bandana",
+                SupplyType = PetStoreSupplyType.Costume,
+                CategoryText = "Costume",
+                Price = BandanaPrice,
+                EffectText = "Owned costume unlock.",
+                ExpenseCategory = ExpenseCategory.UpgradesAndCustomization
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = CostumeRoyalCapeId,
+                DisplayName = "Royal Cape",
+                SupplyType = PetStoreSupplyType.Costume,
+                CategoryText = "Costume",
+                Price = RoyalCapePrice,
+                EffectText = "Rare costume unlock.",
+                ExpenseCategory = ExpenseCategory.UpgradesAndCustomization
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = SpecialEggToyItemId,
+                DisplayName = "Special Egg Toy",
+                SupplyType = PetStoreSupplyType.SpecialEggToy,
+                CategoryText = "Special Egg Toy",
+                Price = SpecialEggToyPrice,
+                EffectText = "Open to receive one deterministic reward.",
+                ExpenseCategory = ExpenseCategory.Miscellaneous
+            }
+        };
 
         public static BirdSpeciesOffer FindBirdOffer(string speciesId)
         {
             return BirdOffers.Find(b => b.SpeciesId == speciesId);
+        }
+
+        public static List<PetStoreSupplyDefinition> GetSupplyOffers()
+        {
+            return SupplyOffers;
+        }
+
+        public static PetStoreSupplyDefinition FindSupplyOffer(string itemId, PetStoreSupplyType supplyType)
+        {
+            if (supplyType == PetStoreSupplyType.BirdFood && itemId == BirdFoodItemId)
+            {
+                itemId = BirdFoodSeedMixItemId;
+            }
+
+            return SupplyOffers.Find(offer => offer.ItemId == itemId && offer.SupplyType == supplyType);
         }
 
         public static string BuildBirdName(string speciesName, int dayNumber, int existingBirdCount)
@@ -92,24 +195,8 @@ namespace BirdCafe.Shared.Engine.Utils
 
         public static BirdFoodType? GetFoodTypeForItem(string itemId)
         {
-            return itemId switch
-            {
-                var s when s == BirdFoodSeedMixItemId || s == BirdFoodItemId => BirdFoodType.SeedMix,
-                var s when s == BirdFoodFruitMedleyItemId => BirdFoodType.FruitMedley,
-                var s when s == BirdFoodNutriPelletsItemId => BirdFoodType.NutriPellets,
-                _ => null
-            };
-        }
-
-        public static ExpenseCategory GetCategoryForSupply(PetStoreSupplyType supplyType)
-        {
-            return supplyType switch
-            {
-                PetStoreSupplyType.BirdFood => ExpenseCategory.FoodAndSupplies,
-                PetStoreSupplyType.Toy => ExpenseCategory.ToysAndActivities,
-                PetStoreSupplyType.Costume => ExpenseCategory.UpgradesAndCustomization,
-                _ => ExpenseCategory.Miscellaneous
-            };
+            var offer = FindSupplyOffer(itemId, PetStoreSupplyType.BirdFood);
+            return offer?.BirdFoodType;
         }
     }
 }

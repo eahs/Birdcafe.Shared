@@ -6,7 +6,7 @@ using System.Linq;
 namespace BirdCafe.Shared.Models.Economy
 {
     /// <summary>
-    /// Persistent inventory and unlock state for Rick's Pet Store purchases.
+    /// Persistent inventory and unlock state for Pete's Pet Store purchases.
     /// </summary>
     [Serializable]
     public class PetStoreState
