@@ -27,7 +27,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.WriteLine("1. View Daily Summary");
                 Console.WriteLine("2. Care for Birds");
                 Console.WriteLine("3. Plan Tomorrow's Shop & Roster");
-                Console.WriteLine("4. Rick's Pet Store");
+                Console.WriteLine("4. Pete's Pet Store");
                 Console.WriteLine("5. Start Next Day (End Evening)");
                 Console.WriteLine("\n[H] Help  [C] Chat");
                 Console.Write("> ");
@@ -301,7 +301,7 @@ namespace BirdCafe.ConsoleApp.Screens
             {
                 Console.Clear();
                 var vm = BirdCafeGame.Instance.GetPetStoreDashboard();
-                Console.WriteLine("=== RICK'S PET STORE ===");
+                Console.WriteLine("=== PETE'S PET STORE ===");
                 Console.WriteLine($"Funds: ${vm.CurrentMoney:F2} | Birds Owned: {vm.OwnedBirdCount}");
                 Console.WriteLine($"Bird Food: {vm.BirdFoodUnits} | Special Egg Toys: {vm.SpecialEggToysOwned}");
                 Console.WriteLine(vm.LastEggRewardText);
@@ -324,7 +324,7 @@ namespace BirdCafe.ConsoleApp.Screens
             {
                 Console.Clear();
                 var offers = BirdCafeGame.Instance.GetPetStoreBirdOffers();
-                Console.WriteLine("=== RICK'S PET STORE / BUY BIRDS ===");
+                Console.WriteLine("=== PETE'S PET STORE / BUY BIRDS ===");
                 for (int i = 0; i < offers.Count; i++)
                 {
                     var offer = offers[i];
@@ -353,14 +353,29 @@ namespace BirdCafe.ConsoleApp.Screens
             {
                 Console.Clear();
                 var offers = BirdCafeGame.Instance.GetPetStoreSupplyOffers();
-                Console.WriteLine("=== RICK'S PET STORE / BUY SUPPLIES ===");
-                Console.WriteLine("1. Seed Mix ($18.00)");
-                Console.WriteLine("2. Fruit Medley");
-                Console.WriteLine("3. Nutri Pellets");
-                Console.WriteLine("4. Feather Wand");
-                Console.WriteLine("5. Cafe Bandana");
-                Console.WriteLine("6. Special Egg Toy");
-                Console.WriteLine("O. Open owned Special Egg Toy");
+                Console.WriteLine("=== PETE'S PET STORE / BUY SUPPLIES ===");
+
+                /*
+                int optionNum = 0;
+                char[] options = { '1', '2', '3', '4', '5', '6', '7', '8', '9' };
+
+                foreach (var offer in offers)
+                {
+                    Console.WriteLine($"{options[optionNum]}. {offer.Name} ({offer.Price.ToString("C")})");
+                    optionNum++;
+                }
+                */
+
+                Console.WriteLine("FOOD");
+                Console.WriteLine("1. Seed Mix ($" + offers[0].Price + ")"); 
+                Console.WriteLine("2. Fruit Medley ($" + offers[1].Price + ")");
+                Console.WriteLine("3. Nutri Pellets ($" + offers[2].Price + ")");
+                Console.WriteLine();
+                Console.WriteLine("OTHERS");
+                Console.WriteLine("4. Feather Wand ($" + offers[3].Price + ")");
+                Console.WriteLine("5. Cafe Bandana ($" + offers[5].Price + ")");
+                Console.WriteLine("6. Special Egg Toy ($" + offers[7].Price + ")");
+                Console.WriteLine("O. Open owned Special Egg Toy (x" + offers[7].OwnedQuantity + ")");
                 Console.WriteLine("B. Back");
                 Console.Write("> ");
 

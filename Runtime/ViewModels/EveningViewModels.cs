@@ -479,6 +479,8 @@ namespace BirdCafe.Shared.ViewModels
 
         public string CategoryText { get; set; }
 
+        public PetStoreSupplyType SupplyType { get; set; }
+
         public decimal Price { get; set; }
 
         public int OwnedQuantity { get; set; }
