@@ -37,19 +37,23 @@ namespace BirdCafe.Shared.Engine.Managers
                 return PerformFeedAction(bird, template);
             }
 
-            if (_controller.CurrentState.Economy.CurrentBalance < template.MoneyCost)
+            var state = _controller.CurrentState;
+            if (state.Economy.CurrentBalance < template.MoneyCost)
                 return EngineResult.Failure("InsufficientFunds", "Not enough money.");
 
             if (template.MoneyCost > 0)
             {
-                _controller.CurrentState.Economy.CurrentBalance -= template.MoneyCost;
-                _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+                state.Economy.CurrentBalance -= template.MoneyCost;
+                state.Economy.Ledger.Add(new LedgerEntry
                 {
+                    DayNumber = state.CurrentDayNumber,
+                    WeekNumber = state.CurrentWeekNumber,
                     Amount = -template.MoneyCost,
                     Reason = template.DisplayName,
                     Timestamp = DateTime.Now,
-                    Category = ExpenseCategory.FoodAndSupplies,
-                    RelatedBirdId = bird.Id
+                    Category = GetExpenseCategoryForCareAction(actionId),
+                    RelatedBirdId = bird.Id,
+                    ShortDescription = $"{template.DisplayName} for {bird.Name}"
                 });
             }
 
@@ -93,11 +97,23 @@ namespace BirdCafe.Shared.Engine.Managers
 
             bird.ApplyCareEffect(template);
 
-            // Preferred food gives a meaningful trust increase, non-preferred gives a small baseline.
             float trustGain = bird.PrefersFood(selectedFoodType.Value) ? 10f : 2f;
             bird.IncreaseTrust(trustGain);
 
             return EngineResult.Success(bird);
+        }
+
+        private ExpenseCategory GetExpenseCategoryForCareAction(string actionId)
+        {
+            switch (actionId)
+            {
+                case CareActionIds.Vet:
+                    return ExpenseCategory.VetCare;
+                case CareActionIds.Play:
+                    return ExpenseCategory.ToysAndActivities;
+                default:
+                    return ExpenseCategory.FoodAndSupplies;
+            }
         }
 
         private BirdFoodType? SelectFoodTypeForBird(Bird bird, PetStoreState store)

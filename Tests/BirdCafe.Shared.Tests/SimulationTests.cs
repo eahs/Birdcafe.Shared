@@ -90,7 +90,8 @@ namespace BirdCafe.Shared.Tests
             // Use Last() on Ledger to verify exact transaction
             var lastEntry = _controller.CurrentState.Economy.Ledger.Last();
             Assert.AreEqual(-5.0m, lastEntry.Amount);
-            Assert.AreEqual("Inventory Restock", lastEntry.Reason);
+            Assert.AreEqual("Inventory Restock: Coffee", lastEntry.Reason);
+            Assert.AreEqual(ExpenseCategory.InventoryCoffee, lastEntry.Category);
         }
 
 

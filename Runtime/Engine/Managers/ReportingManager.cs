@@ -1,6 +1,9 @@
-
+using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Reporting;
 using BirdCafe.Shared.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BirdCafe.Shared.Engine.Managers
@@ -32,41 +35,90 @@ namespace BirdCafe.Shared.Engine.Managers
         public WeeklyReportViewModel GenerateWeeklyReport(int weekNumber)
         {
             var state = _controller.CurrentState;
-
-            // Define Time Window: Assuming Week 1 = Days 1-7, Week 2 = 8-14.
-            int startDay = (weekNumber - 1) * 7 + 1;
-            int endDay = startDay + 6;
-
-            // Note: In a robust system, we would filter the Ledger by date here.
-            // For now, we will calculate based on the PastDayResults which are keyed by Day/Week.
-
-            // Using LINQ to filter the past results to just the days in the requested week.
             var days = state.PastDayResults.Where(d => d.WeekNumber == weekNumber).ToList();
 
-            // Sum up the total revenue from all days in this list.
             decimal totalRevenue = days.Sum(d => d.Economy.TotalRevenue);
+            decimal totalExpenses = GetLedgerEntriesForExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = ((weekNumber - 1) * 7) + 1,
+                EndDayNumber = ((weekNumber - 1) * 7) + 7,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            }).Sum(GetExpenseAmount);
 
-            // Calculate approximate profit by taking revenue and subtracting waste and inventory costs recorded in the day results.
-            decimal approxProfit = totalRevenue - days.Sum(d => d.Economy.WasteCost + d.Economy.InventoryCost);
+            decimal weeklyProfit = totalRevenue - totalExpenses;
+            float avgHealth = state.Birds.Count > 0 ? state.Birds.Average(b => b.Health) : 0;
 
-            // Calculate Bird Welfare Stats.
-            float avgHealth = 0;
-            if (state.Birds.Count > 0)
-                avgHealth = state.Birds.Average(b => b.Health); // LINQ Average calculation.
-
-            // Generate a simple narrative string based on performance metrics.
             string narrative = "The cafe ran smoothly.";
-            if (approxProfit < 0) narrative = "We lost money this week. We need to cut costs.";
+            if (weeklyProfit < 0) narrative = "We lost money this week. We need to cut costs.";
             else if (avgHealth < 40) narrative = "Profits are okay, but the birds are exhausted.";
-            else if (approxProfit > 500) narrative = "An outstanding week! The birds are happy and rich.";
+            else if (weeklyProfit > 500) narrative = "An outstanding week! The birds are happy and rich.";
 
             return new WeeklyReportViewModel
             {
                 WeekNumber = weekNumber,
-                TotalProfit = approxProfit,
+                TotalProfit = weeklyProfit,
                 AvgBirdHealth = (int)avgHealth,
                 Narrative = narrative
             };
+        }
+
+        /// <summary>
+        /// Builds a customizable expense report using ledger entries as the source of truth.
+        /// </summary>
+        /// <param name="request">Report options that control scope, grouping, and filters.</param>
+        /// <returns>A UI-ready expense report.</returns>
+        public ExpenseReportViewModel GenerateExpenseReport(ExpenseReportRequest request)
+        {
+            var effectiveRequest = request ?? new ExpenseReportRequest();
+            var report = new ExpenseReportViewModel
+            {
+                Title = BuildTitle(effectiveRequest),
+                ScopeText = BuildScopeText(effectiveRequest)
+            };
+
+            if (!effectiveRequest.IncludeCareExpenses && !effectiveRequest.IncludeInventoryExpenses)
+            {
+                report.Warnings.Add("Both care and inventory expense filters are disabled, so no categorized expenses can be shown.");
+            }
+
+            var entries = GetLedgerEntriesForExpenseReport(effectiveRequest).ToList();
+            report.TotalCareExpenses = entries.Where(IsCareExpense).Sum(GetExpenseAmount);
+            report.TotalBirdExpenses = entries.Where(e => !string.IsNullOrEmpty(e.RelatedBirdId)).Sum(GetExpenseAmount);
+            report.TotalCafeExpenses = entries.Where(e => string.IsNullOrEmpty(e.RelatedBirdId)).Sum(GetExpenseAmount);
+            report.GrandTotalExpenses = entries.Sum(GetExpenseAmount);
+
+            report.Rows = effectiveRequest.GroupBy == ExpenseReportGroupBy.ByTransaction
+                ? BuildTransactionRows(entries)
+                : BuildGroupedRows(entries, effectiveRequest.GroupBy);
+
+            if (effectiveRequest.IncludeRunningTotal)
+            {
+                ApplyRunningTotals(report.Rows);
+            }
+
+            if (effectiveRequest.Scope == ExpenseReportScope.CustomDayRange &&
+                (!effectiveRequest.StartDayNumber.HasValue || !effectiveRequest.EndDayNumber.HasValue))
+            {
+                report.Warnings.Add("Custom day-range reports require both a start day and an end day.");
+            }
+
+            if (effectiveRequest.Scope == ExpenseReportScope.CustomDayRange &&
+                effectiveRequest.StartDayNumber.HasValue &&
+                effectiveRequest.EndDayNumber.HasValue &&
+                effectiveRequest.StartDayNumber.Value > effectiveRequest.EndDayNumber.Value)
+            {
+                report.Warnings.Add("The custom day range start is after the end, so no expenses matched the request.");
+            }
+
+            if (entries.Count == 0)
+            {
+                report.Warnings.Add("No expense entries matched the current report filters.");
+            }
+
+            return report;
         }
 
         /// <summary>
@@ -76,17 +128,12 @@ namespace BirdCafe.Shared.Engine.Managers
         public bool CheckGameOver()
         {
             var state = _controller.CurrentState;
-
-            // Condition 1: Bankruptcy 
-            // Calculated as: Balance is less than cost of (1 Coffee + 1 Food) AND we have no Coffee left to sell.
             decimal minCost = state.Config.BasePriceCoffee + state.Config.BaselineBirdFoodCost;
             if (state.Economy.CurrentBalance < minCost && state.Cafe.Inventory.Coffee.QuantityOnHand == 0)
             {
                 return true;
             }
 
-            // Condition 2: Popularity Collapse
-            // If popularity hits 0, no customers will come.
             if (state.Cafe.Popularity <= 0)
             {
                 return true;
@@ -95,15 +142,216 @@ namespace BirdCafe.Shared.Engine.Managers
             return false;
         }
 
-        /// <summary>
-        /// Helper to map real time dates to game day numbers.
-        /// </summary>
-        /// <param name="start">The start date of the game.</param>
-        /// <param name="current">The current transaction date.</param>
-        /// <returns>The calculated day number.</returns>
-        private int GetDayFromDate(DateTime start, DateTime current)
+        private IEnumerable<LedgerEntry> GetLedgerEntriesForExpenseReport(ExpenseReportRequest request)
         {
-            return (current - start).Days + 1;
+            var state = _controller.CurrentState;
+            var range = ResolveDayRange(request);
+
+            return state.Economy.Ledger
+                .Where(entry => entry.Amount < 0)
+                .Where(entry => entry.DayNumber >= range.startDay && entry.DayNumber <= range.endDay)
+                .Where(entry => MatchesRequestFilters(entry, request))
+                .OrderBy(entry => entry.DayNumber)
+                .ThenBy(entry => entry.Timestamp)
+                .ThenBy(entry => entry.ShortDescription ?? entry.Reason ?? string.Empty)
+                .ToList();
+        }
+
+        private bool MatchesRequestFilters(LedgerEntry entry, ExpenseReportRequest request)
+        {
+            if (request.ExpenseCategory.HasValue && entry.Category != request.ExpenseCategory.Value)
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(request.BirdId) && entry.RelatedBirdId != request.BirdId)
+            {
+                return false;
+            }
+
+            bool isCareExpense = IsCareExpense(entry);
+            bool isInventoryExpense = IsInventoryExpense(entry);
+
+            if (!request.IncludeCareExpenses && !request.IncludeInventoryExpenses)
+            {
+                return false;
+            }
+
+            if (request.IncludeCareExpenses && request.IncludeInventoryExpenses)
+            {
+                return true;
+            }
+
+            if (request.IncludeCareExpenses)
+            {
+                return isCareExpense;
+            }
+
+            return isInventoryExpense;
+        }
+
+        private List<ExpenseReportRowViewModel> BuildTransactionRows(List<LedgerEntry> entries)
+        {
+            return entries
+                .Select(entry => new ExpenseReportRowViewModel
+                {
+                    Label = entry.ShortDescription ?? entry.Reason ?? "Expense",
+                    SecondaryLabel = $"Day {entry.DayNumber} / Week {entry.WeekNumber}",
+                    Amount = GetExpenseAmount(entry),
+                    CategoryText = entry.Category.ToString(),
+                    BirdName = GetBirdName(entry.RelatedBirdId),
+                    DayNumber = entry.DayNumber
+                })
+                .ToList();
+        }
+
+        private List<ExpenseReportRowViewModel> BuildGroupedRows(List<LedgerEntry> entries, ExpenseReportGroupBy groupBy)
+        {
+            switch (groupBy)
+            {
+                case ExpenseReportGroupBy.ByDay:
+                    return entries
+                        .GroupBy(e => e.DayNumber)
+                        .OrderBy(group => group.Key)
+                        .Select(group => new ExpenseReportRowViewModel
+                        {
+                            Label = $"Day {group.Key}",
+                            SecondaryLabel = $"{group.Count()} expense entries",
+                            Amount = group.Sum(GetExpenseAmount),
+                            CategoryText = "Mixed",
+                            DayNumber = group.Key
+                        })
+                        .ToList();
+
+                case ExpenseReportGroupBy.ByCategory:
+                    return entries
+                        .GroupBy(e => e.Category)
+                        .OrderBy(group => group.Key.ToString())
+                        .Select(group => new ExpenseReportRowViewModel
+                        {
+                            Label = group.Key.ToString(),
+                            SecondaryLabel = $"{group.Count()} expense entries",
+                            Amount = group.Sum(GetExpenseAmount),
+                            CategoryText = group.Key.ToString(),
+                            DayNumber = group.Min(e => e.DayNumber)
+                        })
+                        .ToList();
+
+                case ExpenseReportGroupBy.ByBird:
+                    return entries
+                        .GroupBy(e => string.IsNullOrEmpty(e.RelatedBirdId) ? string.Empty : e.RelatedBirdId)
+                        .OrderBy(group => GetBirdName(group.Key))
+                        .Select(group => new ExpenseReportRowViewModel
+                        {
+                            Label = string.IsNullOrEmpty(group.Key) ? "Cafe-wide" : GetBirdName(group.Key),
+                            SecondaryLabel = $"{group.Count()} expense entries",
+                            Amount = group.Sum(GetExpenseAmount),
+                            CategoryText = string.IsNullOrEmpty(group.Key) ? "General" : "Bird-linked",
+                            BirdName = string.IsNullOrEmpty(group.Key) ? null : GetBirdName(group.Key),
+                            DayNumber = group.Min(e => e.DayNumber)
+                        })
+                        .ToList();
+
+                default:
+                    return BuildTransactionRows(entries);
+            }
+        }
+
+        private void ApplyRunningTotals(List<ExpenseReportRowViewModel> rows)
+        {
+            decimal runningTotal = 0m;
+            foreach (var row in rows)
+            {
+                runningTotal += row.Amount;
+                row.RunningTotal = runningTotal;
+            }
+        }
+
+        private bool IsCareExpense(LedgerEntry entry)
+        {
+            return !string.IsNullOrEmpty(entry.RelatedBirdId) &&
+                   (entry.Category == ExpenseCategory.FoodAndSupplies ||
+                    entry.Category == ExpenseCategory.VetCare ||
+                    entry.Category == ExpenseCategory.ToysAndActivities);
+        }
+
+        private bool IsInventoryExpense(LedgerEntry entry)
+        {
+            return entry.Category == ExpenseCategory.InventoryCoffee ||
+                   entry.Category == ExpenseCategory.InventoryBakedGoods ||
+                   entry.Category == ExpenseCategory.InventoryThemedMerch;
+        }
+
+        private (int startDay, int endDay) ResolveDayRange(ExpenseReportRequest request)
+        {
+            var state = _controller.CurrentState;
+            switch (request.Scope)
+            {
+                case ExpenseReportScope.CurrentWeek:
+                    int weekNumber = GetCurrentWeekNumberForReporting();
+                    return (((weekNumber - 1) * 7) + 1, ((weekNumber - 1) * 7) + 7);
+
+                case ExpenseReportScope.CustomDayRange:
+                    int startDay = request.StartDayNumber ?? int.MaxValue;
+                    int endDay = request.EndDayNumber ?? int.MinValue;
+                    return (startDay, endDay);
+
+                default:
+                    return (state.CurrentDayNumber, state.CurrentDayNumber);
+            }
+        }
+
+        private int GetCurrentWeekNumberForReporting()
+        {
+            var state = _controller.CurrentState;
+            if (_controller.CurrentPhase == GamePhase.Reporting && state.CurrentWeekNumber > 1)
+            {
+                return state.CurrentWeekNumber - 1;
+            }
+
+            return state.CurrentWeekNumber;
+        }
+
+        private decimal GetExpenseAmount(LedgerEntry entry)
+        {
+            return Math.Abs(entry.Amount);
+        }
+
+        private string GetBirdName(string birdId)
+        {
+            if (string.IsNullOrEmpty(birdId))
+            {
+                return null;
+            }
+
+            return _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId)?.Name ?? "Unknown Bird";
+        }
+
+        private string BuildTitle(ExpenseReportRequest request)
+        {
+            if (!string.IsNullOrEmpty(request.BirdId))
+            {
+                return $"Expense Report - {GetBirdName(request.BirdId)}";
+            }
+
+            return "Expense Report";
+        }
+
+        private string BuildScopeText(ExpenseReportRequest request)
+        {
+            switch (request.Scope)
+            {
+                case ExpenseReportScope.CurrentWeek:
+                    return $"Week {GetCurrentWeekNumberForReporting()}";
+                case ExpenseReportScope.CustomDayRange:
+                    if (request.StartDayNumber.HasValue && request.EndDayNumber.HasValue)
+                    {
+                        return $"Days {request.StartDayNumber.Value}-{request.EndDayNumber.Value}";
+                    }
+                    return "Custom Day Range";
+                default:
+                    return $"Day {_controller.CurrentState.CurrentDayNumber}";
+            }
         }
     }
 }
