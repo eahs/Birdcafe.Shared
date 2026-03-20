@@ -39,6 +39,16 @@ namespace BirdCafe.Shared.Models.Economy
         public DateTime Timestamp { get; set; }
 
         /// <summary>
+        /// The in-game day number when the transaction occurred.
+        /// </summary>
+        public int DayNumber { get; set; }
+
+        /// <summary>
+        /// The in-game week number when the transaction occurred.
+        /// </summary>
+        public int WeekNumber { get; set; }
+
+        /// <summary>
         /// The monetary value. Positive for income, negative for expenses.
         /// </summary>
         public decimal Amount { get; set; }

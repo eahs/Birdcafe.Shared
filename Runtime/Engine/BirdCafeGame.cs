@@ -4,6 +4,7 @@ using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Reporting;
 using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.ViewModels;
 using System;
@@ -648,6 +649,37 @@ namespace BirdCafe.Shared
         // =================================================================================
         // WEEKLY & GAME OVER
         // =================================================================================
+
+
+        /// <summary>
+        /// Builds a customizable expense report using the shared reporting manager.
+        /// </summary>
+        /// <param name="request">Options controlling report scope, filters, and grouping.</param>
+        /// <returns>A UI-ready expense report.</returns>
+        public ExpenseReportViewModel GetExpenseReport(ExpenseReportRequest request)
+        {
+            return _controller.Reporting.GenerateExpenseReport(request ?? new ExpenseReportRequest());
+        }
+
+        /// <summary>
+        /// Builds a bird-specific expense report while preserving the shared facade boundary.
+        /// </summary>
+        /// <param name="birdId">The bird to filter report results by.</param>
+        /// <param name="request">Optional report options. When omitted, a current-week transaction report is used.</param>
+        /// <returns>A UI-ready expense report filtered to the requested bird.</returns>
+        public ExpenseReportViewModel GetBirdExpenseReport(string birdId, ExpenseReportRequest request = null)
+        {
+            var effectiveRequest = request ?? new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CurrentWeek,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            };
+
+            effectiveRequest.BirdId = birdId;
+            return _controller.Reporting.GenerateExpenseReport(effectiveRequest);
+        }
 
         public WeeklyReportViewModel GetWeeklyReport()
         {

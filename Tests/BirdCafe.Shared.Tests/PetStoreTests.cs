@@ -169,6 +169,7 @@ namespace BirdCafe.Shared.Tests
             game.StartNewGame("Tester", "Cafe");
             game.StartSimulationPlayback();
             game.FinishSimulation();
+            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
 
             Assert.IsTrue(game.BuyPetStoreBird("Budgerigar"));
             var careVm = game.GetCareDashboard();
