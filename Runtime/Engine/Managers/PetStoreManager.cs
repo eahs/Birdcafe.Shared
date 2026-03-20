@@ -179,6 +179,8 @@ namespace BirdCafe.Shared.Engine.Managers
             economy.CurrentBalance -= amount;
             economy.Ledger.Add(new LedgerEntry
             {
+                DayNumber = _controller.CurrentState.CurrentDayNumber,
+                WeekNumber = _controller.CurrentState.CurrentWeekNumber,
                 Amount = -amount,
                 Reason = reason,
                 Timestamp = DateTime.Now,

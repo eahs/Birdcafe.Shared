@@ -99,6 +99,57 @@ namespace BirdCafe.Shared.Enums
         Miscellaneous = 7
     }
 
+
+
+    /// <summary>
+    /// Defines the supported in-game time windows for expense reports.
+    /// </summary>
+    [Serializable]
+    public enum ExpenseReportScope
+    {
+        /// <summary>
+        /// Use only the current in-game day.
+        /// </summary>
+        CurrentDay = 0,
+
+        /// <summary>
+        /// Use the current in-game week.
+        /// </summary>
+        CurrentWeek = 1,
+
+        /// <summary>
+        /// Use an explicit inclusive day-number range.
+        /// </summary>
+        CustomDayRange = 2
+    }
+
+    /// <summary>
+    /// Defines how expense report rows should be grouped.
+    /// </summary>
+    [Serializable]
+    public enum ExpenseReportGroupBy
+    {
+        /// <summary>
+        /// One row per in-game day.
+        /// </summary>
+        ByDay = 0,
+
+        /// <summary>
+        /// One row per expense category.
+        /// </summary>
+        ByCategory = 1,
+
+        /// <summary>
+        /// One row per related bird.
+        /// </summary>
+        ByBird = 2,
+
+        /// <summary>
+        /// One row per ledger transaction.
+        /// </summary>
+        ByTransaction = 3
+    }
+
     /// <summary>
     /// Defines generic types of care actions.
     /// </summary>

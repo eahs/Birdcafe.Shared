@@ -1,4 +1,3 @@
-
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Economy;
@@ -35,14 +34,11 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <returns>Success result.</returns>
         public EngineResult SetInventoryOrder(ProductType type, int quantity)
         {
-            // Ensure we are in the correct phase.
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
                 return EngineResult.Failure("InvalidPhase", "Wrong phase.");
 
-            // Access the current daily plan object.
             var plan = _controller.CurrentState.CurrentDayState.CurrentPlan;
 
-            // Update the correct property based on the product type.
             switch (type)
             {
                 case ProductType.Coffee: plan.PlannedCoffeePurchase = quantity; break;
@@ -56,9 +52,6 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <summary>
         /// Toggles a bird's working status in the daily roster.
         /// </summary>
-        /// <param name="birdId">The unique ID of the bird.</param>
-        /// <param name="isWorking">True if the bird should work; false to rest.</param>
-        /// <returns>Success result.</returns>
         public EngineResult SetStaffRoster(string birdId, bool isWorking)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -66,13 +59,11 @@ namespace BirdCafe.Shared.Engine.Managers
 
             var plan = _controller.CurrentState.CurrentDayState.CurrentPlan;
 
-            // If setting to work, add to working list and remove from resting list.
             if (isWorking && !plan.BirdIdsWorking.Contains(birdId))
             {
                 plan.BirdIdsWorking.Add(birdId);
                 plan.BirdIdsResting.Remove(birdId);
             }
-            // If setting to rest, add to resting list and remove from working list.
             else if (!isWorking && !plan.BirdIdsResting.Contains(birdId))
             {
                 plan.BirdIdsResting.Add(birdId);
@@ -84,9 +75,7 @@ namespace BirdCafe.Shared.Engine.Managers
 
         /// <summary>
         /// Commits the plan, pays for inventory, and advances the calendar.
-        /// Refactored to be a sequence of clear steps.
         /// </summary>
-        /// <returns>Success if funds allow and day is advanced.</returns>
         public EngineResult FinalizeDay()
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -95,84 +84,72 @@ namespace BirdCafe.Shared.Engine.Managers
             var state = _controller.CurrentState;
             var plan = state.CurrentDayState.CurrentPlan;
 
-            // Calculate & Validate Costs (Using Shared Helper).
             decimal totalCost = EconomyHelper.CalculateTotalPlanCost(
                 plan.PlannedCoffeePurchase,
                 plan.PlannedBakedGoodsPurchase,
-                plan.PlannedThemedMerchPurchase
-            );
+                plan.PlannedThemedMerchPurchase);
 
-            // Check if player has enough money.
             if (state.Economy.CurrentBalance < totalCost)
                 return EngineResult.Failure("InsufficientFunds", "Cannot afford inventory order.");
 
-            // Process the payment and update stock.
-            ProcessRestockPayment(state, totalCost, plan);
-
-            // Advance the date to the next day.
+            ProcessRestockPayment(state, plan);
             AdvanceCalendar(state);
-
-            // Create the empty plan object for the new day.
             PrepareNextDayPlan(state, plan);
-
-            // Decide which game phase comes next (Reporting or DayLoop).
             TransitionPhase(state);
 
             return EngineResult.Success();
         }
 
-        // --- Private Helpers for Readability ---
-
-        /// <summary>
-        /// Deducts funds and adds inventory to the cafe state.
-        /// </summary>
-        /// <param name="state">The game state.</param>
-        /// <param name="cost">The total cost.</param>
-        /// <param name="plan">The plan containing purchase quantities.</param>
-        private void ProcessRestockPayment(GameSave state, decimal cost, DailyPlan plan)
+        private void ProcessRestockPayment(GameSave state, DailyPlan plan)
         {
-            // Deduct money from balance.
-            state.Economy.CurrentBalance -= cost;
+            decimal coffeeCost = EconomyHelper.CalculateRestockCost(ProductType.Coffee, plan.PlannedCoffeePurchase);
+            decimal bakedGoodsCost = EconomyHelper.CalculateRestockCost(ProductType.BakedGoods, plan.PlannedBakedGoodsPurchase);
+            decimal merchCost = EconomyHelper.CalculateRestockCost(ProductType.ThemedMerch, plan.PlannedThemedMerchPurchase);
+            decimal totalCost = coffeeCost + bakedGoodsCost + merchCost;
 
-            // Add physical items to inventory.
+            state.Economy.CurrentBalance -= totalCost;
             state.Cafe.Inventory.Coffee.QuantityOnHand += plan.PlannedCoffeePurchase;
             state.Cafe.Inventory.BakedGoods.QuantityOnHand += plan.PlannedBakedGoodsPurchase;
             state.Cafe.Inventory.ThemedMerch.QuantityOnHand += plan.PlannedThemedMerchPurchase;
 
-            // Log the transaction to the Ledger.
+            AddInventoryLedgerEntry(state, ProductType.Coffee, plan.PlannedCoffeePurchase, coffeeCost, ExpenseCategory.InventoryCoffee, "Restocked coffee beans");
+            AddInventoryLedgerEntry(state, ProductType.BakedGoods, plan.PlannedBakedGoodsPurchase, bakedGoodsCost, ExpenseCategory.InventoryBakedGoods, "Restocked baked goods");
+            AddInventoryLedgerEntry(state, ProductType.ThemedMerch, plan.PlannedThemedMerchPurchase, merchCost, ExpenseCategory.InventoryThemedMerch, "Restocked themed merch");
+        }
+
+        private void AddInventoryLedgerEntry(GameSave state, ProductType productType, int quantity, decimal cost, ExpenseCategory category, string description)
+        {
+            if (quantity <= 0 || cost <= 0)
+            {
+                return;
+            }
+
             state.Economy.Ledger.Add(new LedgerEntry
             {
+                DayNumber = state.CurrentDayNumber,
+                WeekNumber = state.CurrentWeekNumber,
                 Amount = -cost,
-                Reason = "Inventory Restock",
+                Reason = $"Inventory Restock: {productType}",
                 Timestamp = DateTime.Now,
-                Category = ExpenseCategory.Miscellaneous
+                Category = category,
+                RelatedProduct = productType,
+                ShortDescription = $"{description} x{quantity}"
             });
         }
 
-        /// <summary>
-        /// Increments the day and week numbers and handles Sunday rollover.
-        /// </summary>
-        /// <param name="state">The game state.</param>
         private void AdvanceCalendar(GameSave state)
         {
             state.CurrentDayNumber++;
             var nextDay = state.CurrentDayName + 1;
 
-            // Wrap around Sunday -> Monday (Enum values 0-6).
             if ((int)nextDay > 6) nextDay = DayOfWeek.Sunday;
 
             state.CurrentDayName = nextDay;
 
-            // If we just became Sunday, increment the week counter.
             if (state.CurrentDayName == DayOfWeek.Sunday)
                 state.CurrentWeekNumber++;
         }
 
-        /// <summary>
-        /// Creates a fresh DailyPlan object for the new day.
-        /// </summary>
-        /// <param name="state">The game state.</param>
-        /// <param name="previousPlan">The plan from the previous day (used to copy roster settings).</param>
         private void PrepareNextDayPlan(GameSave state, DailyPlan previousPlan)
         {
             var r = new Random();
@@ -180,25 +157,18 @@ namespace BirdCafe.Shared.Engine.Managers
             {
                 TargetDayNumber = state.CurrentDayNumber,
                 DaySeed = r.Next(),
-                // Copy the list of working birds from yesterday so the player doesn't have to re-select them every time.
                 BirdIdsWorking = new List<string>(previousPlan.BirdIdsWorking)
             };
         }
 
-        /// <summary>
-        /// Determines the next phase based on the current day.
-        /// </summary>
-        /// <param name="state">The game state.</param>
         private void TransitionPhase(GameSave state)
         {
-            // If it's Sunday (and not the very first day), we do a Weekly Report phase.
             if (state.CurrentDayName == DayOfWeek.Sunday && state.CurrentDayNumber > 1)
             {
                 _controller.SetPhase(GamePhase.Reporting);
             }
             else
             {
-                // Otherwise, go straight to the Day Loop.
                 _controller.SetPhase(GamePhase.DayLoop);
             }
         }
