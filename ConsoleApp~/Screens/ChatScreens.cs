@@ -35,7 +35,7 @@ namespace BirdCafe.ConsoleApp.Screens
 
                 Console.Write("\nChoose an option (or Q to Force Quit Chat): ");
                 var key = Console.ReadKey(true);
-
+                
                 if (char.ToUpper(key.KeyChar) == 'Q')
                 {
                     stayingInChat = false;

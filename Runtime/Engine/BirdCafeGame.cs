@@ -10,6 +10,7 @@ using BirdCafe.Shared.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading.Tasks;
 
 namespace BirdCafe.Shared
@@ -471,6 +472,7 @@ namespace BirdCafe.Shared
             return vm;
         }
 
+        
         public List<CareActionViewModel> GetAvailableActions(string birdId)
         {
             var config = _controller.CurrentState.Config;
@@ -613,7 +615,21 @@ namespace BirdCafe.Shared
             if (quantity < 0) return false;
             return _controller.Planning.SetInventoryOrder(type, quantity).IsSuccess;
         }
-
+        
+        public PetStoreSupplyOfferViewModel GetInventory()
+        {
+            var state = _controller.CurrentState;
+            var vm = new PetStoreState{};
+            var foodStored = state.PetStore.BirdFoodByType;
+            foreach (var food in foodStored)
+            {
+                vm.BirdFoodByType.Add(food);
+            }
+            
+            
+            return vm;
+            
+        }
         public bool SetStaffStatus(string birdId, bool isWorking)
         {
             var res = _controller.Planning.SetStaffRoster(birdId, isWorking);
@@ -739,5 +755,12 @@ namespace BirdCafe.Shared
                 WillRestTomorrow = b.AssignedDayOffNextDay
             };
         }
+
+        public void AddMoney(int v)
+        {
+            Console.WriteLine($"Adding ${v} to balance.");
+            _controller.CurrentState.Economy.CurrentBalance += v;
+        }
+
     }
 }

@@ -1,7 +1,10 @@
 
 using BirdCafe.Shared;
+using BirdCafe.Shared.Engine.Managers;
+using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Enums;
 using System;
+using System.Dynamic;
 using System.Linq;
 
 namespace BirdCafe.ConsoleApp.Screens
@@ -127,6 +130,7 @@ namespace BirdCafe.ConsoleApp.Screens
 
             Console.WriteLine("\n[B] Back to Hub");
             Console.WriteLine("[Enter ID] to interact with a bird");
+            Console.WriteLine("[I] View Inventory");
             Console.WriteLine("[H] Help  [C] Chat");
             Console.Write("> ");
         }
@@ -137,7 +141,11 @@ namespace BirdCafe.ConsoleApp.Screens
 
             if (input.ToUpper() == "H") { BirdCafeGame.Instance.FireHelpPopup("Bird Care"); return true; }
             if (input.ToUpper() == "C") { BirdCafeGame.Instance.FireChatPopup(); return true; }
-
+            if (input.ToUpper() == "I")
+            {
+                Console.WriteLine("Displaying Current Inventories:");
+                ShowInventory();
+            } 
             if (input.ToUpper() == "B")
             {
                 BirdCafeGame.Instance.GoToHub();
@@ -182,7 +190,36 @@ namespace BirdCafe.ConsoleApp.Screens
                 }
             }
         }
+        /// <summary>
+        /// Displays supplies, costumes, and toys owned by the player.
+        /// </summary>
+        public static void ShowInventory()
+        {
+            Console.Clear();
+            var vm = BirdCafeGame.Instance.GetInventory();
 
+            Console.WriteLine("=== CURRENT INVENTORY ===");
+            Console.WriteLine("\n-- Bird Food --");
+            foreach (var food in vm.BirdFood)
+            {
+                Console.WriteLine($"{food.Type}: {food.Quantity} units");
+            }
+
+            Console.WriteLine("\n-- Toys --");
+            foreach (var toy in vm.Toys)
+            {
+                Console.WriteLine($"{toy.Name}: {toy.Quantity} owned");
+            }
+
+            Console.WriteLine("\n-- Costumes --");
+            foreach (var costume in vm.Costumes)
+            {
+                Console.WriteLine($"{costume.Name}: {costume.Quantity} owned");
+            }
+
+            Console.WriteLine("\nPress any key to return...");
+            Console.ReadKey();
+        }
         /// <summary>
         /// Displays the Planning Dashboard.
         /// Separates render and input logic.
@@ -311,7 +348,8 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.Write("> ");
 
                 var key = Console.ReadKey().KeyChar;
-                if (char.ToUpper(key) == 'B') { BirdCafeGame.Instance.GoToHub(); stayOnScreen = false; }
+                if (key == 'P') { BirdCafeGame.Instance.AddMoney(1000); } // Money cheat for testing
+                else if (char.ToUpper(key) == 'B') { BirdCafeGame.Instance.GoToHub(); stayOnScreen = false; }
                 else if (key == '1') { BirdCafeGame.Instance.GoToPetStoreBirds(); stayOnScreen = false; }
                 else if (key == '2') { BirdCafeGame.Instance.GoToPetStoreSupplies(); stayOnScreen = false; }
             }

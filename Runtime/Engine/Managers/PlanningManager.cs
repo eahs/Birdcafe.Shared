@@ -49,6 +49,7 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success();
         }
 
+        
         /// <summary>
         /// Toggles a bird's working status in the daily roster.
         /// </summary>

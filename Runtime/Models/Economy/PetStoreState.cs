@@ -35,6 +35,7 @@ namespace BirdCafe.Shared.Models.Economy
 
         public int TotalBirdBuffStacks { get; set; }
 
+        
         public int GetFoodUnits(BirdFoodType type)
         {
             return BirdFoodByType.TryGetValue(type, out var qty) ? qty : 0;
