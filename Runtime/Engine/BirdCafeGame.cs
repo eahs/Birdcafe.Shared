@@ -616,16 +616,18 @@ namespace BirdCafe.Shared
             return _controller.Planning.SetInventoryOrder(type, quantity).IsSuccess;
         }
         
-        public PetStoreSupplyOfferViewModel GetInventory()
+        public PetStoreState GetInventory()
         {
             var state = _controller.CurrentState;
-            var vm = new PetStoreState{};
-            var foodStored = state.PetStore.BirdFoodByType;
-            foreach (var food in foodStored)
-            {
-                vm.BirdFoodByType.Add(food);
-            }
-            
+
+            var vm = new PetStoreState {
+                BirdFoodByType = state.PetStore.BirdFoodByType,
+                OwnedToyQuantities = state.PetStore.OwnedToyQuantities,
+                OwnedCostumeQuantities = state.PetStore.OwnedCostumeQuantities
+            };
+
+
+          
             
             return vm;
             

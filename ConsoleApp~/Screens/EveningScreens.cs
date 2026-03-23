@@ -6,6 +6,9 @@ using BirdCafe.Shared.Enums;
 using System;
 using System.Dynamic;
 using System.Linq;
+using BirdCafe.Shared.Models.Birds;
+using System.Collections.Generic;
+using BirdCafe.Shared.Engine.Utils;
 
 namespace BirdCafe.ConsoleApp.Screens
 {
@@ -197,24 +200,45 @@ namespace BirdCafe.ConsoleApp.Screens
         {
             Console.Clear();
             var vm = BirdCafeGame.Instance.GetInventory();
-
+            
             Console.WriteLine("=== CURRENT INVENTORY ===");
             Console.WriteLine("\n-- Bird Food --");
-            foreach (var food in vm.BirdFood)
+            foreach (var food in vm.BirdFoodByType)
             {
-                Console.WriteLine($"{food.Type}: {food.Quantity} units");
+                String name = "";
+                List<PetStoreSupplyDefinition> catalog = PetStoreCatalog.SupplyOffers;
+                foreach (PetStoreSupplyDefinition item in catalog)
+                {
+                    if (food.Key.ToString() == item.ItemId)
+                        name = item.DisplayName;
+                }
+                Console.WriteLine($"{name}: {food.Value} units");
             }
 
             Console.WriteLine("\n-- Toys --");
-            foreach (var toy in vm.Toys)
+            foreach (var toy in vm.OwnedToyQuantities)
             {
-                Console.WriteLine($"{toy.Name}: {toy.Quantity} owned");
+                String name = "";
+                List<PetStoreSupplyDefinition> catalog = PetStoreCatalog.SupplyOffers;
+                foreach (PetStoreSupplyDefinition item in catalog)
+                {
+                    if (toy.Key.ToString() == item.ItemId)
+                        name = item.DisplayName;
+                }
+                Console.WriteLine($"{name}: {toy.Value} owned");
             }
 
             Console.WriteLine("\n-- Costumes --");
-            foreach (var costume in vm.Costumes)
+            foreach (var costume in vm.OwnedCostumeQuantities)
             {
-                Console.WriteLine($"{costume.Name}: {costume.Quantity} owned");
+                String name = "";
+                List<PetStoreSupplyDefinition> catalog = PetStoreCatalog.SupplyOffers;
+                foreach (PetStoreSupplyDefinition item in catalog)
+                {
+                    if (costume.Key.ToString() == item.ItemId)
+                        name = item.DisplayName;
+                }
+                Console.WriteLine($"{name}: {costume.Value} owned");
             }
 
             Console.WriteLine("\nPress any key to return...");
