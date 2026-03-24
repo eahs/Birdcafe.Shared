@@ -743,6 +743,7 @@ namespace BirdCafe.Shared
             return new BirdCareViewModel
             {
                 Id = b.Id,
+                SpeciesId = b.SpeciesId,
                 Name = b.Name,
                 Hunger = (int)b.Hunger,
                 Mood = (int)b.Mood,

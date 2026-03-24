@@ -193,6 +193,11 @@ namespace BirdCafe.Shared.ViewModels
         public string Id { get; set; }
 
         /// <summary>
+        /// Identifier for the species definition.
+        /// </summary>
+        public string SpeciesId { get; set; }
+
+        /// <summary>
         /// Display name of the bird.
         /// </summary>
         public string Name { get; set; }

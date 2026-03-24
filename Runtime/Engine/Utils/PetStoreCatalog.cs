@@ -33,11 +33,11 @@ namespace BirdCafe.Shared.Engine.Utils
         {
             new BirdSpeciesOffer
             {
-                SpeciesId = "Budgerigar",
-                DisplayName = "Budgerigar",
+                SpeciesId = "budgie",
+                DisplayName = "Buddy",
                 Rarity = BirdRarity.Common,
                 Price = 120m,
-                FlavorDescription = "Friendly starter flock bird. Solid cafe helper.",
+                FlavorDescription = "Friendly helper who loves to entertain.",
                 Productivity = 22,
                 Friendliness = 16,
                 Reliability = 13,
@@ -57,11 +57,11 @@ namespace BirdCafe.Shared.Engine.Utils
             },
             new BirdSpeciesOffer
             {
-                SpeciesId = "HyacinthMacaw",
-                DisplayName = "Hyacinth Macaw",
+                SpeciesId = "lorikeet",
+                DisplayName = "Keet",
                 Rarity = BirdRarity.Rare,
                 Price = 520m,
-                FlavorDescription = "Large rare macaw with excellent service pace.",
+                FlavorDescription = "A sweet but rare attention-grabber that keeps the cafe lively.",
                 Productivity = 35,
                 Friendliness = 24,
                 Reliability = 21,
@@ -69,11 +69,11 @@ namespace BirdCafe.Shared.Engine.Utils
             },
             new BirdSpeciesOffer
             {
-                SpeciesId = "PalmCockatoo",
-                DisplayName = "Palm Cockatoo",
+                SpeciesId = "kingfisher",
+                DisplayName = "King Kiwi",
                 Rarity = BirdRarity.Exotic,
                 Price = 900m,
-                FlavorDescription = "A rare real-world species. Elite all-around cafe performer.",
+                FlavorDescription = "Exotic little favorite that draws extra attention.",
                 Productivity = 42,
                 Friendliness = 30,
                 Reliability = 28,

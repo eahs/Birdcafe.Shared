@@ -20,7 +20,7 @@ namespace BirdCafe.Shared.Engine.Utils
             return new Bird
             {
                 Name = "Peep",
-                SpeciesId = "Sparrow_Standard",
+                SpeciesId = "canary",
                 PrimaryColorHex = "#FFCC00",
                 Productivity = 20,
                 Energy = 100,
