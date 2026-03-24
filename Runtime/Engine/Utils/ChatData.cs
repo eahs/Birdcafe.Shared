@@ -399,7 +399,7 @@ namespace BirdCafe.Shared.Engine.Utils
         /// <summary>
         /// Helper to add a node with arbitrary options (params).
         /// Format: Text, OptionText, TargetId, OptionText, TargetId...
-        /// Automatically adds Exit button ONLY if options < 5 and it's not ROOT.
+        /// Automatically adds Exit button ONLY if options &lt; 5 and it's not ROOT.
         /// </summary>
         private static void Add(string id, string text, params string[] args)
         {

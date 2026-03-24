@@ -45,7 +45,7 @@ namespace BirdCafe.Shared.Engine.Utils
             },
             new BirdSpeciesOffer
             {
-                SpeciesId = "Cockatiel",
+                SpeciesId = "cockatiel",
                 DisplayName = "Cockatiel",
                 Rarity = BirdRarity.Uncommon,
                 Price = 260m,

@@ -619,16 +619,17 @@ namespace BirdCafe.Shared
         public PetStoreSupplyOfferViewModel GetInventory()
         {
             var state = _controller.CurrentState;
-            var vm = new PetStoreState{};
+            var vm = new PetStoreSupplyOfferViewModel{};
+            
+            /*
             var foodStored = state.PetStore.BirdFoodByType;
             foreach (var food in foodStored)
             {
                 vm.BirdFoodByType.Add(food);
             }
-            
+            */
             
             return vm;
-            
         }
         public bool SetStaffStatus(string birdId, bool isWorking)
         {

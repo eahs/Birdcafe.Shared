@@ -197,7 +197,7 @@ namespace BirdCafe.ConsoleApp.Screens
         {
             Console.Clear();
             var vm = BirdCafeGame.Instance.GetInventory();
-
+            /*
             Console.WriteLine("=== CURRENT INVENTORY ===");
             Console.WriteLine("\n-- Bird Food --");
             foreach (var food in vm.BirdFood)
@@ -216,7 +216,7 @@ namespace BirdCafe.ConsoleApp.Screens
             {
                 Console.WriteLine($"{costume.Name}: {costume.Quantity} owned");
             }
-
+            */
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
