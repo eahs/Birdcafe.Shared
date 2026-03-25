@@ -240,7 +240,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 }
                 Console.WriteLine($"{name}: {costume.Value} owned");
             }
-
+            */
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
