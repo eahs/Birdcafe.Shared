@@ -506,4 +506,29 @@ namespace BirdCafe.Shared.ViewModels
 
         public string RewardDescription { get; set; }
     }
+
+    [Serializable]
+    public class OwnedInventoryItem
+    {
+        public string ItemId { get; set; }
+
+        public string Name { get; set; }
+
+        public string CategoryText { get; set; }
+
+        public PetStoreSupplyType SupplyType { get; set; }
+
+        public int OwnedQuantity { get; set; }
+
+        public string EffectText { get; set; }
+    }
+
+    [Serializable]
+    public class InventoryViewModel
+    {
+        public List<OwnedInventoryItem> OwnedFood { get; set; }
+        public List<OwnedInventoryItem> OwnedToys { get; set; }
+        public List<OwnedInventoryItem> OwnedCostumes { get; set; }
+        public List<OwnedInventoryItem> OwnedEggs { get; set; }
+    }
 }

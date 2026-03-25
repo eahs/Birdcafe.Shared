@@ -183,11 +183,6 @@ namespace BirdCafe.Shared.Engine.Utils
 
         public static PetStoreSupplyDefinition FindSupplyOffer(string itemId, PetStoreSupplyType supplyType)
         {
-            if (supplyType == PetStoreSupplyType.BirdFood && itemId == BirdFoodItemId)
-            {
-                itemId = BirdFoodSeedMixItemId;
-            }
-
             return SupplyOffers.Find(offer => offer.ItemId == itemId && offer.SupplyType == supplyType);
         }
 

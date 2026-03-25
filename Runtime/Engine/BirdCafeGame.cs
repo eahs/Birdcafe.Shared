@@ -616,18 +616,51 @@ namespace BirdCafe.Shared
             return _controller.Planning.SetInventoryOrder(type, quantity).IsSuccess;
         }
         
-        public PetStoreState GetInventory()
+        public InventoryViewModel GetInventory()
         {
             var state = _controller.CurrentState;
+            Dictionary<string, PetStoreSupplyDefinition> supplyMap = PetStoreCatalog.SupplyOffers.ToDictionary(x => x.ItemId, x => x);
 
+            /*
             var vm = new PetStoreState {
                 BirdFoodByType = state.PetStore.BirdFoodByType,
                 OwnedToyQuantities = state.PetStore.OwnedToyQuantities,
                 OwnedCostumeQuantities = state.PetStore.OwnedCostumeQuantities
             };
+            */
+            var vm = new InventoryViewModel
+            {
+                OwnedFood = state.PetStore.BirdFoodByType.Select(kvp => new OwnedInventoryItem
+                {
+                    ItemId = supplyMap[kvp.Key.ToString()].ItemId,
+                    Name = supplyMap[kvp.Key.ToString()].DisplayName,
+                    CategoryText = supplyMap[kvp.Key.ToString()].CategoryText,
+                    SupplyType = supplyMap[kvp.Key.ToString()].SupplyType,
+                    OwnedQuantity = kvp.Value,
+                    EffectText = supplyMap[kvp.Key.ToString()].EffectText,
+                }).ToList(),
 
+                OwnedCostumes = state.PetStore.OwnedCostumeQuantities.Select(kvp => new OwnedInventoryItem
+                {
+                    ItemId = supplyMap[kvp.Key].ItemId,
+                    Name = supplyMap[kvp.Key.ToString()].DisplayName,
+                    CategoryText = supplyMap[kvp.Key.ToString()].CategoryText,
+                    SupplyType = supplyMap[kvp.Key.ToString()].SupplyType,
+                    OwnedQuantity = kvp.Value,
+                    EffectText = supplyMap[kvp.Key.ToString()].EffectText,
+                }).ToList(),
 
-          
+                OwnedToys = state.PetStore.OwnedToyQuantities.Select(kvp => new OwnedInventoryItem
+                {
+                    ItemId = supplyMap[kvp.Key].ItemId,
+                    Name = supplyMap[kvp.Key.ToString()].DisplayName,
+                    CategoryText = supplyMap[kvp.Key.ToString()].CategoryText,
+                    SupplyType = supplyMap[kvp.Key.ToString()].SupplyType,
+                    OwnedQuantity = kvp.Value,
+                    EffectText = supplyMap[kvp.Key.ToString()].EffectText,
+                }).ToList()
+            };
+
             
             return vm;
         }

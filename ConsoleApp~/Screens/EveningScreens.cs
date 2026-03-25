@@ -198,21 +198,17 @@ namespace BirdCafe.ConsoleApp.Screens
         /// </summary>
         public static void ShowInventory()
         {
+            Dictionary<string, PetStoreSupplyDefinition> supplyMap = PetStoreCatalog.SupplyOffers.ToDictionary(x => x.ItemId, x => x);
+
             Console.Clear();
             var vm = BirdCafeGame.Instance.GetInventory();
-            
+            /*
             Console.WriteLine("=== CURRENT INVENTORY ===");
             Console.WriteLine("\n-- Bird Food --");
             foreach (var food in vm.BirdFoodByType)
             {
-                String name = "";
-                List<PetStoreSupplyDefinition> catalog = PetStoreCatalog.SupplyOffers;
-                foreach (PetStoreSupplyDefinition item in catalog)
-                {
-                    if (food.Key.ToString() == item.ItemId)
-                        name = item.DisplayName;
-                }
-                Console.WriteLine($"{name}: {food.Value} units");
+                var supplyItem = supplyMap[food.Key.ToString()];
+                Console.WriteLine($"{supplyItem.DisplayName}: {food.Value} units");
             }
 
             Console.WriteLine("\n-- Toys --");
