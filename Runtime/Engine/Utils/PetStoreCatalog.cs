@@ -10,23 +10,26 @@ namespace BirdCafe.Shared.Engine.Utils
     public static class PetStoreCatalog
     {
         public const string BirdFoodItemId = "BirdFoodBag";
-        public const string BirdFoodSeedMixItemId = "BirdFood_SeedMix";
-        public const string BirdFoodFruitMedleyItemId = "BirdFood_FruitMedley";
-        public const string BirdFoodNutriPelletsItemId = "BirdFood_NutriPellets";
+
         public const string ToyFeatherWandId = "Toy_FeatherWand";
         public const string ToyBellOrbId = "Toy_BellOrb";
+
         public const string CostumeBandanaId = "Costume_Bandana";
         public const string CostumeRoyalCapeId = "Costume_RoyalCape";
+
         public const string SpecialEggToyItemId = "SpecialEggToy";
 
         public const decimal BirdFoodPrice = 18m;
         public const decimal BirdFoodSeedMixPrice = 18m;
         public const decimal BirdFoodFruitMedleyPrice = 20m;
         public const decimal BirdFoodNutriPelletsPrice = 22m;
+
         public const decimal FeatherWandPrice = 45m;
         public const decimal BellOrbPrice = 70m;
+
         public const decimal BandanaPrice = 50m;
         public const decimal RoyalCapePrice = 110m;
+
         public const decimal SpecialEggToyPrice = 300m;
 
         public static readonly List<BirdSpeciesOffer> BirdOffers = new List<BirdSpeciesOffer>
@@ -85,7 +88,7 @@ namespace BirdCafe.Shared.Engine.Utils
         {
             new PetStoreSupplyDefinition
             {
-                ItemId = BirdFoodSeedMixItemId,
+                ItemId = BirdFoodType.SeedMix.ToString(),
                 DisplayName = "Seed Mix",
                 SupplyType = PetStoreSupplyType.BirdFood,
                 CategoryText = "Bird Food",
@@ -96,7 +99,7 @@ namespace BirdCafe.Shared.Engine.Utils
             },
             new PetStoreSupplyDefinition
             {
-                ItemId = BirdFoodFruitMedleyItemId,
+                ItemId = BirdFoodType.FruitMedley.ToString(),
                 DisplayName = "Fruit Medley",
                 SupplyType = PetStoreSupplyType.BirdFood,
                 CategoryText = "Bird Food",
@@ -107,7 +110,7 @@ namespace BirdCafe.Shared.Engine.Utils
             },
             new PetStoreSupplyDefinition
             {
-                ItemId = BirdFoodNutriPelletsItemId,
+                ItemId = BirdFoodType.NutriPellets.ToString(),
                 DisplayName = "Nutri Pellets",
                 SupplyType = PetStoreSupplyType.BirdFood,
                 CategoryText = "Bird Food",
