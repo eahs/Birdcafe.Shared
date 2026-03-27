@@ -50,5 +50,7 @@ namespace BirdCafe.Shared.Models.Birds
         public ExpenseCategory ExpenseCategory { get; set; }
 
         public BirdFoodType? BirdFoodType { get; set; }
+
+        public bool Buyable { get; set; } = false;
     }
 }

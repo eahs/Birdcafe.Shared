@@ -176,6 +176,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 string costColor = a.IsAffordable ? "" : "(UNAVAILABLE)";
                 Console.WriteLine($"{i + 1}. {a.Label} (${a.Cost}) {costColor}");
             }
+            Console.WriteLine("W. Open Wardrobe");
             Console.WriteLine("R. Toggle Rest Next Day");
             Console.WriteLine("C. Cancel (Or global Chat via main menu)");
 
@@ -183,6 +184,10 @@ namespace BirdCafe.ConsoleApp.Screens
             if (key.Key == ConsoleKey.R)
             {
                 BirdCafeGame.Instance.ToggleRest(birdId);
+            }
+            else if (key.Key == ConsoleKey.W)
+            {
+                BirdCafeGame.Instance.OpenWardrobe(birdId);
             }
             else if (char.IsDigit(key.KeyChar))
             {
@@ -202,41 +207,34 @@ namespace BirdCafe.ConsoleApp.Screens
 
             Console.Clear();
             var vm = BirdCafeGame.Instance.GetInventory();
-            /*
+            
             Console.WriteLine("=== CURRENT INVENTORY ===");
             Console.WriteLine("\n-- Bird Food --");
-            foreach (var food in vm.BirdFoodByType)
+            foreach (var food in vm.OwnedFood)
             {
-                var supplyItem = supplyMap[food.Key.ToString()];
-                Console.WriteLine($"{supplyItem.DisplayName}: {food.Value} units");
+                
+                Console.WriteLine($"{food.Name}: {food.OwnedQuantity} units");
             }
 
             Console.WriteLine("\n-- Toys --");
-            foreach (var toy in vm.OwnedToyQuantities)
+            foreach (var toy in vm.OwnedToys)
             {
-                String name = "";
-                List<PetStoreSupplyDefinition> catalog = PetStoreCatalog.SupplyOffers;
-                foreach (PetStoreSupplyDefinition item in catalog)
-                {
-                    if (toy.Key.ToString() == item.ItemId)
-                        name = item.DisplayName;
-                }
-                Console.WriteLine($"{name}: {toy.Value} owned");
+                
+                Console.WriteLine($"{toy.Name}: {toy.OwnedQuantity} owned");
             }
 
             Console.WriteLine("\n-- Costumes --");
-            foreach (var costume in vm.OwnedCostumeQuantities)
+            foreach (var costume in vm.OwnedCostumes)
             {
-                String name = "";
+            
                 List<PetStoreSupplyDefinition> catalog = PetStoreCatalog.SupplyOffers;
                 foreach (PetStoreSupplyDefinition item in catalog)
                 {
-                    if (costume.Key.ToString() == item.ItemId)
-                        name = item.DisplayName;
+                   
                 }
-                Console.WriteLine($"{name}: {costume.Value} owned");
+                Console.WriteLine($"{costume.Name}: {costume.OwnedQuantity} owned");
             }
-            */
+            
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
@@ -412,10 +410,12 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.Clear();
                 var offers = BirdCafeGame.Instance.GetPetStoreSupplyOffers();
                 Console.WriteLine("=== PETE'S PET STORE / BUY SUPPLIES ===");
-
+            
                 string currentCategory = null;
                 for (int i = 0; i < offers.Count; i++)
                 {
+                    if (!offers[i].Buyable)
+                        continue; // Skip non-buyable items in this listing
                     var offer = offers[i];
                     if (offer.CategoryText != currentCategory)
                     {

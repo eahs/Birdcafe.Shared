@@ -493,6 +493,8 @@ namespace BirdCafe.Shared.ViewModels
         public string EffectText { get; set; }
 
         public bool IsAffordable { get; set; }
+
+        public bool Buyable { get; set; }
     }
 
     [Serializable]

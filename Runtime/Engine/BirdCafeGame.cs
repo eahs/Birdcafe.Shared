@@ -324,7 +324,8 @@ namespace BirdCafe.Shared
                     Price = supply.Price,
                     OwnedQuantity = GetOwnedSupplyQuantity(store, supply),
                     EffectText = supply.EffectText,
-                    IsAffordable = money >= supply.Price
+                    IsAffordable = money >= supply.Price,
+                    Buyable = supply.Buyable
                 });
             }
 
@@ -797,5 +798,14 @@ namespace BirdCafe.Shared
             _controller.CurrentState.Economy.CurrentBalance += v;
         }
 
+        public void OpenWardrobe(string birdId)
+        {
+            var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
+            Console.WriteLine($"Opening wardrobe for {bird.Name}...");
+
+            
+
+           
+        }
     }
 }

@@ -89,6 +89,8 @@ namespace BirdCafe.Shared.Engine.Managers
             if (_controller.CurrentState.Economy.CurrentBalance < totalCost)
                 return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy that item.");
 
+            
+
             SpendMoney(totalCost, $"Pete's Pet Store Supply Purchase: {itemId} x{quantity}", supply.ExpenseCategory);
             ApplySupplyPurchase(supply, quantity);
 

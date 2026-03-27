@@ -95,7 +95,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 Price = BirdFoodSeedMixPrice,
                 EffectText = "Basic food for flock birds. Feeding uses stored inventory only.",
                 ExpenseCategory = ExpenseCategory.FoodAndSupplies,
-                BirdFoodType = BirdFoodType.SeedMix
+                BirdFoodType = BirdFoodType.SeedMix,
+                Buyable = true
             },
             new PetStoreSupplyDefinition
             {
@@ -106,7 +107,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 Price = BirdFoodFruitMedleyPrice,
                 EffectText = "Preferred by fruit-loving birds; boosts trust faster when matched.",
                 ExpenseCategory = ExpenseCategory.FoodAndSupplies,
-                BirdFoodType = BirdFoodType.FruitMedley
+                BirdFoodType = BirdFoodType.FruitMedley,
+                Buyable = true
             },
             new PetStoreSupplyDefinition
             {
@@ -117,7 +119,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 Price = BirdFoodNutriPelletsPrice,
                 EffectText = "Dense nutrition favored by high-performance birds.",
                 ExpenseCategory = ExpenseCategory.FoodAndSupplies,
-                BirdFoodType = BirdFoodType.NutriPellets
+                BirdFoodType = BirdFoodType.NutriPellets,
+                Buyable = true
             },
             new PetStoreSupplyDefinition
             {
@@ -127,7 +130,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 CategoryText = "Toy",
                 Price = FeatherWandPrice,
                 EffectText = "Owned toy collection item.",
-                ExpenseCategory = ExpenseCategory.ToysAndActivities
+                ExpenseCategory = ExpenseCategory.ToysAndActivities,
+                Buyable = true
             },
             new PetStoreSupplyDefinition
             {
@@ -137,8 +141,10 @@ namespace BirdCafe.Shared.Engine.Utils
                 CategoryText = "Toy",
                 Price = BellOrbPrice,
                 EffectText = "Owned toy collection item.",
-                ExpenseCategory = ExpenseCategory.ToysAndActivities
+                ExpenseCategory = ExpenseCategory.ToysAndActivities,
+                Buyable = true
             },
+            
             new PetStoreSupplyDefinition
             {
                 ItemId = CostumeBandanaId,
@@ -147,8 +153,10 @@ namespace BirdCafe.Shared.Engine.Utils
                 CategoryText = "Costume",
                 Price = BandanaPrice,
                 EffectText = "Owned costume unlock.",
-                ExpenseCategory = ExpenseCategory.UpgradesAndCustomization
+                ExpenseCategory = ExpenseCategory.UpgradesAndCustomization,
+                Buyable = true  
             },
+            
             new PetStoreSupplyDefinition
             {
                 ItemId = CostumeRoyalCapeId,
@@ -157,7 +165,8 @@ namespace BirdCafe.Shared.Engine.Utils
                 CategoryText = "Costume",
                 Price = RoyalCapePrice,
                 EffectText = "Rare costume unlock.",
-                ExpenseCategory = ExpenseCategory.UpgradesAndCustomization
+                ExpenseCategory = ExpenseCategory.UpgradesAndCustomization,
+                Buyable = true
             },
             new PetStoreSupplyDefinition
             {
@@ -167,8 +176,33 @@ namespace BirdCafe.Shared.Engine.Utils
                 CategoryText = "Special Egg Toy",
                 Price = SpecialEggToyPrice,
                 EffectText = "Open to receive one deterministic reward.",
-                ExpenseCategory = ExpenseCategory.Miscellaneous
-            }
+                ExpenseCategory = ExpenseCategory.Miscellaneous,
+                Buyable = true
+            },
+
+            //Egg Rewards
+            new PetStoreSupplyDefinition
+            {
+                ItemId = "Toy_StarlightSpinner",
+                DisplayName = "Starlight Spinner",
+                SupplyType = PetStoreSupplyType.Toy,
+                CategoryText = "Toy",
+                Price = 0m,
+                EffectText = "Unique toy added to your collection.",
+                ExpenseCategory = ExpenseCategory.ToysAndActivities,
+                Buyable = false
+            },
+            new PetStoreSupplyDefinition
+            {
+                ItemId = "Costume_GoldenVest",
+                DisplayName = "Golden Vest",
+                SupplyType = PetStoreSupplyType.Costume,
+                CategoryText = "Costume",
+                Price = 0m,
+                EffectText = "Rare costume unlock.",
+                ExpenseCategory = ExpenseCategory.UpgradesAndCustomization,
+                Buyable = false
+            },
         };
 
         public static BirdSpeciesOffer FindBirdOffer(string speciesId)
