@@ -55,7 +55,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 PreferredFoods = offer.PreferredFoods.ToList()
             };
 
-            SpendMoney(offer.Price, $"Bird: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization, speciesId, createdBird.Id);
+            SpendMoney(offer.Price, 1, $"Bird: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization, speciesId, createdBird.Id);
 
             var existingFriend = state.Birds.FirstOrDefault();
             if (existingFriend != null)
@@ -89,8 +89,7 @@ namespace BirdCafe.Shared.Engine.Managers
             if (_controller.CurrentState.Economy.CurrentBalance < totalCost)
                 return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy that item.");
 
-            
-            SpendMoney(totalCost, $"Supply: {itemId} x{quantity}", supply.ExpenseCategory, supply.ItemId);
+            SpendMoney(totalCost, quantity, $"Supply: {itemId} x{quantity}", supply.ExpenseCategory, supply.ItemId);
             ApplySupplyPurchase(supply, quantity);
 
             return EngineResult.Success();
@@ -174,7 +173,7 @@ namespace BirdCafe.Shared.Engine.Managers
             AddQuantity(store.OwnedCostumeQuantities, reward.RewardId, 1);
         }
 
-        private void SpendMoney(decimal amount, string reason, ExpenseCategory category, string itemId = null, string relatedBirdId = null)
+        private void SpendMoney(decimal amount, int quantity, string reason, ExpenseCategory category, string itemId = null, string relatedBirdId = null)
         {
             var economy = _controller.CurrentState.Economy;
             economy.CurrentBalance -= amount;
@@ -183,6 +182,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 DayNumber = _controller.CurrentState.CurrentDayNumber,
                 WeekNumber = _controller.CurrentState.CurrentWeekNumber,
                 Amount = -amount,
+                Quantity = quantity,
                 Reason = reason,
                 Timestamp = DateTime.Now,
                 Category = category,

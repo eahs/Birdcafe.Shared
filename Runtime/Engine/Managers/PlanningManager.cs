@@ -130,6 +130,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 DayNumber = state.CurrentDayNumber,
                 WeekNumber = state.CurrentWeekNumber,
                 Amount = -cost,
+                Quantity = quantity,
                 Reason = $"Inventory Restock: {productType}",
                 Timestamp = DateTime.Now,
                 Category = category,

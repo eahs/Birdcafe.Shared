@@ -54,6 +54,11 @@ namespace BirdCafe.Shared.Models.Economy
         public decimal Amount { get; set; }
 
         /// <summary>
+        /// Quantity of item related to this entry, if applicable (e.g., number of coffee units sold or restocked).
+        /// </summary>
+        public int Quantity { get; set; }
+
+        /// <summary>
         /// Textual reason for the transaction (e.g., "Sale of Coffee").
         /// </summary>
         public string Reason { get; set; }
