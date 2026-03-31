@@ -121,7 +121,7 @@ namespace BirdCafe.Shared.Tests
             _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
             _controller.SetPhaseForTests(GamePhase.EveningLoop);
             _controller.CurrentState.Economy.CurrentBalance = 5000m;
-            _controller.PetStore.BuyBird("Budgerigar");
+            _controller.PetStore.BuyBird("budgie");
 
             var birdA = _controller.CurrentState.Birds[0];
             var birdB = _controller.CurrentState.Birds[1];
@@ -136,7 +136,7 @@ namespace BirdCafe.Shared.Tests
             _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
             _controller.SetPhaseForTests(GamePhase.EveningLoop);
             _controller.CurrentState.Economy.CurrentBalance = 5000m;
-            _controller.PetStore.BuyBird("Budgerigar");
+            _controller.PetStore.BuyBird("budgie");
 
             birdA = _controller.CurrentState.Birds[0];
             birdB = _controller.CurrentState.Birds[1];
@@ -157,7 +157,7 @@ namespace BirdCafe.Shared.Tests
             _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
             _controller.SetPhaseForTests(GamePhase.EveningLoop);
             _controller.CurrentState.Economy.CurrentBalance = 5000m;
-            _controller.PetStore.BuyBird("Budgerigar");
+            _controller.PetStore.BuyBird("budgie");
             var birdA = _controller.CurrentState.Birds[0];
             var birdB = _controller.CurrentState.Birds[1];
             birdA.Trust = 80;
@@ -174,7 +174,7 @@ namespace BirdCafe.Shared.Tests
             secondController.Meta.StartNewGame("TestPlayer", "TestCafe");
             secondController.SetPhaseForTests(GamePhase.EveningLoop);
             secondController.CurrentState.Economy.CurrentBalance = 5000m;
-            secondController.PetStore.BuyBird("Budgerigar");
+            secondController.PetStore.BuyBird("budgie");
             var secondBirdA = secondController.CurrentState.Birds[0];
             var secondBirdB = secondController.CurrentState.Birds[1];
             secondBirdA.Trust = 80;

@@ -191,13 +191,49 @@ namespace BirdCafe.Shared.Tests
         {
             MoveToEveningPhase();
 
-            var result = _controller.PetStore.BuySupply(BirdCafe.Shared.Engine.Utils.PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood, 1);
+            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
 
             Assert.IsTrue(result.IsSuccess);
             var entry = _controller.CurrentState.Economy.Ledger.Last();
             Assert.AreEqual(ExpenseCategory.FoodAndSupplies, entry.Category);
             Assert.AreEqual(1, entry.DayNumber);
             Assert.AreEqual(1, entry.WeekNumber);
+        }
+
+        [Test]
+        public void BuyingPetStoreSupply_StoresItemIdOnLedgerEntry()
+        {
+            MoveToEveningPhase();
+
+            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
+
+            Assert.IsTrue(result.IsSuccess);
+            var entry = _controller.CurrentState.Economy.Ledger.Last();
+            Assert.AreEqual(BirdFoodType.SeedMix.ToString(), entry.ItemId);
+            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, entry.Category);
+            Assert.IsNull(entry.RelatedBirdId);
+        }
+
+        [Test]
+        public void FeedAction_AddsBirdLinkedConsumptionLedgerEntry_WithItemId()
+        {
+            MoveToEveningPhase();
+            Assert.IsTrue(_controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1).IsSuccess);
+
+            var bird = _controller.CurrentState.Birds.First();
+            var result = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
+
+            Assert.IsTrue(result.IsSuccess);
+
+            var ledger = _controller.CurrentState.Economy.Ledger;
+            Assert.AreEqual(2, ledger.Count);
+
+            var consumptionEntry = ledger.Last();
+            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, consumptionEntry.Category);
+            Assert.AreEqual(0m, consumptionEntry.Amount);
+            Assert.AreEqual(BirdFoodType.SeedMix.ToString(), consumptionEntry.ItemId);
+            Assert.AreEqual(bird.Id, consumptionEntry.RelatedBirdId);
+            StringAssert.Contains(bird.Name, consumptionEntry.ShortDescription);
         }
 
         [Test]

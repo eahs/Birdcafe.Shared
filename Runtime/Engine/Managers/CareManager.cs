@@ -4,6 +4,7 @@ using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Models.Meta;
 using System;
 using System.Linq;
+using BirdCafe.Shared.Engine.Utils;
 
 namespace BirdCafe.Shared.Engine.Managers
 {
@@ -84,7 +85,9 @@ namespace BirdCafe.Shared.Engine.Managers
 
         private EngineResult PerformFeedAction(Bird bird, CareActionTemplate template)
         {
-            var store = _controller.CurrentState.PetStore;
+            var state = _controller.CurrentState;
+            var store = state.PetStore;
+
             if (store.GetTotalFoodUnits() <= 0)
                 return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
 
@@ -99,6 +102,19 @@ namespace BirdCafe.Shared.Engine.Managers
 
             float trustGain = bird.PrefersFood(selectedFoodType.Value) ? 10f : 2f;
             bird.IncreaseTrust(trustGain);
+
+            var consumedSupply = PetStoreCatalog.FindSupplyOffer(selectedFoodType.Value.ToString(), PetStoreSupplyType.BirdFood);
+            state.Economy.Ledger.Add(new LedgerEntry {
+                DayNumber = state.CurrentDayNumber,
+                WeekNumber = state.CurrentWeekNumber,
+                Amount = 0m,
+                Reason = "Bird Food Consumed",
+                Timestamp = DateTime.Now,
+                Category = ExpenseCategory.FoodAndSupplies,
+                ItemId = consumedSupply?.ItemId ?? selectedFoodType.Value.ToString(),
+                RelatedBirdId = bird.Id,
+                ShortDescription = $"{bird.Name} ate {(consumedSupply?.DisplayName ?? selectedFoodType.Value.ToString())}"
+            });
 
             return EngineResult.Success(bird);
         }

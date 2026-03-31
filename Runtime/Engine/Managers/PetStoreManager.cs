@@ -38,8 +38,6 @@ namespace BirdCafe.Shared.Engine.Managers
             if (_controller.CurrentState.Economy.CurrentBalance < offer.Price)
                 return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy this bird.");
 
-            SpendMoney(offer.Price, $"Pete's Pet Store Bird Purchase: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization);
-
             var state = _controller.CurrentState;
             var createdBird = new Bird
             {
@@ -56,6 +54,8 @@ namespace BirdCafe.Shared.Engine.Managers
                 Trust = 0,
                 PreferredFoods = offer.PreferredFoods.ToList()
             };
+
+            SpendMoney(offer.Price, $"Bird: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization, speciesId, createdBird.Id);
 
             var existingFriend = state.Birds.FirstOrDefault();
             if (existingFriend != null)
@@ -90,8 +90,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy that item.");
 
             
-
-            SpendMoney(totalCost, $"Pete's Pet Store Supply Purchase: {itemId} x{quantity}", supply.ExpenseCategory);
+            SpendMoney(totalCost, $"Supply: {itemId} x{quantity}", supply.ExpenseCategory, supply.ItemId);
             ApplySupplyPurchase(supply, quantity);
 
             return EngineResult.Success();
@@ -175,7 +174,7 @@ namespace BirdCafe.Shared.Engine.Managers
             AddQuantity(store.OwnedCostumeQuantities, reward.RewardId, 1);
         }
 
-        private void SpendMoney(decimal amount, string reason, ExpenseCategory category)
+        private void SpendMoney(decimal amount, string reason, ExpenseCategory category, string itemId = null, string relatedBirdId = null)
         {
             var economy = _controller.CurrentState.Economy;
             economy.CurrentBalance -= amount;
@@ -187,7 +186,9 @@ namespace BirdCafe.Shared.Engine.Managers
                 Reason = reason,
                 Timestamp = DateTime.Now,
                 Category = category,
-                ShortDescription = reason
+                ShortDescription = reason,
+                ItemId = itemId,
+                RelatedBirdId = relatedBirdId
             });
         }
 

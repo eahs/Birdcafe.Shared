@@ -35,11 +35,11 @@ namespace BirdCafe.Shared.Tests
         public void BuyBird_DeductsMoney_RecordsLedger_AndPersistsInRoster()
         {
             var startMoney = _controller.CurrentState.Economy.CurrentBalance;
-            var result = _controller.PetStore.BuyBird("Cockatiel");
+            var result = _controller.PetStore.BuyBird("cockatiel");
 
             Assert.IsTrue(result.IsSuccess);
             Assert.AreEqual(startMoney - 260m, _controller.CurrentState.Economy.CurrentBalance);
-            Assert.IsTrue(_controller.CurrentState.Birds.Any(b => b.SpeciesId == "Cockatiel"));
+            Assert.IsTrue(_controller.CurrentState.Birds.Any(b => b.SpeciesId == "cockatiel"));
             Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Cockatiel"));
         }
 
@@ -47,7 +47,7 @@ namespace BirdCafe.Shared.Tests
         public void BuyBird_FailsWhenInsufficientFunds()
         {
             _controller.CurrentState.Economy.CurrentBalance = 10m;
-            var result = _controller.PetStore.BuyBird("HyacinthMacaw");
+            var result = _controller.PetStore.BuyBird("kingfisher");
             Assert.IsFalse(result.IsSuccess);
             Assert.AreEqual("InsufficientFunds", result.ErrorCode);
         }
@@ -55,15 +55,15 @@ namespace BirdCafe.Shared.Tests
         [Test]
         public void SupportsMultipleOwnedBirds()
         {
-            _controller.PetStore.BuyBird("Budgerigar");
-            _controller.PetStore.BuyBird("Cockatiel");
+            _controller.PetStore.BuyBird("budgie");
+            _controller.PetStore.BuyBird("cockatiel");
             Assert.GreaterOrEqual(_controller.CurrentState.Birds.Count, 3);
         }
 
         [Test]
         public void SupplyCatalogLookup_ResolvesSharedDefinitions()
         {
-            var fruitMedley = PetStoreCatalog.FindSupplyOffer(PetStoreCatalog.BirdFoodFruitMedleyItemId, PetStoreSupplyType.BirdFood);
+            var fruitMedley = PetStoreCatalog.FindSupplyOffer(BirdFoodType.FruitMedley.ToString(), PetStoreSupplyType.BirdFood);
             var specialEggToy = PetStoreCatalog.FindSupplyOffer(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
 
             Assert.NotNull(fruitMedley);
@@ -92,12 +92,12 @@ namespace BirdCafe.Shared.Tests
         {
             var startMoney = _controller.CurrentState.Economy.CurrentBalance;
 
-            var result = _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood, 2);
+            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 2);
 
             Assert.IsTrue(result.IsSuccess);
             Assert.AreEqual(startMoney - (PetStoreCatalog.BirdFoodSeedMixPrice * 2), _controller.CurrentState.Economy.CurrentBalance);
             Assert.AreEqual(2, _controller.CurrentState.PetStore.GetFoodUnits(BirdFoodType.SeedMix));
-            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Supply Purchase"));
+            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Supply:"));
         }
 
         [Test]
@@ -171,15 +171,15 @@ namespace BirdCafe.Shared.Tests
             game.FinishSimulation();
             game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
 
-            Assert.IsTrue(game.BuyPetStoreBird("Budgerigar"));
+            Assert.IsTrue(game.BuyPetStoreBird("budgie"));
             var careVm = game.GetCareDashboard();
-            Assert.IsTrue(careVm.Birds.Any(b => b.Name.Contains("Budgerigar")));
+            Assert.IsTrue(careVm.Birds.Any(b => b.Name.Contains("Buddy")));
         }
 
         [Test]
         public void FeedConsumesStoredFood_InsteadOfChargingMoney()
         {
-            _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodSeedMixItemId, PetStoreSupplyType.BirdFood, 1);
+            _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
             var bird = _controller.CurrentState.Birds.First();
             decimal moneyBeforeFeed = _controller.CurrentState.Economy.CurrentBalance;
 
@@ -209,7 +209,7 @@ namespace BirdCafe.Shared.Tests
             bird.PreferredFoods.Clear();
             bird.PreferredFoods.Add(BirdFoodType.FruitMedley);
             bird.Trust = 0;
-            _controller.PetStore.BuySupply(PetStoreCatalog.BirdFoodFruitMedleyItemId, PetStoreSupplyType.BirdFood, 1);
+            _controller.PetStore.BuySupply(BirdFoodType.FruitMedley.ToString(), PetStoreSupplyType.BirdFood, 1);
 
             var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
 
@@ -221,7 +221,7 @@ namespace BirdCafe.Shared.Tests
         public void TrustAndFriendshipPersistThroughLoad()
         {
             var birdA = _controller.CurrentState.Birds[0];
-            _controller.PetStore.BuyBird("Budgerigar");
+            _controller.PetStore.BuyBird("budgie");
             var birdB = _controller.CurrentState.Birds.Last();
 
             birdA.Trust = 33;
@@ -240,8 +240,8 @@ namespace BirdCafe.Shared.Tests
         [Test]
         public void MultipleBirdsCanMaintainFriendships()
         {
-            _controller.PetStore.BuyBird("Budgerigar");
-            _controller.PetStore.BuyBird("Cockatiel");
+            _controller.PetStore.BuyBird("budgie");
+            _controller.PetStore.BuyBird("cockatiel");
 
             var birds = _controller.CurrentState.Birds;
             birds[0].AddFriend(birds[1].Id);

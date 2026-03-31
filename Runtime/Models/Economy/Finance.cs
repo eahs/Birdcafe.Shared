@@ -69,6 +69,13 @@ namespace BirdCafe.Shared.Models.Economy
         public ProductType? RelatedProduct { get; set; }
 
         /// <summary>
+        /// The specific catalog/store item involved in the transaction, if any.
+        /// Useful alongside <see cref="Category"/> to distinguish unique items
+        /// within a broader expense category such as <see cref="ExpenseCategory.FoodAndSupplies"/>.
+        /// </summary>
+        public string ItemId { get; set; }
+
+        /// <summary>
         /// The ID of the bird involved, if applicable (e.g., for Vet bills).
         /// </summary>
         public string RelatedBirdId { get; set; }
