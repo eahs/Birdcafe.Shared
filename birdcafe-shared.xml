@@ -2956,441 +2956,6 @@ guid: eafea2124c737624e878453e78a40917
 </Project>
 </file>
 
-<file path="Tests/BirdCafe.Shared.Tests/ExpenseReportingTests.cs">
-using BirdCafe.Shared.Engine;
-using BirdCafe.Shared.Enums;
-using BirdCafe.Shared.Models.Economy;
-using BirdCafe.Shared.Models.Reporting;
-using NUnit.Framework;
-using System;
-using System.Linq;
-
-namespace BirdCafe.Shared.Tests
-{
-    public class ExpenseReportingTests
-    {
-        private BirdCafeController _controller;
-
-        [SetUp]
-        public void Setup()
-        {
-            _controller = new BirdCafeController();
-            _controller.Meta.StartNewGame("ExpenseTester", "Cafe");
-        }
-
-        [Test]
-        public void ExpenseReport_CustomDayRange_ReturnsOnlyMatchingEntries()
-        {
-            SeedExpenseLedger();
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 2,
-                EndDayNumber = 2,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual(2, report.Rows.Count);
-            Assert.IsTrue(report.Rows.All(r => r.DayNumber == 2));
-            Assert.AreEqual(30m, report.GrandTotalExpenses);
-        }
-
-        [Test]
-        public void ExpenseReport_BirdFilter_ReturnsOnlyThatBirdsCosts()
-        {
-            SeedExpenseLedger();
-            var bird = _controller.CurrentState.Birds.First();
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                BirdId = bird.Id,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual(2, report.Rows.Count);
-            Assert.AreEqual(25m, report.TotalBirdExpenses);
-            Assert.IsTrue(report.Rows.All(r => r.BirdName == bird.Name));
-        }
-
-        [Test]
-        public void ExpenseReport_CareOnlyFilter_ExcludesInventoryEntries()
-        {
-            SeedExpenseLedger();
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = false
-            });
-
-            Assert.AreEqual(2, report.Rows.Count);
-            Assert.IsTrue(report.Rows.All(r => r.CategoryText != ExpenseCategory.InventoryCoffee.ToString()));
-            Assert.AreEqual(25m, report.TotalCareExpenses);
-            Assert.AreEqual(25m, report.GrandTotalExpenses);
-        }
-
-        [Test]
-        public void ExpenseReport_InventoryOnlyFilter_ExcludesCareEntries()
-        {
-            SeedExpenseLedger();
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = false,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual(2, report.Rows.Count);
-            Assert.IsTrue(report.Rows.All(r => r.BirdName == null));
-            Assert.AreEqual(30m, report.TotalCafeExpenses);
-            Assert.AreEqual(30m, report.GrandTotalExpenses);
-        }
-
-
-        [Test]
-        public void ExpenseReport_GroupedByDay_HasCorrectTotals()
-        {
-            SeedExpenseLedger(includeMiscExpense: true);
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByDay,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual(3, report.Rows.Count);
-            Assert.AreEqual(10m, report.Rows.Single(r => r.DayNumber == 1).Amount);
-            Assert.AreEqual(30m, report.Rows.Single(r => r.DayNumber == 2).Amount);
-            Assert.AreEqual(20m, report.Rows.Single(r => r.DayNumber == 3).Amount);
-        }
-
-        [Test]
-        public void ExpenseReport_TransactionRows_AreOrderedDeterministically()
-        {
-            SeedExpenseLedger();
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual("Vet Visit for Peep", report.Rows[0].Label);
-            Assert.AreEqual("Restocked coffee beans x20", report.Rows[1].Label);
-            Assert.AreEqual("Restocked coffee beans x10", report.Rows[2].Label);
-            Assert.AreEqual("Play Time for Peep", report.Rows[3].Label);
-        }
-
-        [Test]
-        public void ExpenseReport_CareOnlyFilter_DoesNotLeakOtherExpenseTypes()
-        {
-            SeedExpenseLedger(includeMiscExpense: true);
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = false
-            });
-
-            Assert.AreEqual(2, report.Rows.Count);
-            Assert.IsTrue(report.Rows.All(r => r.BirdName != null));
-            Assert.AreEqual(25m, report.GrandTotalExpenses);
-        }
-
-        [Test]
-        public void ExpenseReport_InventoryOnlyFilter_DoesNotLeakOtherExpenseTypes()
-        {
-            SeedExpenseLedger(includeMiscExpense: true);
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = false,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual(2, report.Rows.Count);
-            Assert.IsTrue(report.Rows.All(r => r.CategoryText == ExpenseCategory.InventoryCoffee.ToString()));
-            Assert.AreEqual(30m, report.GrandTotalExpenses);
-        }
-
-        [Test]
-        public void BuyingBirdFood_StaysInFoodAndSuppliesCategory()
-        {
-            MoveToEveningPhase();
-
-            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
-
-            Assert.IsTrue(result.IsSuccess);
-            var entry = _controller.CurrentState.Economy.Ledger.Last();
-            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, entry.Category);
-            Assert.AreEqual(1, entry.DayNumber);
-            Assert.AreEqual(1, entry.WeekNumber);
-        }
-
-        [Test]
-        public void BuyingPetStoreSupply_StoresItemIdOnLedgerEntry()
-        {
-            MoveToEveningPhase();
-
-            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
-
-            Assert.IsTrue(result.IsSuccess);
-            var entry = _controller.CurrentState.Economy.Ledger.Last();
-            Assert.AreEqual(BirdFoodType.SeedMix.ToString(), entry.ItemId);
-            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, entry.Category);
-            Assert.IsNull(entry.RelatedBirdId);
-        }
-
-        [Test]
-        public void FeedAction_AddsBirdLinkedConsumptionLedgerEntry_WithItemId()
-        {
-            MoveToEveningPhase();
-            Assert.IsTrue(_controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1).IsSuccess);
-
-            var bird = _controller.CurrentState.Birds.First();
-            var result = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
-
-            Assert.IsTrue(result.IsSuccess);
-
-            var ledger = _controller.CurrentState.Economy.Ledger;
-            Assert.AreEqual(2, ledger.Count);
-
-            var consumptionEntry = ledger.Last();
-            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, consumptionEntry.Category);
-            Assert.AreEqual(0m, consumptionEntry.Amount);
-            Assert.AreEqual(BirdFoodType.SeedMix.ToString(), consumptionEntry.ItemId);
-            Assert.AreEqual(bird.Id, consumptionEntry.RelatedBirdId);
-            StringAssert.Contains(bird.Name, consumptionEntry.ShortDescription);
-        }
-
-        [Test]
-        public void ExpenseReport_GroupedByCategory_HasCorrectTotals()
-        {
-            SeedExpenseLedger();
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByCategory,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual(3, report.Rows.Count);
-            Assert.AreEqual(10m, report.Rows.Single(r => r.CategoryText == ExpenseCategory.VetCare.ToString()).Amount);
-            Assert.AreEqual(15m, report.Rows.Single(r => r.CategoryText == ExpenseCategory.ToysAndActivities.ToString()).Amount);
-            Assert.AreEqual(30m, report.Rows.Single(r => r.CategoryText == ExpenseCategory.InventoryCoffee.ToString()).Amount);
-        }
-
-        [Test]
-        public void ExpenseReport_RunningTotal_IsCalculatedInDisplayOrder()
-        {
-            SeedExpenseLedger();
-
-            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = true,
-                IncludeRunningTotal = true
-            });
-
-            Assert.AreEqual(10m, report.Rows[0].RunningTotal);
-            Assert.AreEqual(30m, report.Rows[1].RunningTotal);
-            Assert.AreEqual(40m, report.Rows[2].RunningTotal);
-            Assert.AreEqual(55m, report.Rows[3].RunningTotal);
-        }
-
-        [Test]
-        public void FinalizeDay_CreatesSeparateLedgerEntriesPerInventoryType()
-        {
-            MoveToEveningPhase();
-
-            _controller.Planning.SetInventoryOrder(ProductType.Coffee, 3);
-            _controller.Planning.SetInventoryOrder(ProductType.BakedGoods, 2);
-            var result = _controller.Planning.FinalizeDay();
-
-            Assert.IsTrue(result.IsSuccess);
-            var entries = _controller.CurrentState.Economy.Ledger.Where(e => e.DayNumber == 1).ToList();
-            Assert.AreEqual(2, entries.Count);
-            Assert.IsTrue(entries.Any(e => e.Category == ExpenseCategory.InventoryCoffee && e.RelatedProduct == ProductType.Coffee && e.Amount == -3m));
-            Assert.IsTrue(entries.Any(e => e.Category == ExpenseCategory.InventoryBakedGoods && e.RelatedProduct == ProductType.BakedGoods && e.Amount == -4m));
-            Assert.IsFalse(entries.Any(e => e.Category == ExpenseCategory.Miscellaneous));
-        }
-
-        [Test]
-        public void CareActions_UseSpecificExpenseCategories()
-        {
-            MoveToEveningPhase();
-            _controller.CurrentState.Config.BaselinePlayCost = 15m;
-            var bird = _controller.CurrentState.Birds.First();
-
-            Assert.IsTrue(_controller.Care.PerformCareAction(bird.Id, CareActionIds.Vet).IsSuccess);
-            Assert.IsTrue(_controller.Care.PerformCareAction(bird.Id, CareActionIds.Play).IsSuccess);
-
-            var ledger = _controller.CurrentState.Economy.Ledger;
-            Assert.AreEqual(2, ledger.Count);
-            Assert.IsTrue(ledger.Any(entry => entry.Category == ExpenseCategory.VetCare));
-            Assert.IsTrue(ledger.Any(entry => entry.Category == ExpenseCategory.ToysAndActivities));
-            Assert.IsTrue(ledger.All(entry => entry.DayNumber == 1 && entry.WeekNumber == 1));
-        }
-
-        [Test]
-        public void GetDailyReport_Behavior_RemainsUsableAfterExpenseReportingChanges()
-        {
-            var game = BirdCafeGame.Instance;
-            game.StartNewGame("Reporter", "Cafe");
-
-            Assert.IsTrue(game.StartSimulationPlayback());
-            var report = game.GetDailyReport();
-
-            Assert.AreEqual(1, report.DayNumber);
-            Assert.GreaterOrEqual(report.TotalRevenue, 0m);
-            Assert.NotNull(report.Birds);
-        }
-
-        [Test]
-        public void BirdCafeGame_BirdExpenseReport_UsesBirdFilter()
-        {
-            SeedExpenseLedger();
-            BirdCafeGame.Instance.Controller.Meta.LoadGame(_controller.CurrentState);
-            var bird = _controller.CurrentState.Birds.First();
-
-            var report = BirdCafeGame.Instance.GetBirdExpenseReport(bird.Id, new ExpenseReportRequest
-            {
-                Scope = ExpenseReportScope.CustomDayRange,
-                StartDayNumber = 1,
-                EndDayNumber = 3,
-                GroupBy = ExpenseReportGroupBy.ByTransaction,
-                IncludeCareExpenses = true,
-                IncludeInventoryExpenses = true
-            });
-
-            Assert.AreEqual(25m, report.GrandTotalExpenses);
-            Assert.IsTrue(report.Rows.All(r => r.BirdName == bird.Name));
-        }
-
-        private void MoveToEveningPhase()
-        {
-            _controller.Simulation.RunDaySimulation();
-            _controller.Simulation.AdvanceFromSimulation();
-            _controller.CurrentState.Economy.CurrentBalance = 5000m;
-        }
-
-        private void SeedExpenseLedger(bool includeMiscExpense = false)
-        {
-            var bird = _controller.CurrentState.Birds.First();
-            _controller.CurrentState.Economy.Ledger.Clear();
-            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
-            {
-                DayNumber = 1,
-                WeekNumber = 1,
-                Timestamp = new DateTime(2026, 1, 1, 9, 0, 0, DateTimeKind.Utc),
-                Amount = -10m,
-                Category = ExpenseCategory.VetCare,
-                RelatedBirdId = bird.Id,
-                Reason = "Vet Visit",
-                ShortDescription = "Vet Visit for Peep"
-            });
-            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
-            {
-                DayNumber = 2,
-                WeekNumber = 1,
-                Timestamp = new DateTime(2026, 1, 2, 9, 0, 0, DateTimeKind.Utc),
-                Amount = -20m,
-                Category = ExpenseCategory.InventoryCoffee,
-                RelatedProduct = ProductType.Coffee,
-                Reason = "Inventory Restock: Coffee",
-                ShortDescription = "Restocked coffee beans x20"
-            });
-            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
-            {
-                DayNumber = 2,
-                WeekNumber = 1,
-                Timestamp = new DateTime(2026, 1, 2, 10, 0, 0, DateTimeKind.Utc),
-                Amount = -10m,
-                Category = ExpenseCategory.InventoryCoffee,
-                RelatedProduct = ProductType.Coffee,
-                Reason = "Inventory Restock: Coffee",
-                ShortDescription = "Restocked coffee beans x10"
-            });
-            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
-            {
-                DayNumber = 3,
-                WeekNumber = 1,
-                Timestamp = new DateTime(2026, 1, 3, 8, 0, 0, DateTimeKind.Utc),
-                Amount = -15m,
-                Category = ExpenseCategory.ToysAndActivities,
-                RelatedBirdId = bird.Id,
-                Reason = "Play Time",
-                ShortDescription = "Play Time for Peep"
-            });
-            if (includeMiscExpense)
-            {
-                _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
-                {
-                    DayNumber = 3,
-                    WeekNumber = 1,
-                    Timestamp = new DateTime(2026, 1, 3, 9, 0, 0, DateTimeKind.Utc),
-                    Amount = -5m,
-                    Category = ExpenseCategory.Miscellaneous,
-                    Reason = "Cage Cleaning",
-                    ShortDescription = "Cage cleaning supplies"
-                });
-            }
-
-            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
-            {
-                DayNumber = 3,
-                WeekNumber = 1,
-                Timestamp = new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc),
-                Amount = 100m,
-                Category = ExpenseCategory.Miscellaneous,
-                Reason = "Revenue",
-                ShortDescription = "Income"
-            });
-        }
-    }
-}
-</file>
-
 <file path="birdcafe-shared.xml.meta">
 fileFormatVersion: 2
 guid: 3ebba554a20d256438a1d63ce7f7988e
@@ -4474,6 +4039,441 @@ fileFormatVersion: 2
 guid: 6e002045a9385ae48840e2b9d5f39ddd
 </file>
 
+<file path="Tests/BirdCafe.Shared.Tests/ExpenseReportingTests.cs">
+using BirdCafe.Shared.Engine;
+using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Reporting;
+using NUnit.Framework;
+using System;
+using System.Linq;
+
+namespace BirdCafe.Shared.Tests
+{
+    public class ExpenseReportingTests
+    {
+        private BirdCafeController _controller;
+
+        [SetUp]
+        public void Setup()
+        {
+            _controller = new BirdCafeController();
+            _controller.Meta.StartNewGame("ExpenseTester", "Cafe");
+        }
+
+        [Test]
+        public void ExpenseReport_CustomDayRange_ReturnsOnlyMatchingEntries()
+        {
+            SeedExpenseLedger();
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 2,
+                EndDayNumber = 2,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual(2, report.Rows.Count);
+            Assert.IsTrue(report.Rows.All(r => r.DayNumber == 2));
+            Assert.AreEqual(30m, report.GrandTotalExpenses);
+        }
+
+        [Test]
+        public void ExpenseReport_BirdFilter_ReturnsOnlyThatBirdsCosts()
+        {
+            SeedExpenseLedger();
+            var bird = _controller.CurrentState.Birds.First();
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                BirdId = bird.Id,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual(2, report.Rows.Count);
+            Assert.AreEqual(25m, report.TotalBirdExpenses);
+            Assert.IsTrue(report.Rows.All(r => r.BirdName == bird.Name));
+        }
+
+        [Test]
+        public void ExpenseReport_CareOnlyFilter_ExcludesInventoryEntries()
+        {
+            SeedExpenseLedger();
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = false
+            });
+
+            Assert.AreEqual(2, report.Rows.Count);
+            Assert.IsTrue(report.Rows.All(r => r.CategoryText != ExpenseCategory.InventoryCoffee.ToString()));
+            Assert.AreEqual(25m, report.TotalCareExpenses);
+            Assert.AreEqual(25m, report.GrandTotalExpenses);
+        }
+
+        [Test]
+        public void ExpenseReport_InventoryOnlyFilter_ExcludesCareEntries()
+        {
+            SeedExpenseLedger();
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = false,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual(2, report.Rows.Count);
+            Assert.IsTrue(report.Rows.All(r => r.BirdName == null));
+            Assert.AreEqual(30m, report.TotalCafeExpenses);
+            Assert.AreEqual(30m, report.GrandTotalExpenses);
+        }
+
+
+        [Test]
+        public void ExpenseReport_GroupedByDay_HasCorrectTotals()
+        {
+            SeedExpenseLedger(includeMiscExpense: true);
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByDay,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual(3, report.Rows.Count);
+            Assert.AreEqual(10m, report.Rows.Single(r => r.DayNumber == 1).Amount);
+            Assert.AreEqual(30m, report.Rows.Single(r => r.DayNumber == 2).Amount);
+            Assert.AreEqual(20m, report.Rows.Single(r => r.DayNumber == 3).Amount);
+        }
+
+        [Test]
+        public void ExpenseReport_TransactionRows_AreOrderedDeterministically()
+        {
+            SeedExpenseLedger();
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual("Vet Visit for Peep", report.Rows[0].Label);
+            Assert.AreEqual("Restocked coffee beans x20", report.Rows[1].Label);
+            Assert.AreEqual("Restocked coffee beans x10", report.Rows[2].Label);
+            Assert.AreEqual("Play Time for Peep", report.Rows[3].Label);
+        }
+
+        [Test]
+        public void ExpenseReport_CareOnlyFilter_DoesNotLeakOtherExpenseTypes()
+        {
+            SeedExpenseLedger(includeMiscExpense: true);
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = false
+            });
+
+            Assert.AreEqual(2, report.Rows.Count);
+            Assert.IsTrue(report.Rows.All(r => r.BirdName != null));
+            Assert.AreEqual(25m, report.GrandTotalExpenses);
+        }
+
+        [Test]
+        public void ExpenseReport_InventoryOnlyFilter_DoesNotLeakOtherExpenseTypes()
+        {
+            SeedExpenseLedger(includeMiscExpense: true);
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = false,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual(2, report.Rows.Count);
+            Assert.IsTrue(report.Rows.All(r => r.CategoryText == ExpenseCategory.InventoryCoffee.ToString()));
+            Assert.AreEqual(30m, report.GrandTotalExpenses);
+        }
+
+        [Test]
+        public void BuyingBirdFood_StaysInFoodAndSuppliesCategory()
+        {
+            MoveToEveningPhase();
+
+            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
+
+            Assert.IsTrue(result.IsSuccess);
+            var entry = _controller.CurrentState.Economy.Ledger.Last();
+            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, entry.Category);
+            Assert.AreEqual(1, entry.DayNumber);
+            Assert.AreEqual(1, entry.WeekNumber);
+        }
+
+        [Test]
+        public void BuyingPetStoreSupply_StoresItemIdOnLedgerEntry()
+        {
+            MoveToEveningPhase();
+
+            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
+
+            Assert.IsTrue(result.IsSuccess);
+            var entry = _controller.CurrentState.Economy.Ledger.Last();
+            Assert.AreEqual(BirdFoodType.SeedMix.ToString(), entry.ItemId);
+            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, entry.Category);
+            Assert.IsNull(entry.RelatedBirdId);
+        }
+
+        [Test]
+        public void FeedAction_AddsBirdLinkedConsumptionLedgerEntry_WithItemId()
+        {
+            MoveToEveningPhase();
+            Assert.IsTrue(_controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1).IsSuccess);
+
+            var bird = _controller.CurrentState.Birds.First();
+            var result = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
+
+            Assert.IsTrue(result.IsSuccess);
+
+            var ledger = _controller.CurrentState.Economy.Ledger;
+            Assert.AreEqual(2, ledger.Count);
+
+            var consumptionEntry = ledger.Last();
+            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, consumptionEntry.Category);
+            Assert.AreEqual(0m, consumptionEntry.Amount);
+            Assert.AreEqual(BirdFoodType.SeedMix.ToString(), consumptionEntry.ItemId);
+            Assert.AreEqual(bird.Id, consumptionEntry.RelatedBirdId);
+            StringAssert.Contains(bird.Name, consumptionEntry.ShortDescription);
+        }
+
+        [Test]
+        public void ExpenseReport_GroupedByCategory_HasCorrectTotals()
+        {
+            SeedExpenseLedger();
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByCategory,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual(3, report.Rows.Count);
+            Assert.AreEqual(10m, report.Rows.Single(r => r.CategoryText == ExpenseCategory.VetCare.ToString()).Amount);
+            Assert.AreEqual(15m, report.Rows.Single(r => r.CategoryText == ExpenseCategory.ToysAndActivities.ToString()).Amount);
+            Assert.AreEqual(30m, report.Rows.Single(r => r.CategoryText == ExpenseCategory.InventoryCoffee.ToString()).Amount);
+        }
+
+        [Test]
+        public void ExpenseReport_RunningTotal_IsCalculatedInDisplayOrder()
+        {
+            SeedExpenseLedger();
+
+            var report = _controller.Reporting.GenerateExpenseReport(new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true,
+                IncludeRunningTotal = true
+            });
+
+            Assert.AreEqual(10m, report.Rows[0].RunningTotal);
+            Assert.AreEqual(30m, report.Rows[1].RunningTotal);
+            Assert.AreEqual(40m, report.Rows[2].RunningTotal);
+            Assert.AreEqual(55m, report.Rows[3].RunningTotal);
+        }
+
+        [Test]
+        public void FinalizeDay_CreatesSeparateLedgerEntriesPerInventoryType()
+        {
+            MoveToEveningPhase();
+
+            _controller.Planning.SetInventoryOrder(ProductType.Coffee, 3);
+            _controller.Planning.SetInventoryOrder(ProductType.BakedGoods, 2);
+            var result = _controller.Planning.FinalizeDay();
+
+            Assert.IsTrue(result.IsSuccess);
+            var entries = _controller.CurrentState.Economy.Ledger.Where(e => e.DayNumber == 1).ToList();
+            Assert.AreEqual(2, entries.Count);
+            Assert.IsTrue(entries.Any(e => e.Category == ExpenseCategory.InventoryCoffee && e.RelatedProduct == ProductType.Coffee && e.Amount == -3m));
+            Assert.IsTrue(entries.Any(e => e.Category == ExpenseCategory.InventoryBakedGoods && e.RelatedProduct == ProductType.BakedGoods && e.Amount == -4m));
+            Assert.IsFalse(entries.Any(e => e.Category == ExpenseCategory.Miscellaneous));
+        }
+
+        [Test]
+        public void CareActions_UseSpecificExpenseCategories()
+        {
+            MoveToEveningPhase();
+            _controller.CurrentState.Config.BaselinePlayCost = 15m;
+            var bird = _controller.CurrentState.Birds.First();
+
+            Assert.IsTrue(_controller.Care.PerformCareAction(bird.Id, CareActionIds.Vet).IsSuccess);
+            Assert.IsTrue(_controller.Care.PerformCareAction(bird.Id, CareActionIds.Play).IsSuccess);
+
+            var ledger = _controller.CurrentState.Economy.Ledger;
+            Assert.AreEqual(2, ledger.Count);
+            Assert.IsTrue(ledger.Any(entry => entry.Category == ExpenseCategory.VetCare));
+            Assert.IsTrue(ledger.Any(entry => entry.Category == ExpenseCategory.ToysAndActivities));
+            Assert.IsTrue(ledger.All(entry => entry.DayNumber == 1 && entry.WeekNumber == 1));
+        }
+
+        [Test]
+        public void GetDailyReport_Behavior_RemainsUsableAfterExpenseReportingChanges()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("Reporter", "Cafe");
+
+            Assert.IsTrue(game.StartSimulationPlayback());
+            var report = game.GetDailyReport();
+
+            Assert.AreEqual(1, report.DayNumber);
+            Assert.GreaterOrEqual(report.TotalRevenue, 0m);
+            Assert.NotNull(report.Birds);
+        }
+
+        [Test]
+        public void BirdCafeGame_BirdExpenseReport_UsesBirdFilter()
+        {
+            SeedExpenseLedger();
+            BirdCafeGame.Instance.Controller.Meta.LoadGame(_controller.CurrentState);
+            var bird = _controller.CurrentState.Birds.First();
+
+            var report = BirdCafeGame.Instance.GetBirdExpenseReport(bird.Id, new ExpenseReportRequest
+            {
+                Scope = ExpenseReportScope.CustomDayRange,
+                StartDayNumber = 1,
+                EndDayNumber = 3,
+                GroupBy = ExpenseReportGroupBy.ByTransaction,
+                IncludeCareExpenses = true,
+                IncludeInventoryExpenses = true
+            });
+
+            Assert.AreEqual(25m, report.GrandTotalExpenses);
+            Assert.IsTrue(report.Rows.All(r => r.BirdName == bird.Name));
+        }
+
+        private void MoveToEveningPhase()
+        {
+            _controller.Simulation.RunDaySimulation();
+            _controller.Simulation.AdvanceFromSimulation();
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
+        }
+
+        private void SeedExpenseLedger(bool includeMiscExpense = false)
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            _controller.CurrentState.Economy.Ledger.Clear();
+            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 1,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 1, 9, 0, 0, DateTimeKind.Utc),
+                Amount = -10m,
+                Category = ExpenseCategory.VetCare,
+                RelatedBirdId = bird.Id,
+                Reason = "Vet Visit",
+                ShortDescription = "Vet Visit for Peep"
+            });
+            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 2,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 2, 9, 0, 0, DateTimeKind.Utc),
+                Amount = -20m,
+                Category = ExpenseCategory.InventoryCoffee,
+                RelatedProduct = ProductType.Coffee,
+                Reason = "Inventory Restock: Coffee",
+                ShortDescription = "Restocked coffee beans x20"
+            });
+            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 2,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 2, 10, 0, 0, DateTimeKind.Utc),
+                Amount = -10m,
+                Category = ExpenseCategory.InventoryCoffee,
+                RelatedProduct = ProductType.Coffee,
+                Reason = "Inventory Restock: Coffee",
+                ShortDescription = "Restocked coffee beans x10"
+            });
+            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 3,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 3, 8, 0, 0, DateTimeKind.Utc),
+                Amount = -15m,
+                Category = ExpenseCategory.ToysAndActivities,
+                RelatedBirdId = bird.Id,
+                Reason = "Play Time",
+                ShortDescription = "Play Time for Peep"
+            });
+            if (includeMiscExpense)
+            {
+                _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+                {
+                    DayNumber = 3,
+                    WeekNumber = 1,
+                    Timestamp = new DateTime(2026, 1, 3, 9, 0, 0, DateTimeKind.Utc),
+                    Amount = -5m,
+                    Category = ExpenseCategory.Miscellaneous,
+                    Reason = "Cage Cleaning",
+                    ShortDescription = "Cage cleaning supplies"
+                });
+            }
+
+            _controller.CurrentState.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 3,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 3, 12, 0, 0, DateTimeKind.Utc),
+                Amount = 100m,
+                Category = ExpenseCategory.Miscellaneous,
+                Reason = "Revenue",
+                ShortDescription = "Income"
+            });
+        }
+    }
+}
+</file>
+
 <file path="ConsoleApp~/Screens/MetaScreens.cs">
 using BirdCafe.Shared;
 using System;
@@ -5328,96 +5328,6 @@ namespace BirdCafe.Shared.Models.Birds
 }
 </file>
 
-<file path="Runtime/Models/Economy/Finance.cs">
-using BirdCafe.Shared.Enums;
-using System;
-using System.Collections.Generic;
-
-namespace BirdCafe.Shared.Models.Economy
-{
-    /// <summary>
-    /// Tracks the overall financial status of the player.
-    /// </summary>
-    [Serializable]
-    public class EconomyState
-    {
-        /// <summary>
-        /// The current amount of money available to spend.
-        /// </summary>
-        public decimal CurrentBalance { get; set; }
-
-        /// <summary>
-        /// A history of all financial transactions.
-        /// </summary>
-        public List<LedgerEntry> Ledger { get; set; } = new List<LedgerEntry>();
-    }
-
-    /// <summary>
-    /// Represents a single financial transaction (Income or Expense).
-    /// </summary>
-    [Serializable]
-    public class LedgerEntry
-    {
-        /// <summary>
-        /// Unique identifier for the transaction.
-        /// </summary>
-        public string Id { get; set; } = Guid.NewGuid().ToString();
-
-        /// <summary>
-        /// When the transaction occurred.
-        /// </summary>
-        public DateTime Timestamp { get; set; }
-
-        /// <summary>
-        /// The in-game day number when the transaction occurred.
-        /// </summary>
-        public int DayNumber { get; set; }
-
-        /// <summary>
-        /// The in-game week number when the transaction occurred.
-        /// </summary>
-        public int WeekNumber { get; set; }
-
-        /// <summary>
-        /// The monetary value. Positive for income, negative for expenses.
-        /// </summary>
-        public decimal Amount { get; set; }
-
-        /// <summary>
-        /// Textual reason for the transaction (e.g., "Sale of Coffee").
-        /// </summary>
-        public string Reason { get; set; }
-
-        /// <summary>
-        /// The classification of the expense or income.
-        /// </summary>
-        public ExpenseCategory Category { get; set; }
-
-        /// <summary>
-        /// The product involved in the transaction, if any.
-        /// </summary>
-        public ProductType? RelatedProduct { get; set; }
-
-        /// <summary>
-        /// The specific catalog/store item involved in the transaction, if any.
-        /// Useful alongside <see cref="Category"/> to distinguish unique items
-        /// within a broader expense category such as <see cref="ExpenseCategory.FoodAndSupplies"/>.
-        /// </summary>
-        public string ItemId { get; set; }
-
-        /// <summary>
-        /// The ID of the bird involved, if applicable (e.g., for Vet bills).
-        /// </summary>
-        public string RelatedBirdId { get; set; }
-
-        /// <summary>
-        /// A short, user-friendly description of the transaction.
-        /// </summary>
-        public string ShortDescription { get; set; }
-    }
-}
-</file>
-
 <file path="Runtime/Models/Economy/PetStoreState.cs">
 using BirdCafe.Shared.Enums;
 using System;
@@ -6068,275 +5978,6 @@ namespace BirdCafe.Shared.ViewModels
 }
 </file>
 
-<file path="Tests/BirdCafe.Shared.Tests/PetStoreTests.cs">
-using BirdCafe.Shared.Engine;
-using BirdCafe.Shared.Engine.Utils;
-using BirdCafe.Shared.Enums;
-using BirdCafe.Shared.Models.Birds;
-using BirdCafe.Shared.Models.Economy;
-using NUnit.Framework;
-using System.Linq;
-
-namespace BirdCafe.Shared.Tests
-{
-    public class PetStoreTests
-    {
-        private BirdCafeController _controller;
-
-        [SetUp]
-        public void Setup()
-        {
-            _controller = new BirdCafeController();
-            _controller.Meta.StartNewGame("PetStoreTester", "Cafe");
-            _controller.Simulation.RunDaySimulation();
-            _controller.Simulation.AdvanceFromSimulation();
-            _controller.CurrentState.Economy.CurrentBalance = 5000m;
-        }
-
-        [Test]
-        public void BuyBird_FailsOutsideEveningPhase()
-        {
-            _controller.SetPhaseForTests(GamePhase.DayLoop);
-            var result = _controller.PetStore.BuyBird(PetStoreCatalog.BirdOffers[0].SpeciesId);
-            Assert.IsFalse(result.IsSuccess);
-            Assert.AreEqual("InvalidPhase", result.ErrorCode);
-        }
-
-        [Test]
-        public void BuyBird_DeductsMoney_RecordsLedger_AndPersistsInRoster()
-        {
-            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
-            var result = _controller.PetStore.BuyBird("cockatiel");
-
-            Assert.IsTrue(result.IsSuccess);
-            Assert.AreEqual(startMoney - 260m, _controller.CurrentState.Economy.CurrentBalance);
-            Assert.IsTrue(_controller.CurrentState.Birds.Any(b => b.SpeciesId == "cockatiel"));
-            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Cockatiel"));
-        }
-
-        [Test]
-        public void BuyBird_FailsWhenInsufficientFunds()
-        {
-            _controller.CurrentState.Economy.CurrentBalance = 10m;
-            var result = _controller.PetStore.BuyBird("kingfisher");
-            Assert.IsFalse(result.IsSuccess);
-            Assert.AreEqual("InsufficientFunds", result.ErrorCode);
-        }
-
-        [Test]
-        public void SupportsMultipleOwnedBirds()
-        {
-            _controller.PetStore.BuyBird("budgie");
-            _controller.PetStore.BuyBird("cockatiel");
-            Assert.GreaterOrEqual(_controller.CurrentState.Birds.Count, 3);
-        }
-
-        [Test]
-        public void SupplyCatalogLookup_ResolvesSharedDefinitions()
-        {
-            var fruitMedley = PetStoreCatalog.FindSupplyOffer(BirdFoodType.FruitMedley.ToString(), PetStoreSupplyType.BirdFood);
-            var specialEggToy = PetStoreCatalog.FindSupplyOffer(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
-
-            Assert.NotNull(fruitMedley);
-            Assert.AreEqual(BirdFoodType.FruitMedley, fruitMedley.BirdFoodType);
-            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, fruitMedley.ExpenseCategory);
-            Assert.NotNull(specialEggToy);
-            Assert.AreEqual(PetStoreSupplyType.SpecialEggToy, specialEggToy.SupplyType);
-        }
-
-        [Test]
-        public void BuySupply_DoesNotDeductMoney_WhenBirdFoodValidationFails()
-        {
-            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
-            var startingLedgerCount = _controller.CurrentState.Economy.Ledger.Count;
-
-            var result = _controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.BirdFood, 1);
-
-            Assert.IsFalse(result.IsSuccess);
-            Assert.AreEqual("InvalidItem", result.ErrorCode);
-            Assert.AreEqual(startMoney, _controller.CurrentState.Economy.CurrentBalance);
-            Assert.AreEqual(startingLedgerCount, _controller.CurrentState.Economy.Ledger.Count);
-        }
-
-        [Test]
-        public void BuyingBirdFood_DeductsMoney_AndAddsStoredFoodInventory()
-        {
-            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
-
-            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 2);
-
-            Assert.IsTrue(result.IsSuccess);
-            Assert.AreEqual(startMoney - (PetStoreCatalog.BirdFoodSeedMixPrice * 2), _controller.CurrentState.Economy.CurrentBalance);
-            Assert.AreEqual(2, _controller.CurrentState.PetStore.GetFoodUnits(BirdFoodType.SeedMix));
-            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Supply:"));
-        }
-
-        [Test]
-        public void BuyingNonFoodSupplies_GrantsCorrectOwnership()
-        {
-            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.ToyFeatherWandId, PetStoreSupplyType.Toy).IsSuccess);
-            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
-            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy).IsSuccess);
-
-            Assert.AreEqual(1, _controller.CurrentState.PetStore.OwnedToyQuantities[PetStoreCatalog.ToyFeatherWandId]);
-            Assert.AreEqual(1, _controller.CurrentState.PetStore.OwnedCostumeQuantities[PetStoreCatalog.CostumeBandanaId]);
-            Assert.AreEqual(1, _controller.CurrentState.PetStore.SpecialEggToysOwned);
-        }
-
-        [Test]
-        public void SpecialEggToyOffer_UsesCorrectSupplyType()
-        {
-            var game = BirdCafeGame.Instance;
-            game.StartNewGame("Tester", "Cafe");
-            game.StartSimulationPlayback();
-            game.FinishSimulation();
-
-            var offer = game.GetPetStoreSupplyOffers().Single(o => o.ItemId == PetStoreCatalog.SpecialEggToyItemId);
-
-            Assert.AreEqual(PetStoreSupplyType.SpecialEggToy, offer.SupplyType);
-        }
-
-        [Test]
-        public void EggRewardResolution_IsDeterministicAndPersisted()
-        {
-            _controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
-            var first = _controller.PetStore.OpenSpecialEggToy();
-
-            Assert.IsTrue(first.IsSuccess);
-            var rewardA = first.Payload as EggRewardRecord;
-            Assert.NotNull(rewardA);
-            Assert.AreEqual(1, _controller.CurrentState.PetStore.EggRewardHistory.Count);
-
-            var fresh = new BirdCafeController();
-            fresh.Meta.StartNewGame("PetStoreTester", "Cafe");
-            fresh.Simulation.RunDaySimulation();
-            fresh.Simulation.AdvanceFromSimulation();
-            fresh.CurrentState.Economy.CurrentBalance = 5000m;
-            fresh.CurrentState.CurrentDayState.CurrentPlan.DaySeed = _controller.CurrentState.CurrentDayState.CurrentPlan.DaySeed;
-            fresh.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
-            var second = fresh.PetStore.OpenSpecialEggToy();
-            var rewardB = second.Payload as EggRewardRecord;
-
-            Assert.AreEqual(rewardA.RewardId, rewardB.RewardId);
-        }
-
-        [Test]
-        public void BirdCatalog_HigherPriceGeneratesHigherStats()
-        {
-            var ordered = PetStoreCatalog.BirdOffers.OrderBy(b => b.Price).ToList();
-            for (int i = 1; i < ordered.Count; i++)
-            {
-                Assert.GreaterOrEqual(ordered[i].Productivity, ordered[i - 1].Productivity);
-                Assert.GreaterOrEqual(ordered[i].Friendliness, ordered[i - 1].Friendliness);
-            }
-
-            Assert.AreEqual(BirdRarity.Exotic, ordered.Last().Rarity);
-        }
-
-        [Test]
-        public void PurchasedBirdAppearsInCareDashboard()
-        {
-            var game = BirdCafeGame.Instance;
-            game.StartNewGame("Tester", "Cafe");
-            game.StartSimulationPlayback();
-            game.FinishSimulation();
-            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
-
-            Assert.IsTrue(game.BuyPetStoreBird("budgie"));
-            var careVm = game.GetCareDashboard();
-            Assert.IsTrue(careVm.Birds.Any(b => b.Name.Contains("Buddy")));
-        }
-
-        [Test]
-        public void FeedConsumesStoredFood_InsteadOfChargingMoney()
-        {
-            _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
-            var bird = _controller.CurrentState.Birds.First();
-            decimal moneyBeforeFeed = _controller.CurrentState.Economy.CurrentBalance;
-
-            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
-
-            Assert.IsTrue(feedResult.IsSuccess);
-            Assert.AreEqual(0, _controller.CurrentState.PetStore.GetTotalFoodUnits());
-            Assert.AreEqual(moneyBeforeFeed, _controller.CurrentState.Economy.CurrentBalance);
-        }
-
-        [Test]
-        public void FeedFailsWhenNoStoredFoodExists()
-        {
-            var bird = _controller.CurrentState.Birds.First();
-            _controller.CurrentState.PetStore.BirdFoodByType.Clear();
-
-            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
-
-            Assert.IsFalse(feedResult.IsSuccess);
-            Assert.AreEqual("NoStoredFood", feedResult.ErrorCode);
-        }
-
-        [Test]
-        public void FeedingPreferredFood_IncreasesTrust()
-        {
-            var bird = _controller.CurrentState.Birds.First();
-            bird.PreferredFoods.Clear();
-            bird.PreferredFoods.Add(BirdFoodType.FruitMedley);
-            bird.Trust = 0;
-            _controller.PetStore.BuySupply(BirdFoodType.FruitMedley.ToString(), PetStoreSupplyType.BirdFood, 1);
-
-            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
-
-            Assert.IsTrue(feedResult.IsSuccess);
-            Assert.AreEqual(10, bird.Trust);
-        }
-
-        [Test]
-        public void TrustAndFriendshipPersistThroughLoad()
-        {
-            var birdA = _controller.CurrentState.Birds[0];
-            _controller.PetStore.BuyBird("budgie");
-            var birdB = _controller.CurrentState.Birds.Last();
-
-            birdA.Trust = 33;
-            birdA.AddFriend(birdB.Id);
-            birdB.AddFriend(birdA.Id);
-
-            var save = _controller.CurrentState;
-            var fresh = new BirdCafeController();
-            var loadResult = fresh.Meta.LoadGame(save);
-
-            Assert.IsTrue(loadResult.IsSuccess);
-            Assert.AreEqual(33, fresh.CurrentState.Birds.First(b => b.Id == birdA.Id).Trust);
-            Assert.IsTrue(fresh.CurrentState.Birds.First(b => b.Id == birdA.Id).FriendBirdIds.Contains(birdB.Id));
-        }
-
-        [Test]
-        public void MultipleBirdsCanMaintainFriendships()
-        {
-            _controller.PetStore.BuyBird("budgie");
-            _controller.PetStore.BuyBird("cockatiel");
-
-            var birds = _controller.CurrentState.Birds;
-            birds[0].AddFriend(birds[1].Id);
-            birds[1].AddFriend(birds[2].Id);
-            birds[2].AddFriend(birds[0].Id);
-
-            Assert.IsTrue(birds[0].FriendBirdIds.Contains(birds[1].Id));
-            Assert.IsTrue(birds[1].FriendBirdIds.Contains(birds[2].Id));
-            Assert.IsTrue(birds[2].FriendBirdIds.Contains(birds[0].Id));
-        }
-    }
-
-    internal static class ControllerTestExtensions
-    {
-        internal static void SetPhaseForTests(this BirdCafeController controller, GamePhase phase)
-        {
-            typeof(BirdCafeController)
-                .GetMethod("SetPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                .Invoke(controller, new object[] { phase });
-        }
-    }
-}
-</file>
-
 <file path=".gitignore">
 ## Ignore Visual Studio temporary files, build results, and
 ## files generated by popular Visual Studio add-ons.
@@ -6800,214 +6441,6 @@ DefaultImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant:
-</file>
-
-<file path="Runtime/Engine/Managers/PetStoreManager.cs">
-using BirdCafe.Shared.Engine.Utils;
-using BirdCafe.Shared.Enums;
-using BirdCafe.Shared.Models.Birds;
-using BirdCafe.Shared.Models.Economy;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace BirdCafe.Shared.Engine.Managers
-{
-    /// <summary>
-    /// Handles Pete's Pet Store purchases and deterministic egg rewards.
-    /// </summary>
-    public class PetStoreManager
-    {
-        private const string InvalidPhaseCode = "InvalidPhase";
-        private const string InvalidItemCode = "InvalidItem";
-        private const string InvalidBirdFoodTypeCode = "InvalidBirdFoodType";
-        private const string InsufficientFundsCode = "InsufficientFunds";
-        private const string InvalidQuantityCode = "InvalidQuantity";
-
-        private readonly BirdCafeController _controller;
-
-        public PetStoreManager(BirdCafeController controller)
-        {
-            _controller = controller;
-        }
-
-        public EngineResult BuyBird(string speciesId)
-        {
-            if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
-
-            var offer = PetStoreCatalog.FindBirdOffer(speciesId);
-            if (offer == null)
-                return EngineResult.Failure("InvalidBird", "That bird is not sold in Pete's Pet Store.");
-
-            if (_controller.CurrentState.Economy.CurrentBalance < offer.Price)
-                return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy this bird.");
-
-            var state = _controller.CurrentState;
-            var createdBird = new Bird
-            {
-                Name = PetStoreCatalog.BuildBirdName(offer.DisplayName, state.CurrentDayNumber, state.Birds.Count),
-                SpeciesId = offer.SpeciesId,
-                PrimaryColorHex = "#A8D8FF",
-                Productivity = offer.Productivity,
-                Friendliness = offer.Friendliness,
-                Reliability = offer.Reliability,
-                Mood = 75,
-                Hunger = 100,
-                Energy = 100,
-                Health = 100,
-                Trust = 0,
-                PreferredFoods = offer.PreferredFoods.ToList()
-            };
-
-            SpendMoney(offer.Price, $"Bird: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization, speciesId, createdBird.Id);
-
-            var existingFriend = state.Birds.FirstOrDefault();
-            if (existingFriend != null)
-            {
-                existingFriend.AddFriend(createdBird.Id);
-                createdBird.AddFriend(existingFriend.Id);
-            }
-
-            state.Birds.Add(createdBird);
-            state.CurrentDayState.CurrentPlan.BirdIdsWorking.Add(createdBird.Id);
-
-            return EngineResult.Success(createdBird);
-        }
-
-        public EngineResult BuySupply(string itemId, PetStoreSupplyType supplyType, int quantity = 1)
-        {
-            if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
-
-            if (quantity <= 0)
-                return EngineResult.Failure(InvalidQuantityCode, "Quantity must be at least 1.");
-
-            var supply = PetStoreCatalog.FindSupplyOffer(itemId, supplyType);
-            if (supply == null)
-                return EngineResult.Failure(InvalidItemCode, "That store item is unavailable.");
-
-            if (supply.SupplyType == PetStoreSupplyType.BirdFood && supply.BirdFoodType == null)
-                return EngineResult.Failure(InvalidBirdFoodTypeCode, "That food type is unavailable.");
-
-            var totalCost = supply.Price * quantity;
-            if (_controller.CurrentState.Economy.CurrentBalance < totalCost)
-                return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy that item.");
-
-            
-            SpendMoney(totalCost, $"Supply: {itemId} x{quantity}", supply.ExpenseCategory, supply.ItemId);
-            ApplySupplyPurchase(supply, quantity);
-
-            return EngineResult.Success();
-        }
-
-        public EngineResult OpenSpecialEggToy()
-        {
-            if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
-
-            var state = _controller.CurrentState;
-            if (state.PetStore.SpecialEggToysOwned <= 0)
-                return EngineResult.Failure("NoEggToy", "You do not own any special egg toys.");
-
-            state.PetStore.SpecialEggToysOwned--;
-
-            // Deterministic: seed is a stable function of day and prior reward count.
-            int seed = state.CurrentDayState.CurrentPlan.DaySeed ^ (state.PetStore.EggRewardHistory.Count + 1) ^ (state.CurrentDayNumber * 97);
-            var rng = new Random(seed);
-
-            var rewards = BuildRewardTable();
-            var reward = rewards[rng.Next(rewards.Count)];
-
-            ApplyEggReward(state.PetStore, reward);
-            state.PetStore.EggRewardHistory.Add(reward);
-
-            return EngineResult.Success(reward);
-        }
-
-        private void ApplySupplyPurchase(PetStoreSupplyDefinition supply, int quantity)
-        {
-            var store = _controller.CurrentState.PetStore;
-
-            if (supply.SupplyType == PetStoreSupplyType.BirdFood)
-            {
-                store.AddFood(supply.BirdFoodType.Value, quantity);
-                return;
-            }
-
-            if (supply.SupplyType == PetStoreSupplyType.Toy)
-            {
-                AddQuantity(store.OwnedToyQuantities, supply.ItemId, quantity);
-                return;
-            }
-
-            if (supply.SupplyType == PetStoreSupplyType.Costume)
-            {
-                AddQuantity(store.OwnedCostumeQuantities, supply.ItemId, quantity);
-                return;
-            }
-
-            store.SpecialEggToysOwned += quantity;
-        }
-
-        private List<EggRewardRecord> BuildRewardTable()
-        {
-            return new List<EggRewardRecord>
-            {
-                new EggRewardRecord { RewardType = EggRewardType.BirdBuff, RewardId = "Buff_Charm", RewardName = "Aura Buff", RewardDescription = "All birds gain +2 friendliness value in tomorrow's service flow." },
-                new EggRewardRecord { RewardType = EggRewardType.UniqueToy, RewardId = "Toy_StarlightSpinner", RewardName = "Starlight Spinner", RewardDescription = "Unique toy added to your collection." },
-                new EggRewardRecord { RewardType = EggRewardType.RareCostume, RewardId = "Costume_GoldenVest", RewardName = "Golden Vest", RewardDescription = "Rare costume added to wardrobe." }
-            };
-        }
-
-        private void ApplyEggReward(PetStoreState store, EggRewardRecord reward)
-        {
-            reward.DayNumber = _controller.CurrentState.CurrentDayNumber;
-
-            if (reward.RewardType == EggRewardType.BirdBuff)
-            {
-                store.TotalBirdBuffStacks += 1;
-                return;
-            }
-
-            if (reward.RewardType == EggRewardType.UniqueToy)
-            {
-                AddQuantity(store.OwnedToyQuantities, reward.RewardId, 1);
-                return;
-            }
-
-            AddQuantity(store.OwnedCostumeQuantities, reward.RewardId, 1);
-        }
-
-        private void SpendMoney(decimal amount, string reason, ExpenseCategory category, string itemId = null, string relatedBirdId = null)
-        {
-            var economy = _controller.CurrentState.Economy;
-            economy.CurrentBalance -= amount;
-            economy.Ledger.Add(new LedgerEntry
-            {
-                DayNumber = _controller.CurrentState.CurrentDayNumber,
-                WeekNumber = _controller.CurrentState.CurrentWeekNumber,
-                Amount = -amount,
-                Reason = reason,
-                Timestamp = DateTime.Now,
-                Category = category,
-                ShortDescription = reason,
-                ItemId = itemId,
-                RelatedBirdId = relatedBirdId
-            });
-        }
-
-        private void AddQuantity(Dictionary<string, int> map, string key, int amount)
-        {
-            if (!map.ContainsKey(key))
-            {
-                map[key] = 0;
-            }
-
-            map[key] += amount;
-        }
-    }
-}
 </file>
 
 <file path="Runtime/Engine/Managers/ReportingManager.cs">
@@ -7850,15 +7283,18 @@ namespace BirdCafe.Shared.ViewModels
 }
 </file>
 
-<file path="Tests/BirdCafe.Shared.Tests/SimulationTests.cs">
+<file path="Tests/BirdCafe.Shared.Tests/PetStoreTests.cs">
 using BirdCafe.Shared.Engine;
+using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Birds;
+using BirdCafe.Shared.Models.Economy;
 using NUnit.Framework;
 using System.Linq;
 
 namespace BirdCafe.Shared.Tests
 {
-    public class SimulationTests
+    public class PetStoreTests
     {
         private BirdCafeController _controller;
 
@@ -7866,179 +7302,251 @@ namespace BirdCafe.Shared.Tests
         public void Setup()
         {
             _controller = new BirdCafeController();
-        }
-
-        [Test]
-        public void StartNewGame_SetsUpDefaults()
-        {
-            var res = _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-
-            Assert.IsTrue(res.IsSuccess);
-            Assert.AreEqual(1, _controller.CurrentState.CurrentDayNumber);
-            Assert.AreEqual(GamePhase.DayLoop, _controller.CurrentPhase);
-            Assert.AreEqual(1, _controller.CurrentState.Birds.Count);
-            Assert.AreEqual("Peep", _controller.CurrentState.Birds[0].Name);
-        }
-
-        [Test]
-        public void RunDaySimulation_GeneratesTimeline()
-        {
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-
-            var res = _controller.Simulation.RunDaySimulation();
-
-            Assert.IsTrue(res.IsSuccess, "Simulation should succeed");
-
-            var resultData = res.Payload as Models.Simulation.DaySimulationResult;
-            Assert.IsNotNull(resultData);
-
-            Assert.Greater(resultData.Timeline.Count, 0, "Should have timeline events");
-            Assert.Greater(resultData.Customers.CustomersArrived, 0, "Customers should arrive");
-            Assert.GreaterOrEqual(resultData.Economy.EndingMoney, resultData.Economy.StartingMoney);
-        }
-
-        [Test]
-        public void RunDaySimulation_AttributesCustomersToBirds()
-        {
-            // THIS TEST would have caught the bug where Bird.CustomersServed was 0.
-
-            // 1. Setup Day 1
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-
-            // 2. Run Simulation
-            var res = _controller.Simulation.RunDaySimulation();
-            var resultData = res.Payload as Models.Simulation.DaySimulationResult;
-
-            // 3. Validate Global Stats
-            Assert.Greater(resultData.Customers.CustomersServed, 0, "Global served count should be > 0");
-
-            // 4. Validate Individual Bird Stats
-            var peepSummary = resultData.BirdSummaries.First(b => b.BirdName == "Peep");
-
-            Assert.IsTrue(peepSummary.WorkedToday, "Peep should be marked as working");
-
-            // The fix ensures this is now true:
-            Assert.AreEqual(resultData.Customers.CustomersServed, peepSummary.CustomersServed,
-                "Since Peep is the only worker, they must have served all the customers.");
-
-            Assert.Greater(peepSummary.CustomersServed, 0, "Peep's individual served count must be > 0");
-        }
-
-        [Test]
-        public void PurchasingInventory_DeductsMoney()
-        {
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-
+            _controller.Meta.StartNewGame("PetStoreTester", "Cafe");
             _controller.Simulation.RunDaySimulation();
-            _controller.Simulation.AdvanceFromSimulation(); // To EveningLoop
-
-            decimal startMoney = _controller.CurrentState.Economy.CurrentBalance;
-
-            _controller.Planning.SetInventoryOrder(ProductType.Coffee, 5);
-            var res = _controller.Planning.FinalizeDay();
-
-            Assert.IsTrue(res.IsSuccess);
-
-            // Use Last() on Ledger to verify exact transaction
-            var lastEntry = _controller.CurrentState.Economy.Ledger.Last();
-            Assert.AreEqual(-5.0m, lastEntry.Amount);
-            Assert.AreEqual("Inventory Restock: Coffee", lastEntry.Reason);
-            Assert.AreEqual(ExpenseCategory.InventoryCoffee, lastEntry.Category);
+            _controller.Simulation.AdvanceFromSimulation();
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
         }
 
+        [Test]
+        public void BuyBird_FailsOutsideEveningPhase()
+        {
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+            var result = _controller.PetStore.BuyBird(PetStoreCatalog.BirdOffers[0].SpeciesId);
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("InvalidPhase", result.ErrorCode);
+        }
 
         [Test]
-        public void TrustIncreasesSimulationCashOutput()
+        public void BuyBird_DeductsMoney_RecordsLedger_AndPersistsInRoster()
         {
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
+            var result = _controller.PetStore.BuyBird("cockatiel");
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual(startMoney - 260m, _controller.CurrentState.Economy.CurrentBalance);
+            Assert.IsTrue(_controller.CurrentState.Birds.Any(b => b.SpeciesId == "cockatiel"));
+            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Cockatiel"));
+        }
+
+        [Test]
+        public void BuyBird_FailsWhenInsufficientFunds()
+        {
+            _controller.CurrentState.Economy.CurrentBalance = 10m;
+            var result = _controller.PetStore.BuyBird("kingfisher");
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("InsufficientFunds", result.ErrorCode);
+        }
+
+        [Test]
+        public void SupportsMultipleOwnedBirds()
+        {
+            _controller.PetStore.BuyBird("budgie");
+            _controller.PetStore.BuyBird("cockatiel");
+            Assert.GreaterOrEqual(_controller.CurrentState.Birds.Count, 3);
+        }
+
+        [Test]
+        public void SupplyCatalogLookup_ResolvesSharedDefinitions()
+        {
+            var fruitMedley = PetStoreCatalog.FindSupplyOffer(BirdFoodType.FruitMedley.ToString(), PetStoreSupplyType.BirdFood);
+            var specialEggToy = PetStoreCatalog.FindSupplyOffer(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
+
+            Assert.NotNull(fruitMedley);
+            Assert.AreEqual(BirdFoodType.FruitMedley, fruitMedley.BirdFoodType);
+            Assert.AreEqual(ExpenseCategory.FoodAndSupplies, fruitMedley.ExpenseCategory);
+            Assert.NotNull(specialEggToy);
+            Assert.AreEqual(PetStoreSupplyType.SpecialEggToy, specialEggToy.SupplyType);
+        }
+
+        [Test]
+        public void BuySupply_DoesNotDeductMoney_WhenBirdFoodValidationFails()
+        {
+            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
+            var startingLedgerCount = _controller.CurrentState.Economy.Ledger.Count;
+
+            var result = _controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.BirdFood, 1);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("InvalidItem", result.ErrorCode);
+            Assert.AreEqual(startMoney, _controller.CurrentState.Economy.CurrentBalance);
+            Assert.AreEqual(startingLedgerCount, _controller.CurrentState.Economy.Ledger.Count);
+        }
+
+        [Test]
+        public void BuyingBirdFood_DeductsMoney_AndAddsStoredFoodInventory()
+        {
+            var startMoney = _controller.CurrentState.Economy.CurrentBalance;
+
+            var result = _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 2);
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual(startMoney - (PetStoreCatalog.BirdFoodSeedMixPrice * 2), _controller.CurrentState.Economy.CurrentBalance);
+            Assert.AreEqual(2, _controller.CurrentState.PetStore.GetFoodUnits(BirdFoodType.SeedMix));
+            Assert.IsTrue(_controller.CurrentState.Economy.Ledger.Last().Reason.Contains("Supply:"));
+        }
+
+        [Test]
+        public void BuyingNonFoodSupplies_GrantsCorrectOwnership()
+        {
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.ToyFeatherWandId, PetStoreSupplyType.Toy).IsSuccess);
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy).IsSuccess);
+
+            Assert.AreEqual(1, _controller.CurrentState.PetStore.OwnedToyQuantities[PetStoreCatalog.ToyFeatherWandId]);
+            Assert.AreEqual(1, _controller.CurrentState.PetStore.OwnedCostumeQuantities[PetStoreCatalog.CostumeBandanaId]);
+            Assert.AreEqual(1, _controller.CurrentState.PetStore.SpecialEggToysOwned);
+        }
+
+        [Test]
+        public void SpecialEggToyOffer_UsesCorrectSupplyType()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("Tester", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+
+            var offer = game.GetPetStoreSupplyOffers().Single(o => o.ItemId == PetStoreCatalog.SpecialEggToyItemId);
+
+            Assert.AreEqual(PetStoreSupplyType.SpecialEggToy, offer.SupplyType);
+        }
+
+        [Test]
+        public void EggRewardResolution_IsDeterministicAndPersisted()
+        {
+            _controller.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
+            var first = _controller.PetStore.OpenSpecialEggToy();
+
+            Assert.IsTrue(first.IsSuccess);
+            var rewardA = first.Payload as EggRewardRecord;
+            Assert.NotNull(rewardA);
+            Assert.AreEqual(1, _controller.CurrentState.PetStore.EggRewardHistory.Count);
+
+            var fresh = new BirdCafeController();
+            fresh.Meta.StartNewGame("PetStoreTester", "Cafe");
+            fresh.Simulation.RunDaySimulation();
+            fresh.Simulation.AdvanceFromSimulation();
+            fresh.CurrentState.Economy.CurrentBalance = 5000m;
+            fresh.CurrentState.CurrentDayState.CurrentPlan.DaySeed = _controller.CurrentState.CurrentDayState.CurrentPlan.DaySeed;
+            fresh.PetStore.BuySupply(PetStoreCatalog.SpecialEggToyItemId, PetStoreSupplyType.SpecialEggToy);
+            var second = fresh.PetStore.OpenSpecialEggToy();
+            var rewardB = second.Payload as EggRewardRecord;
+
+            Assert.AreEqual(rewardA.RewardId, rewardB.RewardId);
+        }
+
+        [Test]
+        public void BirdCatalog_HigherPriceGeneratesHigherStats()
+        {
+            var ordered = PetStoreCatalog.BirdOffers.OrderBy(b => b.Price).ToList();
+            for (int i = 1; i < ordered.Count; i++)
+            {
+                Assert.GreaterOrEqual(ordered[i].Productivity, ordered[i - 1].Productivity);
+                Assert.GreaterOrEqual(ordered[i].Friendliness, ordered[i - 1].Friendliness);
+            }
+
+            Assert.AreEqual(BirdRarity.Exotic, ordered.Last().Rarity);
+        }
+
+        [Test]
+        public void PurchasedBirdAppearsInCareDashboard()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("Tester", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
+
+            Assert.IsTrue(game.BuyPetStoreBird("budgie"));
+            var careVm = game.GetCareDashboard();
+            Assert.IsTrue(careVm.Birds.Any(b => b.Name.Contains("Buddy")));
+        }
+
+        [Test]
+        public void FeedConsumesStoredFood_InsteadOfChargingMoney()
+        {
+            _controller.PetStore.BuySupply(BirdFoodType.SeedMix.ToString(), PetStoreSupplyType.BirdFood, 1);
             var bird = _controller.CurrentState.Birds.First();
+            decimal moneyBeforeFeed = _controller.CurrentState.Economy.CurrentBalance;
+
+            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
+
+            Assert.IsTrue(feedResult.IsSuccess);
+            Assert.AreEqual(0, _controller.CurrentState.PetStore.GetTotalFoodUnits());
+            Assert.AreEqual(moneyBeforeFeed, _controller.CurrentState.Economy.CurrentBalance);
+        }
+
+        [Test]
+        public void FeedFailsWhenNoStoredFoodExists()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            _controller.CurrentState.PetStore.BirdFoodByType.Clear();
+
+            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
+
+            Assert.IsFalse(feedResult.IsSuccess);
+            Assert.AreEqual("NoStoredFood", feedResult.ErrorCode);
+        }
+
+        [Test]
+        public void FeedingPreferredFood_IncreasesTrust()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            bird.PreferredFoods.Clear();
+            bird.PreferredFoods.Add(BirdFoodType.FruitMedley);
             bird.Trust = 0;
+            _controller.PetStore.BuySupply(BirdFoodType.FruitMedley.ToString(), PetStoreSupplyType.BirdFood, 1);
 
-            var noTrust = _controller.Simulation.RunDaySimulation();
-            var noTrustRevenue = ((Models.Simulation.DaySimulationResult)noTrust.Payload).Economy.TotalRevenue;
+            var feedResult = _controller.Care.PerformCareAction(bird.Id, CareActionIds.Feed);
 
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-            bird = _controller.CurrentState.Birds.First();
-            bird.Trust = 100;
-
-            var highTrust = _controller.Simulation.RunDaySimulation();
-            var highTrustRevenue = ((Models.Simulation.DaySimulationResult)highTrust.Payload).Economy.TotalRevenue;
-
-            Assert.Greater(highTrustRevenue, noTrustRevenue);
+            Assert.IsTrue(feedResult.IsSuccess);
+            Assert.AreEqual(10, bird.Trust);
         }
 
         [Test]
-        public void FriendshipIncreasesSimulationCashOutput()
+        public void TrustAndFriendshipPersistThroughLoad()
         {
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-            _controller.SetPhaseForTests(GamePhase.EveningLoop);
-            _controller.CurrentState.Economy.CurrentBalance = 5000m;
-            _controller.PetStore.BuyBird("budgie");
-
             var birdA = _controller.CurrentState.Birds[0];
-            var birdB = _controller.CurrentState.Birds[1];
-            birdA.FriendBirdIds.Clear();
-            birdB.FriendBirdIds.Clear();
-            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
-
-            _controller.SetPhaseForTests(GamePhase.DayLoop);
-            var noFriend = _controller.Simulation.RunDaySimulation();
-            var noFriendRevenue = ((Models.Simulation.DaySimulationResult)noFriend.Payload).Economy.TotalRevenue;
-
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-            _controller.SetPhaseForTests(GamePhase.EveningLoop);
-            _controller.CurrentState.Economy.CurrentBalance = 5000m;
             _controller.PetStore.BuyBird("budgie");
+            var birdB = _controller.CurrentState.Birds.Last();
 
-            birdA = _controller.CurrentState.Birds[0];
-            birdB = _controller.CurrentState.Birds[1];
+            birdA.Trust = 33;
             birdA.AddFriend(birdB.Id);
             birdB.AddFriend(birdA.Id);
-            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
 
-            _controller.SetPhaseForTests(GamePhase.DayLoop);
-            var withFriend = _controller.Simulation.RunDaySimulation();
-            var withFriendRevenue = ((Models.Simulation.DaySimulationResult)withFriend.Payload).Economy.TotalRevenue;
+            var save = _controller.CurrentState;
+            var fresh = new BirdCafeController();
+            var loadResult = fresh.Meta.LoadGame(save);
 
-            Assert.Greater(withFriendRevenue, noFriendRevenue);
+            Assert.IsTrue(loadResult.IsSuccess);
+            Assert.AreEqual(33, fresh.CurrentState.Birds.First(b => b.Id == birdA.Id).Trust);
+            Assert.IsTrue(fresh.CurrentState.Birds.First(b => b.Id == birdA.Id).FriendBirdIds.Contains(birdB.Id));
         }
 
         [Test]
-        public void TrustAndFriendshipRevenueBonuses_AreDeterministicForSameSeed()
+        public void MultipleBirdsCanMaintainFriendships()
         {
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-            _controller.SetPhaseForTests(GamePhase.EveningLoop);
-            _controller.CurrentState.Economy.CurrentBalance = 5000m;
             _controller.PetStore.BuyBird("budgie");
-            var birdA = _controller.CurrentState.Birds[0];
-            var birdB = _controller.CurrentState.Birds[1];
-            birdA.Trust = 80;
-            birdB.Trust = 60;
-            birdA.AddFriend(birdB.Id);
-            birdB.AddFriend(birdA.Id);
-            var seed = _controller.CurrentState.CurrentDayState.CurrentPlan.DaySeed;
-            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
+            _controller.PetStore.BuyBird("cockatiel");
 
-            _controller.SetPhaseForTests(GamePhase.DayLoop);
-            var first = (Models.Simulation.DaySimulationResult)_controller.Simulation.RunDaySimulation().Payload;
+            var birds = _controller.CurrentState.Birds;
+            birds[0].AddFriend(birds[1].Id);
+            birds[1].AddFriend(birds[2].Id);
+            birds[2].AddFriend(birds[0].Id);
 
-            var secondController = new BirdCafeController();
-            secondController.Meta.StartNewGame("TestPlayer", "TestCafe");
-            secondController.SetPhaseForTests(GamePhase.EveningLoop);
-            secondController.CurrentState.Economy.CurrentBalance = 5000m;
-            secondController.PetStore.BuyBird("budgie");
-            var secondBirdA = secondController.CurrentState.Birds[0];
-            var secondBirdB = secondController.CurrentState.Birds[1];
-            secondBirdA.Trust = 80;
-            secondBirdB.Trust = 60;
-            secondBirdA.AddFriend(secondBirdB.Id);
-            secondBirdB.AddFriend(secondBirdA.Id);
-            secondController.CurrentState.CurrentDayState.CurrentPlan.DaySeed = seed;
-            secondController.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { secondBirdA.Id, secondBirdB.Id };
-            secondController.SetPhaseForTests(GamePhase.DayLoop);
-            var second = (Models.Simulation.DaySimulationResult)secondController.Simulation.RunDaySimulation().Payload;
+            Assert.IsTrue(birds[0].FriendBirdIds.Contains(birds[1].Id));
+            Assert.IsTrue(birds[1].FriendBirdIds.Contains(birds[2].Id));
+            Assert.IsTrue(birds[2].FriendBirdIds.Contains(birds[0].Id));
+        }
+    }
 
-            Assert.AreEqual(first.Economy.TotalRevenue, second.Economy.TotalRevenue);
+    internal static class ControllerTestExtensions
+    {
+        internal static void SetPhaseForTests(this BirdCafeController controller, GamePhase phase)
+        {
+            typeof(BirdCafeController)
+                .GetMethod("SetPhase", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                .Invoke(controller, new object[] { phase });
         }
     }
 }
@@ -8507,6 +8015,722 @@ namespace BirdCafe.Shared.Engine
 }
 </file>
 
+<file path="Runtime/GameSave.cs">
+using BirdCafe.Shared.Models.Birds;
+using BirdCafe.Shared.Models.Cafe;
+using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Meta;
+using BirdCafe.Shared.Models.Simulation;
+using System;
+using System.Collections.Generic;
+
+namespace BirdCafe.Shared
+{
+    /// <summary>
+    /// The root data object for a saved game.
+    /// Contains all persistent data needed to restore a session.
+    /// </summary>
+    [Serializable]
+    public class GameSave
+    {
+        /// <summary>
+        /// Unique ID for the save file.
+        /// </summary>
+        public string SaveId { get; set; } = Guid.NewGuid().ToString();
+
+        /// <summary>
+        /// Version number of the save format for backward compatibility.
+        /// </summary>
+        public int SchemaVersion { get; set; } = 1;
+
+        /// <summary>
+        /// Timestamp of when the file was last written.
+        /// </summary>
+        public DateTime LastSaved { get; set; } = DateTime.Now;
+
+        // Time
+
+        /// <summary>
+        /// The current integer day number (1, 2, 3...).
+        /// </summary>
+        public int CurrentDayNumber { get; set; } = 1;
+
+        /// <summary>
+        /// The current day of the week (Monday, Tuesday...).
+        /// </summary>
+        public DayOfWeek CurrentDayName { get; set; } = DayOfWeek.Monday;
+
+        /// <summary>
+        /// The current week number.
+        /// </summary>
+        public int CurrentWeekNumber { get; set; } = 1;
+
+        // Meta
+
+        /// <summary>
+        /// Player profile information.
+        /// </summary>
+        public PlayerProfile Profile { get; set; } = new PlayerProfile();
+
+        /// <summary>
+        /// User preferences/settings.
+        /// </summary>
+        public PlayerPreferences Preferences { get; set; } = new PlayerPreferences();
+
+        /// <summary>
+        /// Game configuration values (constants and balancing).
+        /// </summary>
+        public GameConfiguration Config { get; set; } = new GameConfiguration();
+
+        /// <summary>
+        /// Tracks narrative progression flags.
+        /// </summary>
+        public StoryState Story { get; set; } = new StoryState();
+
+        // World
+
+        /// <summary>
+        /// State of the physical cafe (Inventory, Popularity).
+        /// </summary>
+        public CafeState Cafe { get; set; } = new CafeState();
+
+        /// <summary>
+        /// Financial state (Balance, Ledger).
+        /// </summary>
+        public EconomyState Economy { get; set; } = new EconomyState();
+
+        /// <summary>
+        /// Persistent inventory and unlock data for Pete's Pet Store.
+        /// </summary>
+        public PetStoreState PetStore { get; set; } = new PetStoreState();
+
+        /// <summary>
+        /// List of all birds owned by the player.
+        /// </summary>
+        public List<Bird> Birds { get; set; } = new List<Bird>();
+
+        // History
+
+        /// <summary>
+        /// Complete history of detailed simulation results for previous days.
+        /// </summary>
+        public List<DaySimulationResult> PastDayResults { get; set; } = new List<DaySimulationResult>();
+
+        /// <summary>
+        /// History of weekly summary reports.
+        /// </summary>
+        public List<WeeklySummary> PastWeeklySummaries { get; set; } = new List<WeeklySummary>();
+
+        // Current State logic
+
+        /// <summary>
+        /// The active state for the current day, including the daily plan.
+        /// </summary>
+        public DayState CurrentDayState { get; set; } = new DayState();
+    }
+}
+</file>
+
+<file path="Runtime/Models/Economy/Finance.cs">
+using BirdCafe.Shared.Enums;
+using System;
+using System.Collections.Generic;
+
+namespace BirdCafe.Shared.Models.Economy
+{
+    /// <summary>
+    /// Tracks the overall financial status of the player.
+    /// </summary>
+    [Serializable]
+    public class EconomyState
+    {
+        /// <summary>
+        /// The current amount of money available to spend.
+        /// </summary>
+        public decimal CurrentBalance { get; set; }
+
+        /// <summary>
+        /// A history of all financial transactions.
+        /// </summary>
+        public List<LedgerEntry> Ledger { get; set; } = new List<LedgerEntry>();
+    }
+
+    /// <summary>
+    /// Represents a single financial transaction (Income or Expense).
+    /// </summary>
+    [Serializable]
+    public class LedgerEntry
+    {
+        /// <summary>
+        /// Unique identifier for the transaction.
+        /// </summary>
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+
+        /// <summary>
+        /// When the transaction occurred.
+        /// </summary>
+        public DateTime Timestamp { get; set; }
+
+        /// <summary>
+        /// The in-game day number when the transaction occurred.
+        /// </summary>
+        public int DayNumber { get; set; }
+
+        /// <summary>
+        /// The in-game week number when the transaction occurred.
+        /// </summary>
+        public int WeekNumber { get; set; }
+
+        /// <summary>
+        /// The monetary value. Positive for income, negative for expenses.
+        /// </summary>
+        public decimal Amount { get; set; }
+
+        /// <summary>
+        /// Quantity of item related to this entry, if applicable (e.g., number of coffee units sold or restocked).
+        /// </summary>
+        public int Quantity { get; set; }
+
+        /// <summary>
+        /// Textual reason for the transaction (e.g., "Sale of Coffee").
+        /// </summary>
+        public string Reason { get; set; }
+
+        /// <summary>
+        /// The classification of the expense or income.
+        /// </summary>
+        public ExpenseCategory Category { get; set; }
+
+        /// <summary>
+        /// The product involved in the transaction, if any.
+        /// </summary>
+        public ProductType? RelatedProduct { get; set; }
+
+        /// <summary>
+        /// The specific catalog/store item involved in the transaction, if any.
+        /// Useful alongside <see cref="Category"/> to distinguish unique items
+        /// within a broader expense category such as <see cref="ExpenseCategory.FoodAndSupplies"/>.
+        /// </summary>
+        public string ItemId { get; set; }
+
+        /// <summary>
+        /// The ID of the bird involved, if applicable (e.g., for Vet bills).
+        /// </summary>
+        public string RelatedBirdId { get; set; }
+
+        /// <summary>
+        /// A short, user-friendly description of the transaction.
+        /// </summary>
+        public string ShortDescription { get; set; }
+    }
+}
+</file>
+
+<file path="Runtime/ViewModels/GeneralViewModels.cs">
+using System;
+
+namespace BirdCafe.Shared.ViewModels
+{
+    /// <summary>
+    /// Enumerates all possible high-level screens in the game application.
+    /// </summary>
+    public enum GameScreen
+    {
+        /// <summary>
+        /// The main start menu.
+        /// </summary>
+        MainMenu,
+
+        /// <summary>
+        /// The load game selection screen.
+        /// </summary>
+        LoadGame,
+
+        /// <summary>
+        /// The first-time user tutorial.
+        /// </summary>
+        Tutorial,
+
+        /// <summary>
+        /// The morning intro banner ("Day 1 - Monday").
+        /// </summary>
+        DayIntro,
+
+        /// <summary>
+        /// The active workday simulation view.
+        /// </summary>
+        DaySimulation,
+
+        Hub,
+
+        /// <summary>
+        /// The end-of-day financial summary.
+        /// </summary>
+        EveningSummary,
+
+        /// <summary>
+        /// The evening care interface (feeding/petting).
+        /// </summary>
+        EveningCare,
+
+        /// <summary>
+        /// The shop and staffing planning interface.
+        /// </summary>
+        EveningPlanning,
+
+        EveningPetStore,
+
+        EveningPetStoreBirds,
+
+        EveningPetStoreSupplies,
+
+        /// <summary>
+        /// The weekly performance report.
+        /// </summary>
+        WeeklySummary,
+
+        /// <summary>
+        /// The game over screen.
+        /// </summary>
+        GameOver,
+
+        /// <summary>
+        /// The Oracle Chat interface.
+        /// </summary>
+        Chat
+    }
+
+    /// <summary>
+    /// Represents a save file slot for the load menu.
+    /// </summary>
+    [Serializable]
+    public class SaveSlotViewModel
+    {
+        /// <summary>
+        /// ID of the save.
+        /// </summary>
+        public string Id { get; set; }
+
+        /// <summary>
+        /// Name of player in save.
+        /// </summary>
+        public string PlayerName { get; set; }
+
+        /// <summary>
+        /// Current day reached.
+        /// </summary>
+        public int DayNumber { get; set; }
+
+        /// <summary>
+        /// Current week reached.
+        /// </summary>
+        public int WeekNumber { get; set; }
+    }
+}
+</file>
+
+<file path="Tests/BirdCafe.Shared.Tests/SimulationTests.cs">
+using BirdCafe.Shared.Engine;
+using BirdCafe.Shared.Enums;
+using NUnit.Framework;
+using System.Linq;
+
+namespace BirdCafe.Shared.Tests
+{
+    public class SimulationTests
+    {
+        private BirdCafeController _controller;
+
+        [SetUp]
+        public void Setup()
+        {
+            _controller = new BirdCafeController();
+        }
+
+        [Test]
+        public void StartNewGame_SetsUpDefaults()
+        {
+            var res = _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+
+            Assert.IsTrue(res.IsSuccess);
+            Assert.AreEqual(1, _controller.CurrentState.CurrentDayNumber);
+            Assert.AreEqual(GamePhase.DayLoop, _controller.CurrentPhase);
+            Assert.AreEqual(1, _controller.CurrentState.Birds.Count);
+            Assert.AreEqual("Peep", _controller.CurrentState.Birds[0].Name);
+        }
+
+        [Test]
+        public void RunDaySimulation_GeneratesTimeline()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+
+            var res = _controller.Simulation.RunDaySimulation();
+
+            Assert.IsTrue(res.IsSuccess, "Simulation should succeed");
+
+            var resultData = res.Payload as Models.Simulation.DaySimulationResult;
+            Assert.IsNotNull(resultData);
+
+            Assert.Greater(resultData.Timeline.Count, 0, "Should have timeline events");
+            Assert.Greater(resultData.Customers.CustomersArrived, 0, "Customers should arrive");
+            Assert.GreaterOrEqual(resultData.Economy.EndingMoney, resultData.Economy.StartingMoney);
+        }
+
+        [Test]
+        public void RunDaySimulation_AttributesCustomersToBirds()
+        {
+            // THIS TEST would have caught the bug where Bird.CustomersServed was 0.
+
+            // 1. Setup Day 1
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+
+            // 2. Run Simulation
+            var res = _controller.Simulation.RunDaySimulation();
+            var resultData = res.Payload as Models.Simulation.DaySimulationResult;
+
+            // 3. Validate Global Stats
+            Assert.Greater(resultData.Customers.CustomersServed, 0, "Global served count should be > 0");
+
+            // 4. Validate Individual Bird Stats
+            var peepSummary = resultData.BirdSummaries.First(b => b.BirdName == "Peep");
+
+            Assert.IsTrue(peepSummary.WorkedToday, "Peep should be marked as working");
+
+            // The fix ensures this is now true:
+            Assert.AreEqual(resultData.Customers.CustomersServed, peepSummary.CustomersServed,
+                "Since Peep is the only worker, they must have served all the customers.");
+
+            Assert.Greater(peepSummary.CustomersServed, 0, "Peep's individual served count must be > 0");
+        }
+
+        [Test]
+        public void PurchasingInventory_DeductsMoney()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+
+            _controller.Simulation.RunDaySimulation();
+            _controller.Simulation.AdvanceFromSimulation(); // To EveningLoop
+
+            decimal startMoney = _controller.CurrentState.Economy.CurrentBalance;
+
+            _controller.Planning.SetInventoryOrder(ProductType.Coffee, 5);
+            var res = _controller.Planning.FinalizeDay();
+
+            Assert.IsTrue(res.IsSuccess);
+
+            // Use Last() on Ledger to verify exact transaction
+            var lastEntry = _controller.CurrentState.Economy.Ledger.Last();
+            Assert.AreEqual(-5.0m, lastEntry.Amount);
+            Assert.AreEqual("Inventory Restock: Coffee", lastEntry.Reason);
+            Assert.AreEqual(ExpenseCategory.InventoryCoffee, lastEntry.Category);
+        }
+
+
+        [Test]
+        public void TrustIncreasesSimulationCashOutput()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            var bird = _controller.CurrentState.Birds.First();
+            bird.Trust = 0;
+
+            var noTrust = _controller.Simulation.RunDaySimulation();
+            var noTrustRevenue = ((Models.Simulation.DaySimulationResult)noTrust.Payload).Economy.TotalRevenue;
+
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            bird = _controller.CurrentState.Birds.First();
+            bird.Trust = 100;
+
+            var highTrust = _controller.Simulation.RunDaySimulation();
+            var highTrustRevenue = ((Models.Simulation.DaySimulationResult)highTrust.Payload).Economy.TotalRevenue;
+
+            Assert.Greater(highTrustRevenue, noTrustRevenue);
+        }
+
+        [Test]
+        public void FriendshipIncreasesSimulationCashOutput()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            _controller.SetPhaseForTests(GamePhase.EveningLoop);
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
+            _controller.PetStore.BuyBird("budgie");
+
+            var birdA = _controller.CurrentState.Birds[0];
+            var birdB = _controller.CurrentState.Birds[1];
+            birdA.FriendBirdIds.Clear();
+            birdB.FriendBirdIds.Clear();
+            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
+
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+            var noFriend = _controller.Simulation.RunDaySimulation();
+            var noFriendRevenue = ((Models.Simulation.DaySimulationResult)noFriend.Payload).Economy.TotalRevenue;
+
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            _controller.SetPhaseForTests(GamePhase.EveningLoop);
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
+            _controller.PetStore.BuyBird("budgie");
+
+            birdA = _controller.CurrentState.Birds[0];
+            birdB = _controller.CurrentState.Birds[1];
+            birdA.AddFriend(birdB.Id);
+            birdB.AddFriend(birdA.Id);
+            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
+
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+            var withFriend = _controller.Simulation.RunDaySimulation();
+            var withFriendRevenue = ((Models.Simulation.DaySimulationResult)withFriend.Payload).Economy.TotalRevenue;
+
+            Assert.Greater(withFriendRevenue, noFriendRevenue);
+        }
+
+        [Test]
+        public void TrustAndFriendshipRevenueBonuses_AreDeterministicForSameSeed()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+            _controller.SetPhaseForTests(GamePhase.EveningLoop);
+            _controller.CurrentState.Economy.CurrentBalance = 5000m;
+            _controller.PetStore.BuyBird("budgie");
+            var birdA = _controller.CurrentState.Birds[0];
+            var birdB = _controller.CurrentState.Birds[1];
+            birdA.Trust = 80;
+            birdB.Trust = 60;
+            birdA.AddFriend(birdB.Id);
+            birdB.AddFriend(birdA.Id);
+            var seed = _controller.CurrentState.CurrentDayState.CurrentPlan.DaySeed;
+            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
+
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+            var first = (Models.Simulation.DaySimulationResult)_controller.Simulation.RunDaySimulation().Payload;
+
+            var secondController = new BirdCafeController();
+            secondController.Meta.StartNewGame("TestPlayer", "TestCafe");
+            secondController.SetPhaseForTests(GamePhase.EveningLoop);
+            secondController.CurrentState.Economy.CurrentBalance = 5000m;
+            secondController.PetStore.BuyBird("budgie");
+            var secondBirdA = secondController.CurrentState.Birds[0];
+            var secondBirdB = secondController.CurrentState.Birds[1];
+            secondBirdA.Trust = 80;
+            secondBirdB.Trust = 60;
+            secondBirdA.AddFriend(secondBirdB.Id);
+            secondBirdB.AddFriend(secondBirdA.Id);
+            secondController.CurrentState.CurrentDayState.CurrentPlan.DaySeed = seed;
+            secondController.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { secondBirdA.Id, secondBirdB.Id };
+            secondController.SetPhaseForTests(GamePhase.DayLoop);
+            var second = (Models.Simulation.DaySimulationResult)secondController.Simulation.RunDaySimulation().Payload;
+
+            Assert.AreEqual(first.Economy.TotalRevenue, second.Economy.TotalRevenue);
+        }
+    }
+}
+</file>
+
+<file path="Runtime/Engine/Managers/PetStoreManager.cs">
+using BirdCafe.Shared.Engine.Utils;
+using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Birds;
+using BirdCafe.Shared.Models.Economy;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace BirdCafe.Shared.Engine.Managers
+{
+    /// <summary>
+    /// Handles Pete's Pet Store purchases and deterministic egg rewards.
+    /// </summary>
+    public class PetStoreManager
+    {
+        private const string InvalidPhaseCode = "InvalidPhase";
+        private const string InvalidItemCode = "InvalidItem";
+        private const string InvalidBirdFoodTypeCode = "InvalidBirdFoodType";
+        private const string InsufficientFundsCode = "InsufficientFunds";
+        private const string InvalidQuantityCode = "InvalidQuantity";
+
+        private readonly BirdCafeController _controller;
+
+        public PetStoreManager(BirdCafeController controller)
+        {
+            _controller = controller;
+        }
+
+        public EngineResult BuyBird(string speciesId)
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
+
+            var offer = PetStoreCatalog.FindBirdOffer(speciesId);
+            if (offer == null)
+                return EngineResult.Failure("InvalidBird", "That bird is not sold in Pete's Pet Store.");
+
+            if (_controller.CurrentState.Economy.CurrentBalance < offer.Price)
+                return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy this bird.");
+
+            var state = _controller.CurrentState;
+            var createdBird = new Bird
+            {
+                Name = PetStoreCatalog.BuildBirdName(offer.DisplayName, state.CurrentDayNumber, state.Birds.Count),
+                SpeciesId = offer.SpeciesId,
+                PrimaryColorHex = "#A8D8FF",
+                Productivity = offer.Productivity,
+                Friendliness = offer.Friendliness,
+                Reliability = offer.Reliability,
+                Mood = 75,
+                Hunger = 100,
+                Energy = 100,
+                Health = 100,
+                Trust = 0,
+                PreferredFoods = offer.PreferredFoods.ToList()
+            };
+
+            SpendMoney(offer.Price, 1, $"Bird: {offer.DisplayName}", ExpenseCategory.UpgradesAndCustomization, speciesId, createdBird.Id);
+
+            var existingFriend = state.Birds.FirstOrDefault();
+            if (existingFriend != null)
+            {
+                existingFriend.AddFriend(createdBird.Id);
+                createdBird.AddFriend(existingFriend.Id);
+            }
+
+            state.Birds.Add(createdBird);
+            state.CurrentDayState.CurrentPlan.BirdIdsWorking.Add(createdBird.Id);
+
+            return EngineResult.Success(createdBird);
+        }
+
+        public EngineResult BuySupply(string itemId, PetStoreSupplyType supplyType, int quantity = 1)
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
+
+            if (quantity <= 0)
+                return EngineResult.Failure(InvalidQuantityCode, "Quantity must be at least 1.");
+
+            var supply = PetStoreCatalog.FindSupplyOffer(itemId, supplyType);
+            if (supply == null)
+                return EngineResult.Failure(InvalidItemCode, "That store item is unavailable.");
+
+            if (supply.SupplyType == PetStoreSupplyType.BirdFood && supply.BirdFoodType == null)
+                return EngineResult.Failure(InvalidBirdFoodTypeCode, "That food type is unavailable.");
+
+            var totalCost = supply.Price * quantity;
+            if (_controller.CurrentState.Economy.CurrentBalance < totalCost)
+                return EngineResult.Failure(InsufficientFundsCode, "Not enough money to buy that item.");
+
+            SpendMoney(totalCost, quantity, $"Supply: {itemId} x{quantity}", supply.ExpenseCategory, supply.ItemId);
+            ApplySupplyPurchase(supply, quantity);
+
+            return EngineResult.Success();
+        }
+
+        public EngineResult OpenSpecialEggToy()
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
+
+            var state = _controller.CurrentState;
+            if (state.PetStore.SpecialEggToysOwned <= 0)
+                return EngineResult.Failure("NoEggToy", "You do not own any special egg toys.");
+
+            state.PetStore.SpecialEggToysOwned--;
+
+            // Deterministic: seed is a stable function of day and prior reward count.
+            int seed = state.CurrentDayState.CurrentPlan.DaySeed ^ (state.PetStore.EggRewardHistory.Count + 1) ^ (state.CurrentDayNumber * 97);
+            var rng = new Random(seed);
+
+            var rewards = BuildRewardTable();
+            var reward = rewards[rng.Next(rewards.Count)];
+
+            ApplyEggReward(state.PetStore, reward);
+            state.PetStore.EggRewardHistory.Add(reward);
+
+            return EngineResult.Success(reward);
+        }
+
+        private void ApplySupplyPurchase(PetStoreSupplyDefinition supply, int quantity)
+        {
+            var store = _controller.CurrentState.PetStore;
+
+            if (supply.SupplyType == PetStoreSupplyType.BirdFood)
+            {
+                store.AddFood(supply.BirdFoodType.Value, quantity);
+                return;
+            }
+
+            if (supply.SupplyType == PetStoreSupplyType.Toy)
+            {
+                AddQuantity(store.OwnedToyQuantities, supply.ItemId, quantity);
+                return;
+            }
+
+            if (supply.SupplyType == PetStoreSupplyType.Costume)
+            {
+                AddQuantity(store.OwnedCostumeQuantities, supply.ItemId, quantity);
+                return;
+            }
+
+            store.SpecialEggToysOwned += quantity;
+        }
+
+        private List<EggRewardRecord> BuildRewardTable()
+        {
+            return new List<EggRewardRecord>
+            {
+                new EggRewardRecord { RewardType = EggRewardType.BirdBuff, RewardId = "Buff_Charm", RewardName = "Aura Buff", RewardDescription = "All birds gain +2 friendliness value in tomorrow's service flow." },
+                new EggRewardRecord { RewardType = EggRewardType.UniqueToy, RewardId = "Toy_StarlightSpinner", RewardName = "Starlight Spinner", RewardDescription = "Unique toy added to your collection." },
+                new EggRewardRecord { RewardType = EggRewardType.RareCostume, RewardId = "Costume_GoldenVest", RewardName = "Golden Vest", RewardDescription = "Rare costume added to wardrobe." }
+            };
+        }
+
+        private void ApplyEggReward(PetStoreState store, EggRewardRecord reward)
+        {
+            reward.DayNumber = _controller.CurrentState.CurrentDayNumber;
+
+            if (reward.RewardType == EggRewardType.BirdBuff)
+            {
+                store.TotalBirdBuffStacks += 1;
+                return;
+            }
+
+            if (reward.RewardType == EggRewardType.UniqueToy)
+            {
+                AddQuantity(store.OwnedToyQuantities, reward.RewardId, 1);
+                return;
+            }
+
+            AddQuantity(store.OwnedCostumeQuantities, reward.RewardId, 1);
+        }
+
+        private void SpendMoney(decimal amount, int quantity, string reason, ExpenseCategory category, string itemId = null, string relatedBirdId = null)
+        {
+            var economy = _controller.CurrentState.Economy;
+            economy.CurrentBalance -= amount;
+            economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = _controller.CurrentState.CurrentDayNumber,
+                WeekNumber = _controller.CurrentState.CurrentWeekNumber,
+                Amount = -amount,
+                Quantity = quantity,
+                Reason = reason,
+                Timestamp = DateTime.Now,
+                Category = category,
+                ShortDescription = reason,
+                ItemId = itemId,
+                RelatedBirdId = relatedBirdId
+            });
+        }
+
+        private void AddQuantity(Dictionary<string, int> map, string key, int amount)
+        {
+            if (!map.ContainsKey(key))
+            {
+                map[key] = 0;
+            }
+
+            map[key] += amount;
+        }
+    }
+}
+</file>
+
 <file path="Runtime/Engine/Managers/PlanningManager.cs">
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
@@ -8640,6 +8864,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 DayNumber = state.CurrentDayNumber,
                 WeekNumber = state.CurrentWeekNumber,
                 Amount = -cost,
+                Quantity = quantity,
                 Reason = $"Inventory Restock: {productType}",
                 Timestamp = DateTime.Now,
                 Category = category,
@@ -8683,225 +8908,6 @@ namespace BirdCafe.Shared.Engine.Managers
                 _controller.SetPhase(GamePhase.DayLoop);
             }
         }
-    }
-}
-</file>
-
-<file path="Runtime/GameSave.cs">
-using BirdCafe.Shared.Models.Birds;
-using BirdCafe.Shared.Models.Cafe;
-using BirdCafe.Shared.Models.Economy;
-using BirdCafe.Shared.Models.Meta;
-using BirdCafe.Shared.Models.Simulation;
-using System;
-using System.Collections.Generic;
-
-namespace BirdCafe.Shared
-{
-    /// <summary>
-    /// The root data object for a saved game.
-    /// Contains all persistent data needed to restore a session.
-    /// </summary>
-    [Serializable]
-    public class GameSave
-    {
-        /// <summary>
-        /// Unique ID for the save file.
-        /// </summary>
-        public string SaveId { get; set; } = Guid.NewGuid().ToString();
-
-        /// <summary>
-        /// Version number of the save format for backward compatibility.
-        /// </summary>
-        public int SchemaVersion { get; set; } = 1;
-
-        /// <summary>
-        /// Timestamp of when the file was last written.
-        /// </summary>
-        public DateTime LastSaved { get; set; } = DateTime.Now;
-
-        // Time
-
-        /// <summary>
-        /// The current integer day number (1, 2, 3...).
-        /// </summary>
-        public int CurrentDayNumber { get; set; } = 1;
-
-        /// <summary>
-        /// The current day of the week (Monday, Tuesday...).
-        /// </summary>
-        public DayOfWeek CurrentDayName { get; set; } = DayOfWeek.Monday;
-
-        /// <summary>
-        /// The current week number.
-        /// </summary>
-        public int CurrentWeekNumber { get; set; } = 1;
-
-        // Meta
-
-        /// <summary>
-        /// Player profile information.
-        /// </summary>
-        public PlayerProfile Profile { get; set; } = new PlayerProfile();
-
-        /// <summary>
-        /// User preferences/settings.
-        /// </summary>
-        public PlayerPreferences Preferences { get; set; } = new PlayerPreferences();
-
-        /// <summary>
-        /// Game configuration values (constants and balancing).
-        /// </summary>
-        public GameConfiguration Config { get; set; } = new GameConfiguration();
-
-        /// <summary>
-        /// Tracks narrative progression flags.
-        /// </summary>
-        public StoryState Story { get; set; } = new StoryState();
-
-        // World
-
-        /// <summary>
-        /// State of the physical cafe (Inventory, Popularity).
-        /// </summary>
-        public CafeState Cafe { get; set; } = new CafeState();
-
-        /// <summary>
-        /// Financial state (Balance, Ledger).
-        /// </summary>
-        public EconomyState Economy { get; set; } = new EconomyState();
-
-        /// <summary>
-        /// Persistent inventory and unlock data for Pete's Pet Store.
-        /// </summary>
-        public PetStoreState PetStore { get; set; } = new PetStoreState();
-
-        /// <summary>
-        /// List of all birds owned by the player.
-        /// </summary>
-        public List<Bird> Birds { get; set; } = new List<Bird>();
-
-        // History
-
-        /// <summary>
-        /// Complete history of detailed simulation results for previous days.
-        /// </summary>
-        public List<DaySimulationResult> PastDayResults { get; set; } = new List<DaySimulationResult>();
-
-        /// <summary>
-        /// History of weekly summary reports.
-        /// </summary>
-        public List<WeeklySummary> PastWeeklySummaries { get; set; } = new List<WeeklySummary>();
-
-        // Current State logic
-
-        /// <summary>
-        /// The active state for the current day, including the daily plan.
-        /// </summary>
-        public DayState CurrentDayState { get; set; } = new DayState();
-    }
-}
-</file>
-
-<file path="Runtime/ViewModels/GeneralViewModels.cs">
-using System;
-
-namespace BirdCafe.Shared.ViewModels
-{
-    /// <summary>
-    /// Enumerates all possible high-level screens in the game application.
-    /// </summary>
-    public enum GameScreen
-    {
-        /// <summary>
-        /// The main start menu.
-        /// </summary>
-        MainMenu,
-
-        /// <summary>
-        /// The load game selection screen.
-        /// </summary>
-        LoadGame,
-
-        /// <summary>
-        /// The first-time user tutorial.
-        /// </summary>
-        Tutorial,
-
-        /// <summary>
-        /// The morning intro banner ("Day 1 - Monday").
-        /// </summary>
-        DayIntro,
-
-        /// <summary>
-        /// The active workday simulation view.
-        /// </summary>
-        DaySimulation,
-
-        Hub,
-
-        /// <summary>
-        /// The end-of-day financial summary.
-        /// </summary>
-        EveningSummary,
-
-        /// <summary>
-        /// The evening care interface (feeding/petting).
-        /// </summary>
-        EveningCare,
-
-        /// <summary>
-        /// The shop and staffing planning interface.
-        /// </summary>
-        EveningPlanning,
-
-        EveningPetStore,
-
-        EveningPetStoreBirds,
-
-        EveningPetStoreSupplies,
-
-        /// <summary>
-        /// The weekly performance report.
-        /// </summary>
-        WeeklySummary,
-
-        /// <summary>
-        /// The game over screen.
-        /// </summary>
-        GameOver,
-
-        /// <summary>
-        /// The Oracle Chat interface.
-        /// </summary>
-        Chat
-    }
-
-    /// <summary>
-    /// Represents a save file slot for the load menu.
-    /// </summary>
-    [Serializable]
-    public class SaveSlotViewModel
-    {
-        /// <summary>
-        /// ID of the save.
-        /// </summary>
-        public string Id { get; set; }
-
-        /// <summary>
-        /// Name of player in save.
-        /// </summary>
-        public string PlayerName { get; set; }
-
-        /// <summary>
-        /// Current day reached.
-        /// </summary>
-        public int DayNumber { get; set; }
-
-        /// <summary>
-        /// Current week reached.
-        /// </summary>
-        public int WeekNumber { get; set; }
     }
 }
 </file>
@@ -9478,197 +9484,6 @@ namespace BirdCafe.Shared.Enums
         BirdBuff = 0,
         UniqueToy = 1,
         RareCostume = 2
-    }
-}
-</file>
-
-<file path="Runtime/Engine/Managers/CareManager.cs">
-using BirdCafe.Shared.Enums;
-using BirdCafe.Shared.Models.Birds;
-using BirdCafe.Shared.Models.Economy;
-using BirdCafe.Shared.Models.Meta;
-using System;
-using System.Linq;
-using BirdCafe.Shared.Engine.Utils;
-
-namespace BirdCafe.Shared.Engine.Managers
-{
-    /// <summary>
-    /// Handles interactions with birds during the Evening Loop (Feeding, Vet, etc.).
-    /// </summary>
-    public class CareManager
-    {
-        private readonly BirdCafeController _controller;
-
-        public CareManager(BirdCafeController controller)
-        {
-            _controller = controller;
-        }
-
-        public EngineResult PerformCareAction(string birdId, string actionId)
-        {
-            if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure("InvalidPhase", "Can only care for birds in the Evening.");
-
-            var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
-            if (bird == null)
-                return EngineResult.Failure("BirdNotFound", "Bird ID not found.");
-
-            var template = GetTemplate(actionId, _controller.CurrentState.Config);
-            if (template == null)
-                return EngineResult.Failure("InvalidAction", "Unknown care action.");
-
-            if (actionId == CareActionIds.Feed)
-            {
-                return PerformFeedAction(bird, template);
-            }
-
-            var state = _controller.CurrentState;
-            if (state.Economy.CurrentBalance < template.MoneyCost)
-                return EngineResult.Failure("InsufficientFunds", "Not enough money.");
-
-            if (template.MoneyCost > 0)
-            {
-                state.Economy.CurrentBalance -= template.MoneyCost;
-                state.Economy.Ledger.Add(new LedgerEntry
-                {
-                    DayNumber = state.CurrentDayNumber,
-                    WeekNumber = state.CurrentWeekNumber,
-                    Amount = -template.MoneyCost,
-                    Reason = template.DisplayName,
-                    Timestamp = DateTime.Now,
-                    Category = GetExpenseCategoryForCareAction(actionId),
-                    RelatedBirdId = bird.Id,
-                    ShortDescription = $"{template.DisplayName} for {bird.Name}"
-                });
-            }
-
-            bird.ApplyCareEffect(template);
-
-            if (actionId == CareActionIds.Vet)
-            {
-                bird.IsSick = false;
-                bird.IsSeverelySick = false;
-            }
-
-            return EngineResult.Success(bird);
-        }
-
-        public EngineResult ToggleRest(string birdId)
-        {
-            if (_controller.CurrentPhase != GamePhase.EveningLoop)
-                return EngineResult.Failure("InvalidPhase", "Wrong phase.");
-
-            var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
-            if (bird == null)
-                return EngineResult.Failure("BirdNotFound", "Bird ID not found.");
-
-            bird.AssignedDayOffNextDay = !bird.AssignedDayOffNextDay;
-
-            return EngineResult.Success(bird);
-        }
-
-        private EngineResult PerformFeedAction(Bird bird, CareActionTemplate template)
-        {
-            var state = _controller.CurrentState;
-            var store = state.PetStore;
-
-            if (store.GetTotalFoodUnits() <= 0)
-                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
-
-            var selectedFoodType = SelectFoodTypeForBird(bird, store);
-            if (selectedFoodType == null)
-                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
-
-            if (!store.TryConsumeFood(selectedFoodType.Value, 1))
-                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
-
-            bird.ApplyCareEffect(template);
-
-            float trustGain = bird.PrefersFood(selectedFoodType.Value) ? 10f : 2f;
-            bird.IncreaseTrust(trustGain);
-
-            var consumedSupply = PetStoreCatalog.FindSupplyOffer(selectedFoodType.Value.ToString(), PetStoreSupplyType.BirdFood);
-            state.Economy.Ledger.Add(new LedgerEntry {
-                DayNumber = state.CurrentDayNumber,
-                WeekNumber = state.CurrentWeekNumber,
-                Amount = 0m,
-                Reason = "Bird Food Consumed",
-                Timestamp = DateTime.Now,
-                Category = ExpenseCategory.FoodAndSupplies,
-                ItemId = consumedSupply?.ItemId ?? selectedFoodType.Value.ToString(),
-                RelatedBirdId = bird.Id,
-                ShortDescription = $"{bird.Name} ate {(consumedSupply?.DisplayName ?? selectedFoodType.Value.ToString())}"
-            });
-
-            return EngineResult.Success(bird);
-        }
-
-        private ExpenseCategory GetExpenseCategoryForCareAction(string actionId)
-        {
-            switch (actionId)
-            {
-                case CareActionIds.Vet:
-                    return ExpenseCategory.VetCare;
-                case CareActionIds.Play:
-                    return ExpenseCategory.ToysAndActivities;
-                default:
-                    return ExpenseCategory.FoodAndSupplies;
-            }
-        }
-
-        private BirdFoodType? SelectFoodTypeForBird(Bird bird, PetStoreState store)
-        {
-            foreach (var preferred in bird.PreferredFoods)
-            {
-                if (store.GetFoodUnits(preferred) > 0)
-                    return preferred;
-            }
-
-            foreach (BirdFoodType type in Enum.GetValues(typeof(BirdFoodType)))
-            {
-                if (store.GetFoodUnits(type) > 0)
-                    return type;
-            }
-
-            return null;
-        }
-
-        private CareActionTemplate GetTemplate(string id, GameConfiguration config)
-        {
-            if (id == CareActionIds.Feed)
-                return new CareActionTemplate
-                {
-                    ActionId = CareActionIds.Feed,
-                    DisplayName = "Feed",
-                    MoneyCost = 0,
-                    HungerChange = 30,
-                    MoodChange = 5
-                };
-
-            if (id == CareActionIds.Vet)
-                return new CareActionTemplate
-                {
-                    ActionId = CareActionIds.Vet,
-                    DisplayName = "Vet Visit",
-                    MoneyCost = config.BaselineVetCost,
-                    HealthChange = 50,
-                    StressChange = -20
-                };
-
-            if (id == CareActionIds.Play)
-                return new CareActionTemplate
-                {
-                    ActionId = CareActionIds.Play,
-                    DisplayName = "Play Time",
-                    MoneyCost = config.BaselinePlayCost,
-                    MoodChange = 20,
-                    EnergyChange = -5,
-                    StressChange = -10
-                };
-
-            return null;
-        }
     }
 }
 </file>
@@ -10350,6 +10165,197 @@ namespace BirdCafe.Shared.Models.Meta
         /// Standard cost for playing with a bird (Toys, etc).
         /// </summary>
         public decimal BaselinePlayCost { get; set; } = 0.00m;
+    }
+}
+</file>
+
+<file path="Runtime/Engine/Managers/CareManager.cs">
+using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Birds;
+using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Meta;
+using System;
+using System.Linq;
+using BirdCafe.Shared.Engine.Utils;
+
+namespace BirdCafe.Shared.Engine.Managers
+{
+    /// <summary>
+    /// Handles interactions with birds during the Evening Loop (Feeding, Vet, etc.).
+    /// </summary>
+    public class CareManager
+    {
+        private readonly BirdCafeController _controller;
+
+        public CareManager(BirdCafeController controller)
+        {
+            _controller = controller;
+        }
+
+        public EngineResult PerformCareAction(string birdId, string actionId)
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure("InvalidPhase", "Can only care for birds in the Evening.");
+
+            var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
+            if (bird == null)
+                return EngineResult.Failure("BirdNotFound", "Bird ID not found.");
+
+            var template = GetTemplate(actionId, _controller.CurrentState.Config);
+            if (template == null)
+                return EngineResult.Failure("InvalidAction", "Unknown care action.");
+
+            if (actionId == CareActionIds.Feed)
+            {
+                return PerformFeedAction(bird, template);
+            }
+
+            var state = _controller.CurrentState;
+            if (state.Economy.CurrentBalance < template.MoneyCost)
+                return EngineResult.Failure("InsufficientFunds", "Not enough money.");
+
+            if (template.MoneyCost > 0)
+            {
+                state.Economy.CurrentBalance -= template.MoneyCost;
+                state.Economy.Ledger.Add(new LedgerEntry
+                {
+                    DayNumber = state.CurrentDayNumber,
+                    WeekNumber = state.CurrentWeekNumber,
+                    Amount = -template.MoneyCost,
+                    Reason = template.DisplayName,
+                    Timestamp = DateTime.Now,
+                    Category = GetExpenseCategoryForCareAction(actionId),
+                    RelatedBirdId = bird.Id,
+                    ShortDescription = $"{template.DisplayName} for {bird.Name}"
+                });
+            }
+
+            bird.ApplyCareEffect(template);
+
+            if (actionId == CareActionIds.Vet)
+            {
+                bird.IsSick = false;
+                bird.IsSeverelySick = false;
+            }
+
+            return EngineResult.Success(bird);
+        }
+
+        public EngineResult ToggleRest(string birdId)
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure("InvalidPhase", "Wrong phase.");
+
+            var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
+            if (bird == null)
+                return EngineResult.Failure("BirdNotFound", "Bird ID not found.");
+
+            bird.AssignedDayOffNextDay = !bird.AssignedDayOffNextDay;
+
+            return EngineResult.Success(bird);
+        }
+
+        private EngineResult PerformFeedAction(Bird bird, CareActionTemplate template)
+        {
+            var state = _controller.CurrentState;
+            var store = state.PetStore;
+
+            if (store.GetTotalFoodUnits() <= 0)
+                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
+
+            var selectedFoodType = SelectFoodTypeForBird(bird, store);
+            if (selectedFoodType == null)
+                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
+
+            if (!store.TryConsumeFood(selectedFoodType.Value, 1))
+                return EngineResult.Failure("NoStoredFood", "No bird food in storage. Buy food at Pete's Pet Store first.");
+
+            bird.ApplyCareEffect(template);
+
+            float trustGain = bird.PrefersFood(selectedFoodType.Value) ? 10f : 2f;
+            bird.IncreaseTrust(trustGain);
+
+            var consumedSupply = PetStoreCatalog.FindSupplyOffer(selectedFoodType.Value.ToString(), PetStoreSupplyType.BirdFood);
+            state.Economy.Ledger.Add(new LedgerEntry {
+                DayNumber = state.CurrentDayNumber,
+                WeekNumber = state.CurrentWeekNumber,
+                Amount = 0m,
+                Reason = "Bird Food Consumed",
+                Timestamp = DateTime.Now,
+                Category = ExpenseCategory.FoodAndSupplies,
+                ItemId = consumedSupply?.ItemId ?? selectedFoodType.Value.ToString(),
+                RelatedBirdId = bird.Id,
+                ShortDescription = $"{bird.Name} ate {(consumedSupply?.DisplayName ?? selectedFoodType.Value.ToString())}"
+            });
+
+            return EngineResult.Success(bird);
+        }
+
+        private ExpenseCategory GetExpenseCategoryForCareAction(string actionId)
+        {
+            switch (actionId)
+            {
+                case CareActionIds.Vet:
+                    return ExpenseCategory.VetCare;
+                case CareActionIds.Play:
+                    return ExpenseCategory.ToysAndActivities;
+                default:
+                    return ExpenseCategory.FoodAndSupplies;
+            }
+        }
+
+        private BirdFoodType? SelectFoodTypeForBird(Bird bird, PetStoreState store)
+        {
+            foreach (var preferred in bird.PreferredFoods)
+            {
+                if (store.GetFoodUnits(preferred) > 0)
+                    return preferred;
+            }
+
+            foreach (BirdFoodType type in Enum.GetValues(typeof(BirdFoodType)))
+            {
+                if (store.GetFoodUnits(type) > 0)
+                    return type;
+            }
+
+            return null;
+        }
+
+        private CareActionTemplate GetTemplate(string id, GameConfiguration config)
+        {
+            if (id == CareActionIds.Feed)
+                return new CareActionTemplate
+                {
+                    ActionId = CareActionIds.Feed,
+                    DisplayName = "Feed",
+                    MoneyCost = 0,
+                    HungerChange = 30,
+                    MoodChange = 5
+                };
+
+            if (id == CareActionIds.Vet)
+                return new CareActionTemplate
+                {
+                    ActionId = CareActionIds.Vet,
+                    DisplayName = "Vet Visit",
+                    MoneyCost = config.BaselineVetCost,
+                    HealthChange = 50,
+                    StressChange = -20
+                };
+
+            if (id == CareActionIds.Play)
+                return new CareActionTemplate
+                {
+                    ActionId = CareActionIds.Play,
+                    DisplayName = "Play Time",
+                    MoneyCost = config.BaselinePlayCost,
+                    MoodChange = 20,
+                    EnergyChange = -5,
+                    StressChange = -10
+                };
+
+            return null;
+        }
     }
 }
 </file>
@@ -11277,6 +11283,8 @@ namespace BirdCafe.Shared.ViewModels
     {
         public decimal CurrentMoney { get; set; }
 
+        public int CurrentPopularity { get; set; }
+
         public int OwnedBirdCount { get; set; }
 
         public int BirdFoodUnits { get; set; }
@@ -11403,6 +11411,7 @@ namespace BirdCafe.Shared
 
         public BirdCafeController Controller => _controller;
         public GameScreen CurrentScreen => _currentScreen;
+        
 
         // Events
         public event Action<GameScreen> OnScreenChanged;
@@ -11651,6 +11660,7 @@ namespace BirdCafe.Shared
             return new PetStoreDashboardViewModel
             {
                 CurrentMoney = state.Economy.CurrentBalance,
+                CurrentPopularity = (int)state.Cafe.Popularity,
                 OwnedBirdCount = state.Birds.Count,
                 BirdFoodUnits = state.PetStore.GetTotalFoodUnits(),
                 SpecialEggToysOwned = state.PetStore.SpecialEggToysOwned,
@@ -12179,7 +12189,7 @@ namespace BirdCafe.Shared
 <file path="package.json">
 {
   "name": "com.birdcafe.shared",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "displayName": "Bird Cafe Shared Library",
   "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
   "unity": "2022.3",
