@@ -38,6 +38,7 @@ namespace BirdCafe.Shared
 
         public BirdCafeController Controller => _controller;
         public GameScreen CurrentScreen => _currentScreen;
+        
 
         // Events
         public event Action<GameScreen> OnScreenChanged;
@@ -286,6 +287,7 @@ namespace BirdCafe.Shared
             return new PetStoreDashboardViewModel
             {
                 CurrentMoney = state.Economy.CurrentBalance,
+                CurrentPopularity = (int)state.Cafe.Popularity,
                 OwnedBirdCount = state.Birds.Count,
                 BirdFoodUnits = state.PetStore.GetTotalFoodUnits(),
                 SpecialEggToysOwned = state.PetStore.SpecialEggToysOwned,

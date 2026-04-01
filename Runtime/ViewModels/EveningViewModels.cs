@@ -450,6 +450,8 @@ namespace BirdCafe.Shared.ViewModels
     {
         public decimal CurrentMoney { get; set; }
 
+        public int CurrentPopularity { get; set; }
+
         public int OwnedBirdCount { get; set; }
 
         public int BirdFoodUnits { get; set; }
