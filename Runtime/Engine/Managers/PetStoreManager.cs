@@ -21,11 +21,21 @@ namespace BirdCafe.Shared.Engine.Managers
 
         private readonly BirdCafeController _controller;
 
+        /// <summary>
+        /// Initializes the pet-store manager bound to a shared controller instance.
+        /// </summary>
         public PetStoreManager(BirdCafeController controller)
         {
             _controller = controller;
         }
 
+        /// <summary>
+        /// Purchases a bird offer from Pete's Pet Store and adds the created bird to the roster.
+        /// </summary>
+        /// <param name="speciesId">Catalog species id from <see cref="PetStoreCatalog.BirdOffers"/>.</param>
+        /// <returns>
+        /// Success with the created bird payload, or failure when phase, funds, or species selection is invalid.
+        /// </returns>
         public EngineResult BuyBird(string speciesId)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -70,6 +80,15 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success(createdBird);
         }
 
+        /// <summary>
+        /// Purchases a quantity of a store supply and applies it to persistent pet-store inventory state.
+        /// </summary>
+        /// <param name="itemId">Supply item id from the shared pet-store catalog.</param>
+        /// <param name="supplyType">Supply category used to disambiguate overlapping item ids.</param>
+        /// <param name="quantity">Quantity to purchase; must be greater than zero.</param>
+        /// <returns>
+        /// Success when funds are deducted and inventory is updated, otherwise a validation failure result.
+        /// </returns>
         public EngineResult BuySupply(string itemId, PetStoreSupplyType supplyType, int quantity = 1)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -95,6 +114,12 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success();
         }
 
+        /// <summary>
+        /// Opens one owned special egg toy and resolves its deterministic reward.
+        /// </summary>
+        /// <returns>
+        /// Success with the generated <see cref="EggRewardRecord"/> payload, or failure when the call is invalid.
+        /// </returns>
         public EngineResult OpenSpecialEggToy()
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -106,7 +131,8 @@ namespace BirdCafe.Shared.Engine.Managers
 
             state.PetStore.SpecialEggToysOwned--;
 
-            // Deterministic: seed is a stable function of day and prior reward count.
+            // Seed intentionally uses only persisted progression inputs so repeated runs of the same
+            // save/day/reward-history state produce the same reward sequence across front ends.
             int seed = state.CurrentDayState.CurrentPlan.DaySeed ^ (state.PetStore.EggRewardHistory.Count + 1) ^ (state.CurrentDayNumber * 97);
             var rng = new Random(seed);
 

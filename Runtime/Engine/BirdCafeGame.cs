@@ -36,17 +36,39 @@ namespace BirdCafe.Shared
         /// </summary>
         public string CurrentChatStateKey { get; private set; } = ChatData.ROOT_ID;
 
+        /// <summary>
+        /// Exposes the underlying controller for legacy integrations.
+        /// New UI code should prefer facade methods to preserve layering.
+        /// </summary>
         public BirdCafeController Controller => _controller;
+        /// <summary>
+        /// Gets the currently active screen in the facade-driven UI flow.
+        /// </summary>
         public GameScreen CurrentScreen => _currentScreen;
         
 
         // Events
+        /// <summary>
+        /// Raised after the facade transitions to a different screen.
+        /// </summary>
         public event Action<GameScreen> OnScreenChanged;
+        /// <summary>
+        /// Raised when an action needs short user-facing feedback.
+        /// </summary>
         public event Action<string> OnToastMessage;
+        /// <summary>
+        /// Raised when the observable money balance changes.
+        /// </summary>
         public event Action<decimal> OnMoneyChanged;
+        /// <summary>
+        /// Raised to request contextual help popup content.
+        /// </summary>
         public event Action<string> OnHelpPopup;
         
         // Chat event no longer passes messages, it just signals the UI to open/refresh
+        /// <summary>
+        /// Raised when Oracle chat should open or refresh.
+        /// </summary>
         public event Action OnChatPopup; 
 
         private BirdCafeGame()
@@ -58,11 +80,17 @@ namespace BirdCafe.Shared
         // META & MAIN MENU
         // =================================================================================
 
+        /// <summary>
+        /// Retrieves available save slots for load-game UI screens.
+        /// </summary>
         public List<SaveSlotViewModel> GetSaveSlots()
         {
             return _controller.Meta.GetAvailableSaves();
         }
 
+        /// <summary>
+        /// Creates a new game and transitions into tutorial on success.
+        /// </summary>
         public void StartNewGame(string playerName, string cafeName)
         {
             var result = _controller.Meta.StartNewGame(playerName, cafeName);
@@ -74,11 +102,17 @@ namespace BirdCafe.Shared
             TransitionTo(GameScreen.Tutorial);
         }
 
+        /// <summary>
+        /// Continues from a selected save slot and enters day intro flow.
+        /// </summary>
         public void LoadGame(string saveId)
         {
             TransitionTo(GameScreen.DayIntro);
         }
 
+        /// <summary>
+        /// Requests the help popup for a specific context key.
+        /// </summary>
         public void FireHelpPopup(string context = "General")
         {
             OnHelpPopup?.Invoke(context);
@@ -125,6 +159,9 @@ namespace BirdCafe.Shared
         // TUTORIAL
         // =================================================================================
 
+        /// <summary>
+        /// Builds tutorial copy shown to first-time players.
+        /// </summary>
         public TutorialViewModel GetTutorialContent()
         {
             return new TutorialViewModel
@@ -139,6 +176,9 @@ namespace BirdCafe.Shared
             };
         }
 
+        /// <summary>
+        /// Completes tutorial navigation and enters day intro.
+        /// </summary>
         public void CompleteTutorial()
         {
             TransitionTo(GameScreen.DayIntro);
@@ -148,6 +188,9 @@ namespace BirdCafe.Shared
         // DAY SIMULATION
         // =================================================================================
 
+        /// <summary>
+        /// Builds the day-intro view model shown before simulation playback.
+        /// </summary>
         public DayIntroViewModel GetDayIntro()
         {
             var state = _controller.CurrentState;
@@ -161,6 +204,9 @@ namespace BirdCafe.Shared
             };
         }
 
+        /// <summary>
+        /// Starts daily simulation or reuses a cached result for the current day.
+        /// </summary>
         public bool StartSimulationPlayback()
         {
             if (_cachedSimResult != null && _cachedSimResult.DayNumber == _controller.CurrentState.CurrentDayNumber)
@@ -182,6 +228,9 @@ namespace BirdCafe.Shared
             return true;
         }
 
+        /// <summary>
+        /// Projects simulation timeline records into UI playback events.
+        /// </summary>
         public List<UiTimelineEvent> GetDayTimeline()
         {
             if (_cachedSimResult == null) return new List<UiTimelineEvent>();
@@ -197,6 +246,8 @@ namespace BirdCafe.Shared
                 string timeString = DateTime.Today.Add(eventTime).ToString("hh:mm tt");
                 var birdName = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == t.BirdId)?.Name ?? "Unknown";
 
+                // Fall back to generated descriptions so timeline playback remains readable
+                // even when simulation events did not assign an explicit reason code.
                 string desc = t.ReasonCode;
                 if (string.IsNullOrEmpty(desc))
                 {
@@ -221,6 +272,9 @@ namespace BirdCafe.Shared
             }).ToList(); 
         }
 
+        /// <summary>
+        /// Advances from simulation into evening progression when valid.
+        /// </summary>
         public void FinishSimulation()
         {
             var res = _controller.Simulation.AdvanceFromSimulation();
@@ -234,41 +288,65 @@ namespace BirdCafe.Shared
         // EVENING HUB NAVIGATION
         // =================================================================================
 
+        /// <summary>
+        /// Navigates to the evening hub screen.
+        /// </summary>
         public void GoToHub()
         {
             TransitionTo(GameScreen.Hub);
         }
 
+        /// <summary>
+        /// Navigates to the evening summary screen.
+        /// </summary>
         public void GoToSummary()
         {
             TransitionTo(GameScreen.EveningSummary);
         }
 
+        /// <summary>
+        /// Navigates to the evening care screen.
+        /// </summary>
         public void GoToCare()
         {
             TransitionTo(GameScreen.EveningCare);
         }
 
+        /// <summary>
+        /// Navigates to the evening planning screen.
+        /// </summary>
         public void GoToPlanning()
         {
             TransitionTo(GameScreen.EveningPlanning);
         }
 
+        /// <summary>
+        /// Navigates to the pet-store dashboard screen.
+        /// </summary>
         public void GoToPetStore()
         {
             TransitionTo(GameScreen.EveningPetStore);
         }
 
+        /// <summary>
+        /// Navigates to the pet-store bird offers screen.
+        /// </summary>
         public void GoToPetStoreBirds()
         {
             TransitionTo(GameScreen.EveningPetStoreBirds);
         }
 
+        /// <summary>
+        /// Navigates to the pet-store supply offers screen.
+        /// </summary>
         public void GoToPetStoreSupplies()
         {
             TransitionTo(GameScreen.EveningPetStoreSupplies);
         }
 
+        /// <summary>
+        /// Builds summary data for the evening hub screen.
+        /// </summary>
         public EveningHubViewModel GetEveningHub()
         {
             var state = _controller.CurrentState;
@@ -280,6 +358,9 @@ namespace BirdCafe.Shared
             };
         }
 
+        /// <summary>
+        /// Builds pet-store dashboard data including ownership and latest reward context.
+        /// </summary>
         public PetStoreDashboardViewModel GetPetStoreDashboard()
         {
             var state = _controller.CurrentState;
@@ -295,6 +376,9 @@ namespace BirdCafe.Shared
             };
         }
 
+        /// <summary>
+        /// Returns bird offers projected with affordability for store UI.
+        /// </summary>
         public List<PetStoreBirdOfferViewModel> GetPetStoreBirdOffers()
         {
             var money = _controller.CurrentState.Economy.CurrentBalance;
@@ -309,6 +393,9 @@ namespace BirdCafe.Shared
             }).ToList();
         }
 
+        /// <summary>
+        /// Returns supply offers projected with ownership and affordability information.
+        /// </summary>
         public List<PetStoreSupplyOfferViewModel> GetPetStoreSupplyOffers()
         {
             var money = _controller.CurrentState.Economy.CurrentBalance;
@@ -354,6 +441,9 @@ namespace BirdCafe.Shared
             return store.SpecialEggToysOwned;
         }
 
+        /// <summary>
+        /// Attempts to buy a bird offer and emits toast/money events as needed.
+        /// </summary>
         public bool BuyPetStoreBird(string speciesId)
         {
             var result = _controller.PetStore.BuyBird(speciesId);
@@ -367,6 +457,9 @@ namespace BirdCafe.Shared
             return true;
         }
 
+        /// <summary>
+        /// Attempts to buy one supply offer and emits toast/money events as needed.
+        /// </summary>
         public bool BuyPetStoreSupply(string itemId, PetStoreSupplyType supplyType)
         {
             var result = _controller.PetStore.BuySupply(itemId, supplyType);
@@ -380,6 +473,9 @@ namespace BirdCafe.Shared
             return true;
         }
 
+        /// <summary>
+        /// Opens a special egg toy and maps the resolved reward for UI display.
+        /// </summary>
         public EggRewardResultViewModel OpenSpecialEggToy()
         {
             var result = _controller.PetStore.OpenSpecialEggToy();
@@ -403,6 +499,9 @@ namespace BirdCafe.Shared
         // EVENING SUMMARY
         // =================================================================================
 
+        /// <summary>
+        /// Builds the evening day-report view model from cached simulation output.
+        /// </summary>
         public DailyReportViewModel GetDailyReport()
         {
             if (_cachedSimResult == null) return new DailyReportViewModel();
@@ -458,6 +557,9 @@ namespace BirdCafe.Shared
         // EVENING CARE
         // =================================================================================
 
+        /// <summary>
+        /// Builds the care dashboard for all owned birds and current economy context.
+        /// </summary>
         public CareDashboardViewModel GetCareDashboard()
         {
             var vm = new CareDashboardViewModel
@@ -476,6 +578,9 @@ namespace BirdCafe.Shared
         }
 
         
+        /// <summary>
+        /// Returns care actions with affordability/readiness values precomputed for UI.
+        /// </summary>
         public List<CareActionViewModel> GetAvailableActions(string birdId)
         {
             var config = _controller.CurrentState.Config;
@@ -497,6 +602,9 @@ namespace BirdCafe.Shared
             return actions;
         }
 
+        /// <summary>
+        /// Executes an evening care action via the manager layer.
+        /// </summary>
         public bool PerformCare(string birdId, string actionId)
         {
             var result = _controller.Care.PerformCareAction(birdId, actionId);
@@ -510,6 +618,9 @@ namespace BirdCafe.Shared
             return true;
         }
 
+        /// <summary>
+        /// Toggles whether a bird is assigned to rest tomorrow.
+        /// </summary>
         public bool ToggleRest(string birdId)
         {
             var result = _controller.Care.ToggleRest(birdId);
@@ -525,6 +636,9 @@ namespace BirdCafe.Shared
         // EVENING PLANNING
         // =================================================================================
 
+        /// <summary>
+        /// Builds planning data including projections, roster, and recent performance history.
+        /// </summary>
         public PlanningDashboardViewModel GetPlanningDashboard()
         {
             var state = _controller.CurrentState;
@@ -613,12 +727,18 @@ namespace BirdCafe.Shared
             return vm;
         }
 
+        /// <summary>
+        /// Sets planned inventory purchase quantity for a product type.
+        /// </summary>
         public bool SetInventory(ProductType type, int quantity)
         {
             if (quantity < 0) return false;
             return _controller.Planning.SetInventoryOrder(type, quantity).IsSuccess;
         }
         
+        /// <summary>
+        /// Builds owned pet-store inventory grouped for presentation layers.
+        /// </summary>
         public InventoryViewModel GetInventory()
         {
             var state = _controller.CurrentState;
@@ -667,6 +787,9 @@ namespace BirdCafe.Shared
             
             return vm;
         }
+        /// <summary>
+        /// Updates next-day staffing status for a bird.
+        /// </summary>
         public bool SetStaffStatus(string birdId, bool isWorking)
         {
             var res = _controller.Planning.SetStaffRoster(birdId, isWorking);
@@ -674,6 +797,9 @@ namespace BirdCafe.Shared
             return res.IsSuccess;
         }
 
+        /// <summary>
+        /// Finalizes evening planning and routes to the next progression screen.
+        /// </summary>
         public bool FinalizeDay()
         {
             var res = _controller.Planning.FinalizeDay();
@@ -734,18 +860,27 @@ namespace BirdCafe.Shared
             return _controller.Reporting.GenerateExpenseReport(effectiveRequest);
         }
 
+        /// <summary>
+        /// Builds weekly report data for the completed week.
+        /// </summary>
         public WeeklyReportViewModel GetWeeklyReport()
         {
             int currentWeek = _controller.CurrentState.CurrentWeekNumber - 1;
             return _controller.Reporting.GenerateWeeklyReport(currentWeek);
         }
 
+        /// <summary>
+        /// Completes weekly report flow and resumes day-loop progression.
+        /// </summary>
         public void CompleteWeek()
         {
             _controller.SetPhase(GamePhase.DayLoop);
             TransitionTo(GameScreen.DayIntro);
         }
 
+        /// <summary>
+        /// Builds game-over summary details for final results UI.
+        /// </summary>
         public GameOverViewModel GetGameOverDetails()
         {
             var state = _controller.CurrentState;
@@ -757,6 +892,9 @@ namespace BirdCafe.Shared
             };
         }
 
+        /// <summary>
+        /// Returns navigation to the main menu screen.
+        /// </summary>
         public void ReturnToMainMenu()
         {
             TransitionTo(GameScreen.MainMenu);
@@ -794,12 +932,18 @@ namespace BirdCafe.Shared
             };
         }
 
+        /// <summary>
+        /// Debug helper that adds money directly to the active save balance.
+        /// </summary>
         public void AddMoney(int v)
         {
             Console.WriteLine($"Adding ${v} to balance.");
             _controller.CurrentState.Economy.CurrentBalance += v;
         }
 
+        /// <summary>
+        /// Placeholder facade hook for opening a bird wardrobe interaction.
+        /// </summary>
         public void OpenWardrobe(string birdId)
         {
             var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);

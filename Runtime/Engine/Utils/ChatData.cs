@@ -10,6 +10,9 @@ namespace BirdCafe.Shared.Engine.Utils
     /// </summary>
     public static class ChatData
     {
+        /// <summary>
+        /// Root node key used to start or reset Oracle chat navigation.
+        /// </summary>
         public const string ROOT_ID = "ROOT";
         private static readonly Dictionary<string, ChatMessage> _nodes = new Dictionary<string, ChatMessage>();
         private static readonly Random _rng = new Random();
@@ -33,6 +36,11 @@ namespace BirdCafe.Shared.Engine.Utils
             BuildDialogueTree();
         }
 
+        /// <summary>
+        /// Resolves a chat node by id, falling back to the root node when the key is unknown.
+        /// </summary>
+        /// <param name="id">Node id from a prior chat response option.</param>
+        /// <returns>The matching node when found; otherwise the root tutorial/help node.</returns>
         public static ChatMessage GetNode(string id)
         {
             if (_nodes.ContainsKey(id)) return _nodes[id];
