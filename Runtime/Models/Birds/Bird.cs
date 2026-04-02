@@ -130,6 +130,11 @@ namespace BirdCafe.Shared.Models.Birds
         /// </summary>
         public List<BirdTrait> Traits { get; set; } = new List<BirdTrait>();
 
+        /// <summary>
+        /// Equipped costume item id, or <see langword="null"/> when no costume is equipped.
+        /// </summary>
+        public string CostumeId { get; set; } = null;
+
         #endregion
 
         #region Social & Preference Data
