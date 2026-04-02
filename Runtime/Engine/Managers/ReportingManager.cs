@@ -1,6 +1,9 @@
+using BirdCafe.Shared;
 using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Models.Reporting;
+using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -117,6 +120,59 @@ namespace BirdCafe.Shared.Engine.Managers
             {
                 report.Warnings.Add("No expense entries matched the current report filters.");
             }
+
+            return report;
+        }
+
+        /// <summary>
+        /// Builds the unified "Cost of Care Report" payload used by the UI modal tabs.
+        /// </summary>
+        /// <param name="timeFilter">The selected report time filter.</param>
+        /// <returns>A single view model that contains overview, care costs, bird breakdown, and cafe sales data.</returns>
+        public CostOfCareReportViewModel GenerateCostOfCareReport(CostOfCareReportTimeFilter timeFilter)
+        {
+            var state = _controller.CurrentState;
+            var (startDay, endDay) = ResolveDayRangeForCostOfCareReport(timeFilter);
+
+            var scopedLedgerEntries = state.Economy.Ledger
+                .Where(entry => entry.DayNumber >= startDay && entry.DayNumber <= endDay)
+                .OrderBy(entry => entry.DayNumber)
+                .ThenBy(entry => entry.Timestamp)
+                .ToList();
+
+            var expenseEntries = scopedLedgerEntries.Where(entry => entry.Amount < 0m).ToList();
+            var directBirdExpenseEntries = expenseEntries.Where(entry => !string.IsNullOrEmpty(entry.RelatedBirdId)).ToList();
+            var cafeWideExpenseEntries = expenseEntries.Where(entry => string.IsNullOrEmpty(entry.RelatedBirdId)).ToList();
+            var usageEntries = scopedLedgerEntries
+                .Where(entry => entry.Amount == 0m && !string.IsNullOrEmpty(entry.RelatedBirdId) && !string.IsNullOrEmpty(entry.ItemId))
+                .ToList();
+
+            var birdRows = BuildCostOfCareBirdRows(state, directBirdExpenseEntries, usageEntries);
+            var birdAttributedTotal = birdRows.Sum(row => row.TotalCost);
+
+            var report = new CostOfCareReportViewModel
+            {
+                TimeFilter = timeFilter,
+                ScopeText = BuildCostOfCareScopeText(timeFilter, startDay, endDay),
+                Overview = new CostOfCareOverviewViewModel
+                {
+                    CurrentBalance = state.Economy.CurrentBalance,
+                    TotalSales = scopedLedgerEntries.Where(entry => entry.Amount > 0m).Sum(entry => entry.Amount),
+                    TotalExpenses = expenseEntries.Sum(GetExpenseAmount),
+                    NetProfit = scopedLedgerEntries.Sum(entry => entry.Amount),
+                    CareExpensesTotal = expenseEntries.Where(IsCareCostCategory).Sum(GetExpenseAmount),
+                    InventoryExpensesTotal = expenseEntries.Where(IsInventoryExpense).Sum(GetExpenseAmount),
+                    BirdAttributedExpensesTotal = birdAttributedTotal,
+                    CafeWideExpensesTotal = cafeWideExpenseEntries.Sum(GetExpenseAmount)
+                },
+                CareCosts = BuildCostOfCareCategoryBreakdown(expenseEntries),
+                BirdBreakdown = new CostOfCareBirdBreakdownViewModel
+                {
+                    Birds = birdRows,
+                    Total = birdAttributedTotal
+                },
+                CafeSales = BuildCostOfCareCafeSales(state, startDay, endDay)
+            };
 
             return report;
         }
@@ -280,6 +336,201 @@ namespace BirdCafe.Shared.Engine.Managers
             return entry.Category == ExpenseCategory.InventoryCoffee ||
                    entry.Category == ExpenseCategory.InventoryBakedGoods ||
                    entry.Category == ExpenseCategory.InventoryThemedMerch;
+        }
+
+        private bool IsCareCostCategory(LedgerEntry entry)
+        {
+            return entry.Category == ExpenseCategory.FoodAndSupplies ||
+                   entry.Category == ExpenseCategory.VetCare ||
+                   entry.Category == ExpenseCategory.ToysAndActivities ||
+                   entry.Category == ExpenseCategory.UpgradesAndCustomization ||
+                   entry.Category == ExpenseCategory.Miscellaneous;
+        }
+
+        private List<CostOfCareBirdRowViewModel> BuildCostOfCareBirdRows(
+            GameSave state,
+            List<LedgerEntry> directBirdExpenseEntries,
+            List<LedgerEntry> usageEntries)
+        {
+            var birdCostMap = state.Birds.ToDictionary(bird => bird.Id, bird => new CostOfCareBirdRowViewModel
+            {
+                BirdId = bird.Id,
+                BirdName = bird.Name
+            });
+
+            foreach (var entry in directBirdExpenseEntries)
+            {
+                if (!birdCostMap.TryGetValue(entry.RelatedBirdId, out var row))
+                {
+                    continue;
+                }
+
+                ApplyBirdCost(row, entry.Category, GetExpenseAmount(entry));
+            }
+
+            foreach (var entry in usageEntries)
+            {
+                if (!birdCostMap.TryGetValue(entry.RelatedBirdId, out var row))
+                {
+                    continue;
+                }
+
+                var catalogValue = ResolveSupplyValueFromCatalog(entry.ItemId, entry.Category);
+                if (catalogValue <= 0m)
+                {
+                    continue;
+                }
+
+                ApplyBirdCost(row, entry.Category, catalogValue);
+            }
+
+            foreach (var row in birdCostMap.Values)
+            {
+                row.TotalCost = row.FoodAndSuppliesCost + row.VetCareCost + row.ToysAndActivitiesCost + row.AcquisitionCost + row.OtherCosts;
+            }
+
+            return birdCostMap.Values
+                .OrderBy(row => row.BirdName)
+                .ToList();
+        }
+
+        private void ApplyBirdCost(CostOfCareBirdRowViewModel row, ExpenseCategory category, decimal amount)
+        {
+            if (amount <= 0m)
+            {
+                return;
+            }
+
+            switch (category)
+            {
+                case ExpenseCategory.FoodAndSupplies:
+                    row.FoodAndSuppliesCost += amount;
+                    return;
+                case ExpenseCategory.VetCare:
+                    row.VetCareCost += amount;
+                    return;
+                case ExpenseCategory.ToysAndActivities:
+                    row.ToysAndActivitiesCost += amount;
+                    return;
+                case ExpenseCategory.UpgradesAndCustomization:
+                    // Bird purchases are logged as upgrades/customization with a bird id.
+                    row.AcquisitionCost += amount;
+                    return;
+                default:
+                    row.OtherCosts += amount;
+                    return;
+            }
+        }
+
+        private decimal ResolveSupplyValueFromCatalog(string itemId, ExpenseCategory expenseCategory)
+        {
+            if (string.IsNullOrEmpty(itemId))
+            {
+                return 0m;
+            }
+
+            var match = PetStoreCatalog.GetSupplyOffers()
+                .FirstOrDefault(supply => supply.ItemId == itemId && supply.ExpenseCategory == expenseCategory)
+                ?? PetStoreCatalog.GetSupplyOffers().FirstOrDefault(supply => supply.ItemId == itemId);
+
+            return match?.Price ?? 0m;
+        }
+
+        private CostOfCareCategoryBreakdownViewModel BuildCostOfCareCategoryBreakdown(List<LedgerEntry> expenseEntries)
+        {
+            var rows = expenseEntries
+                .Where(IsCareCostCategory)
+                .GroupBy(entry => entry.Category)
+                .OrderBy(group => group.Key.ToString())
+                .Select(group => new CostOfCareCategoryRowViewModel
+                {
+                    Category = group.Key,
+                    CategoryText = group.Key.ToString(),
+                    TotalCost = group.Sum(GetExpenseAmount)
+                })
+                .ToList();
+
+            return new CostOfCareCategoryBreakdownViewModel
+            {
+                Categories = rows,
+                Total = rows.Sum(row => row.TotalCost)
+            };
+        }
+
+        private CostOfCareCafeSalesViewModel BuildCostOfCareCafeSales(GameSave state, int startDay, int endDay)
+        {
+            var scopedResults = state.PastDayResults
+                .Where(result => result.DayNumber >= startDay && result.DayNumber <= endDay)
+                .OrderBy(result => result.DayNumber)
+                .ToList();
+
+            decimal coffeeSales = 0m;
+            decimal bakedGoodsSales = 0m;
+            decimal merchSales = 0m;
+
+            foreach (var result in scopedResults)
+            {
+                foreach (var eventItem in result.Timeline.Where(item => item.EventType == SimulationTimelineEventType.ServiceCompleted && item.Product.HasValue))
+                {
+                    if (eventItem.Product == ProductType.Coffee)
+                    {
+                        coffeeSales += eventItem.MoneyDelta;
+                    }
+                    else if (eventItem.Product == ProductType.BakedGoods)
+                    {
+                        bakedGoodsSales += eventItem.MoneyDelta;
+                    }
+                    else if (eventItem.Product == ProductType.ThemedMerch)
+                    {
+                        merchSales += eventItem.MoneyDelta;
+                    }
+                }
+            }
+
+            return new CostOfCareCafeSalesViewModel
+            {
+                TotalSales = scopedResults.Sum(result => result.Economy.TotalRevenue),
+                CoffeeSales = coffeeSales,
+                BakedGoodsSales = bakedGoodsSales,
+                MerchSales = merchSales,
+                CoffeeUnitsSold = scopedResults.Sum(result => result.Customers.CoffeeSold),
+                BakedGoodsUnitsSold = scopedResults.Sum(result => result.Customers.BakedGoodsSold),
+                MerchUnitsSold = scopedResults.Sum(result => result.Customers.MerchSold),
+                CustomersServed = scopedResults.Sum(result => result.Customers.CustomersServed),
+                CustomersLost = scopedResults.Sum(result => result.Customers.CustomersLeftUnhappy + result.Customers.CustomersLeftNoStock)
+            };
+        }
+
+        private (int startDay, int endDay) ResolveDayRangeForCostOfCareReport(CostOfCareReportTimeFilter timeFilter)
+        {
+            var state = _controller.CurrentState;
+            int currentDay = state.CurrentDayNumber;
+            int currentWeek = GetCurrentWeekNumberForReporting();
+            int weekStartDay = ((currentWeek - 1) * 7) + 1;
+            int weekEndDay = ((currentWeek - 1) * 7) + 7;
+
+            switch (timeFilter)
+            {
+                case CostOfCareReportTimeFilter.ThisWeek:
+                    return (weekStartDay, weekEndDay);
+                case CostOfCareReportTimeFilter.AllTime:
+                    return (1, currentDay);
+                default:
+                    return (currentDay, currentDay);
+            }
+        }
+
+        private string BuildCostOfCareScopeText(CostOfCareReportTimeFilter timeFilter, int startDay, int endDay)
+        {
+            switch (timeFilter)
+            {
+                case CostOfCareReportTimeFilter.ThisWeek:
+                    return $"Week {GetCurrentWeekNumberForReporting()} (Days {startDay}-{endDay})";
+                case CostOfCareReportTimeFilter.AllTime:
+                    return $"All Time (Days {startDay}-{endDay})";
+                default:
+                    return $"Day {startDay}";
+            }
         }
 
         private (int startDay, int endDay) ResolveDayRange(ExpenseReportRequest request)
