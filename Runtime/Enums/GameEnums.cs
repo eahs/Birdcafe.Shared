@@ -151,6 +151,28 @@ namespace BirdCafe.Shared.Enums
     }
 
     /// <summary>
+    /// Time filters supported by the Cost of Care modal report.
+    /// </summary>
+    [Serializable]
+    public enum CostOfCareReportTimeFilter
+    {
+        /// <summary>
+        /// Include only the current in-game day.
+        /// </summary>
+        Today = 0,
+
+        /// <summary>
+        /// Include only the current in-game week.
+        /// </summary>
+        ThisWeek = 1,
+
+        /// <summary>
+        /// Include all completed and current in-game days.
+        /// </summary>
+        AllTime = 2
+    }
+
+    /// <summary>
     /// Defines generic types of care actions.
     /// </summary>
     [Serializable]
