@@ -15,11 +15,22 @@ namespace BirdCafe.Shared.Engine.Managers
     {
         private readonly BirdCafeController _controller;
 
+        /// <summary>
+        /// Initializes the care manager bound to a shared controller instance.
+        /// </summary>
         public CareManager(BirdCafeController controller)
         {
             _controller = controller;
         }
 
+        /// <summary>
+        /// Performs one evening care action for a specific bird.
+        /// </summary>
+        /// <param name="birdId">Persistent bird id from the current save roster.</param>
+        /// <param name="actionId">Action identifier such as <see cref="CareActionIds.Feed"/> or <see cref="CareActionIds.Vet"/>.</param>
+        /// <returns>
+        /// Success with the updated bird payload, or failure when phase, bird, action, or funds are invalid.
+        /// </returns>
         public EngineResult PerformCareAction(string birdId, string actionId)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -69,6 +80,13 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success(bird);
         }
 
+        /// <summary>
+        /// Toggles whether a bird is scheduled to rest on the next day.
+        /// </summary>
+        /// <param name="birdId">Persistent bird id from the current save roster.</param>
+        /// <returns>
+        /// Success with the updated bird payload, or failure when the call is made outside the evening phase.
+        /// </returns>
         public EngineResult ToggleRest(string birdId)
         {
             if (_controller.CurrentPhase != GamePhase.EveningLoop)
@@ -100,6 +118,7 @@ namespace BirdCafe.Shared.Engine.Managers
 
             bird.ApplyCareEffect(template);
 
+            // Preferred food gives a stronger trust bump so store food choices matter to progression.
             float trustGain = bird.PrefersFood(selectedFoodType.Value) ? 10f : 2f;
             bird.IncreaseTrust(trustGain);
 

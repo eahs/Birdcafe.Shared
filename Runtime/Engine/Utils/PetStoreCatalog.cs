@@ -32,6 +32,9 @@ namespace BirdCafe.Shared.Engine.Utils
 
         public const decimal SpecialEggToyPrice = 300m;
 
+        /// <summary>
+        /// Shared list of bird offers consumed by store UIs and purchase validation logic.
+        /// </summary>
         public static readonly List<BirdSpeciesOffer> BirdOffers = new List<BirdSpeciesOffer>
         {
             new BirdSpeciesOffer
@@ -84,6 +87,9 @@ namespace BirdCafe.Shared.Engine.Utils
             }
         };
 
+        /// <summary>
+        /// Shared list of supply offers, including reward-only definitions used for inventory display.
+        /// </summary>
         public static readonly List<PetStoreSupplyDefinition> SupplyOffers = new List<PetStoreSupplyDefinition>
         {
             new PetStoreSupplyDefinition
@@ -205,26 +211,49 @@ namespace BirdCafe.Shared.Engine.Utils
             },
         };
 
+        /// <summary>
+        /// Resolves a bird offer by species id.
+        /// </summary>
+        /// <param name="speciesId">Stable species id stored in save data and purchase actions.</param>
+        /// <returns>The matching offer definition, or <see langword="null"/> when no offer exists.</returns>
         public static BirdSpeciesOffer FindBirdOffer(string speciesId)
         {
             return BirdOffers.Find(b => b.SpeciesId == speciesId);
         }
 
+        /// <summary>
+        /// Returns the shared supply catalog used by both UI listings and purchase validation.
+        /// </summary>
         public static List<PetStoreSupplyDefinition> GetSupplyOffers()
         {
             return SupplyOffers;
         }
 
+        /// <summary>
+        /// Resolves a supply offer by item id and supply category.
+        /// </summary>
         public static PetStoreSupplyDefinition FindSupplyOffer(string itemId, PetStoreSupplyType supplyType)
         {
             return SupplyOffers.Find(offer => offer.ItemId == itemId && offer.SupplyType == supplyType);
         }
 
+        /// <summary>
+        /// Builds a deterministic generated name for newly purchased birds.
+        /// </summary>
+        /// <remarks>
+        /// The day and roster count suffixes help keep names readable and reduce collisions in save files.
+        /// </remarks>
         public static string BuildBirdName(string speciesName, int dayNumber, int existingBirdCount)
         {
             return $"{speciesName} #{dayNumber}-{existingBirdCount + 1}";
         }
 
+        /// <summary>
+        /// Maps a bird-food item id back to its food subtype.
+        /// </summary>
+        /// <returns>
+        /// The mapped food type for bird-food catalog entries; otherwise <see langword="null"/>.
+        /// </returns>
         public static BirdFoodType? GetFoodTypeForItem(string itemId)
         {
             var offer = FindSupplyOffer(itemId, PetStoreSupplyType.BirdFood);

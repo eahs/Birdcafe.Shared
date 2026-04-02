@@ -435,104 +435,239 @@ namespace BirdCafe.Shared.ViewModels
         public bool CanWork { get; set; }
     }
 
+    /// <summary>
+    /// Lightweight summary model shown on the evening hub landing screen.
+    /// </summary>
     [Serializable]
     public class EveningHubViewModel
     {
+        /// <summary>
+        /// Current in-game day number shown in the hub header.
+        /// </summary>
         public int DayNumber { get; set; }
 
+        /// <summary>
+        /// Current available balance after day simulation and evening actions.
+        /// </summary>
         public decimal CurrentMoney { get; set; }
 
+        /// <summary>
+        /// Current cafe popularity used to communicate progression health.
+        /// </summary>
         public int CurrentPopularity { get; set; }
     }
 
+    /// <summary>
+    /// Top-level snapshot for the pet-store dashboard before selecting specific offers.
+    /// </summary>
     [Serializable]
     public class PetStoreDashboardViewModel
     {
+        /// <summary>
+        /// Current available balance while browsing the pet store.
+        /// </summary>
         public decimal CurrentMoney { get; set; }
 
+        /// <summary>
+        /// Current popularity value shown for progression context.
+        /// </summary>
         public int CurrentPopularity { get; set; }
 
+        /// <summary>
+        /// Number of birds currently owned in the save roster.
+        /// </summary>
         public int OwnedBirdCount { get; set; }
 
+        /// <summary>
+        /// Total stored bird-food units across all food types.
+        /// </summary>
         public int BirdFoodUnits { get; set; }
 
+        /// <summary>
+        /// Number of unopened special egg toys currently owned.
+        /// </summary>
         public int SpecialEggToysOwned { get; set; }
 
+        /// <summary>
+        /// Narrative summary of the last opened egg reward, if any.
+        /// </summary>
         public string LastEggRewardText { get; set; }
     }
 
+    /// <summary>
+    /// UI projection of a purchasable bird offer from the shared pet-store catalog.
+    /// </summary>
     [Serializable]
     public class PetStoreBirdOfferViewModel
     {
+        /// <summary>
+        /// Stable species id used when purchasing this offer.
+        /// </summary>
         public string SpeciesId { get; set; }
 
+        /// <summary>
+        /// Display name shown in the bird offer card.
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Formatted rarity text for presentation layers.
+        /// </summary>
         public string RarityText { get; set; }
 
+        /// <summary>
+        /// Purchase price for the bird offer.
+        /// </summary>
         public decimal Price { get; set; }
 
+        /// <summary>
+        /// Descriptive effect/flavor text displayed in store UI.
+        /// </summary>
         public string EffectText { get; set; }
 
+        /// <summary>
+        /// Whether the current balance can afford this offer right now.
+        /// </summary>
         public bool IsAffordable { get; set; }
     }
 
+    /// <summary>
+    /// UI projection of a supply offer with ownership and affordability information.
+    /// </summary>
     [Serializable]
     public class PetStoreSupplyOfferViewModel
     {
+        /// <summary>
+        /// Stable item id passed to the purchase action.
+        /// </summary>
         public string ItemId { get; set; }
 
+        /// <summary>
+        /// Display name shown for this supply offer.
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Human-readable category label used for grouping in UI.
+        /// </summary>
         public string CategoryText { get; set; }
 
+        /// <summary>
+        /// Supply bucket indicating where ownership is tracked.
+        /// </summary>
         public PetStoreSupplyType SupplyType { get; set; }
 
+        /// <summary>
+        /// Price charged per purchased unit.
+        /// </summary>
         public decimal Price { get; set; }
 
+        /// <summary>
+        /// Current owned quantity for this specific item.
+        /// </summary>
         public int OwnedQuantity { get; set; }
 
+        /// <summary>
+        /// Player-facing explanation of what this item does.
+        /// </summary>
         public string EffectText { get; set; }
 
+        /// <summary>
+        /// Whether the current balance can buy one unit right now.
+        /// </summary>
         public bool IsAffordable { get; set; }
 
+        /// <summary>
+        /// Indicates whether this offer is directly purchasable rather than reward-only.
+        /// </summary>
         public bool Buyable { get; set; }
     }
 
+    /// <summary>
+    /// Result payload returned after opening a special egg toy.
+    /// </summary>
     [Serializable]
     public class EggRewardResultViewModel
     {
+        /// <summary>
+        /// True when an egg opening produced a reward payload.
+        /// </summary>
         public bool HasReward { get; set; }
 
+        /// <summary>
+        /// Display text for the reward category.
+        /// </summary>
         public string RewardTypeText { get; set; }
 
+        /// <summary>
+        /// Reward name shown to the player.
+        /// </summary>
         public string RewardName { get; set; }
 
+        /// <summary>
+        /// Reward description shown to explain effect or unlock.
+        /// </summary>
         public string RewardDescription { get; set; }
     }
 
+    /// <summary>
+    /// UI-friendly representation of one owned pet-store inventory entry.
+    /// </summary>
     [Serializable]
     public class OwnedInventoryItem
     {
+        /// <summary>
+        /// Stable item id for this owned inventory entry.
+        /// </summary>
         public string ItemId { get; set; }
 
+        /// <summary>
+        /// Display name shown in inventory listing UI.
+        /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// Category label used for grouped inventory sections.
+        /// </summary>
         public string CategoryText { get; set; }
 
+        /// <summary>
+        /// Supply type used for downstream inventory actions.
+        /// </summary>
         public PetStoreSupplyType SupplyType { get; set; }
 
+        /// <summary>
+        /// Owned quantity for this inventory item.
+        /// </summary>
         public int OwnedQuantity { get; set; }
 
+        /// <summary>
+        /// Effect text copied from catalog metadata for quick display.
+        /// </summary>
         public string EffectText { get; set; }
     }
 
+    /// <summary>
+    /// Grouped inventory collections for rendering the player's pet-store ownership.
+    /// </summary>
     [Serializable]
     public class InventoryViewModel
     {
+        /// <summary>
+        /// Owned food entries grouped for inventory rendering.
+        /// </summary>
         public List<OwnedInventoryItem> OwnedFood { get; set; }
+        /// <summary>
+        /// Owned toy entries grouped for inventory rendering.
+        /// </summary>
         public List<OwnedInventoryItem> OwnedToys { get; set; }
+        /// <summary>
+        /// Owned costume entries grouped for inventory rendering.
+        /// </summary>
         public List<OwnedInventoryItem> OwnedCostumes { get; set; }
+        /// <summary>
+        /// Owned egg-related entries grouped for inventory rendering.
+        /// </summary>
         public List<OwnedInventoryItem> OwnedEggs { get; set; }
     }
 }
