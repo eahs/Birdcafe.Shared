@@ -1,9 +1,11 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Economy;
+using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.Models.Reporting;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BirdCafe.Shared.Tests
@@ -348,6 +350,76 @@ namespace BirdCafe.Shared.Tests
             Assert.IsTrue(report.Rows.All(r => r.BirdName == bird.Name));
         }
 
+        [Test]
+        public void CostOfCareReport_TimeFilters_ReturnExpectedRanges()
+        {
+            SeedCostOfCareReportData();
+
+            var today = _controller.Reporting.GenerateCostOfCareReport(CostOfCareReportTimeFilter.Today);
+            var thisWeek = _controller.Reporting.GenerateCostOfCareReport(CostOfCareReportTimeFilter.ThisWeek);
+            var allTime = _controller.Reporting.GenerateCostOfCareReport(CostOfCareReportTimeFilter.AllTime);
+
+            Assert.AreEqual(65m, today.Overview.TotalExpenses);
+            Assert.AreEqual(0m, today.CafeSales.TotalSales);
+
+            Assert.AreEqual(65m, thisWeek.Overview.TotalExpenses);
+            Assert.AreEqual(40m, thisWeek.CafeSales.TotalSales);
+
+            Assert.AreEqual(153m, allTime.Overview.TotalExpenses);
+            Assert.AreEqual(95m, allTime.CafeSales.TotalSales);
+        }
+
+        [Test]
+        public void CostOfCareReport_BirdBreakdown_IncludesZeroDollarUsageRowsWithoutDoubleCountingInventoryPurchases()
+        {
+            SeedCostOfCareReportData();
+            var bird = _controller.CurrentState.Birds.First();
+
+            var report = _controller.Reporting.GenerateCostOfCareReport(CostOfCareReportTimeFilter.ThisWeek);
+            var birdRow = report.BirdBreakdown.Birds.Single(row => row.BirdId == bird.Id);
+
+            Assert.AreEqual(28m, birdRow.FoodAndSuppliesCost);
+            Assert.AreEqual(10m, birdRow.VetCareCost);
+            Assert.AreEqual(15m, birdRow.ToysAndActivitiesCost);
+            Assert.AreEqual(120m, birdRow.AcquisitionCost);
+            Assert.AreEqual(173m, birdRow.TotalCost);
+            Assert.AreEqual(173m, report.BirdBreakdown.Total);
+            Assert.AreEqual(0m, report.CafeSales.MerchSales);
+            Assert.AreEqual(65m, report.Overview.TotalExpenses);
+            Assert.AreEqual(20m, report.Overview.InventoryExpensesTotal);
+        }
+
+        [Test]
+        public void CostOfCareReport_CafeSales_AggregatesAmountsAndUnitsForSelectedScope()
+        {
+            SeedCostOfCareReportData();
+
+            var report = _controller.Reporting.GenerateCostOfCareReport(CostOfCareReportTimeFilter.AllTime);
+
+            Assert.AreEqual(95m, report.CafeSales.TotalSales);
+            Assert.AreEqual(35m, report.CafeSales.CoffeeSales);
+            Assert.AreEqual(30m, report.CafeSales.BakedGoodsSales);
+            Assert.AreEqual(30m, report.CafeSales.MerchSales);
+            Assert.AreEqual(3, report.CafeSales.CoffeeUnitsSold);
+            Assert.AreEqual(3, report.CafeSales.BakedGoodsUnitsSold);
+            Assert.AreEqual(2, report.CafeSales.MerchUnitsSold);
+            Assert.AreEqual(11, report.CafeSales.CustomersServed);
+            Assert.AreEqual(4, report.CafeSales.CustomersLost);
+        }
+
+        [Test]
+        public void BirdCafeGame_CostOfCareReport_UsesFacadeMethod()
+        {
+            SeedCostOfCareReportData();
+            BirdCafeGame.Instance.Controller.Meta.LoadGame(_controller.CurrentState);
+
+            var report = BirdCafeGame.Instance.GetCostOfCareReportViewModel(CostOfCareReportTimeFilter.AllTime);
+
+            Assert.AreEqual(CostOfCareReportTimeFilter.AllTime, report.TimeFilter);
+            Assert.AreEqual(153m, report.Overview.TotalExpenses);
+            Assert.AreEqual(173m, report.BirdBreakdown.Total);
+        }
+
         private void MoveToEveningPhase()
         {
             _controller.Simulation.RunDaySimulation();
@@ -427,6 +499,158 @@ namespace BirdCafe.Shared.Tests
                 Reason = "Revenue",
                 ShortDescription = "Income"
             });
+        }
+
+        private void SeedCostOfCareReportData()
+        {
+            var state = _controller.CurrentState;
+            var bird = state.Birds.First();
+            state.CurrentDayNumber = 3;
+            state.CurrentWeekNumber = 1;
+            state.Economy.CurrentBalance = 900m;
+            state.Economy.Ledger.Clear();
+            state.PastDayResults.Clear();
+
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 1,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 1, 8, 0, 0, DateTimeKind.Utc),
+                Amount = -120m,
+                Category = ExpenseCategory.UpgradesAndCustomization,
+                ItemId = "budgie",
+                RelatedBirdId = bird.Id,
+                Reason = "Bird: Buddy",
+                ShortDescription = "Bird: Buddy"
+            });
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 2,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 2, 8, 0, 0, DateTimeKind.Utc),
+                Amount = -18m,
+                Category = ExpenseCategory.FoodAndSupplies,
+                ItemId = BirdFoodType.SeedMix.ToString(),
+                Reason = "Supply: SeedMix x1",
+                ShortDescription = "Supply: SeedMix x1"
+            });
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 2,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 2, 9, 0, 0, DateTimeKind.Utc),
+                Amount = -20m,
+                Category = ExpenseCategory.InventoryCoffee,
+                RelatedProduct = ProductType.Coffee,
+                Reason = "Inventory Restock: Coffee",
+                ShortDescription = "Restocked coffee beans x20"
+            });
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 3,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 3, 9, 0, 0, DateTimeKind.Utc),
+                Amount = -10m,
+                Category = ExpenseCategory.VetCare,
+                RelatedBirdId = bird.Id,
+                Reason = "Vet Visit",
+                ShortDescription = "Vet Visit for Peep"
+            });
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 3,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 3, 10, 0, 0, DateTimeKind.Utc),
+                Amount = -15m,
+                Category = ExpenseCategory.ToysAndActivities,
+                RelatedBirdId = bird.Id,
+                Reason = "Play Time",
+                ShortDescription = "Play Time for Peep"
+            });
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 3,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 3, 11, 0, 0, DateTimeKind.Utc),
+                Amount = 0m,
+                Category = ExpenseCategory.FoodAndSupplies,
+                ItemId = BirdFoodType.SeedMix.ToString(),
+                RelatedBirdId = bird.Id,
+                Reason = "Bird Food Consumed",
+                ShortDescription = "Peep ate Seed Mix"
+            });
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
+                DayNumber = 3,
+                WeekNumber = 1,
+                Timestamp = new DateTime(2026, 1, 3, 11, 30, 0, DateTimeKind.Utc),
+                Amount = 40m,
+                Category = ExpenseCategory.Miscellaneous,
+                Reason = "Revenue",
+                ShortDescription = "Income"
+            });
+
+            state.PastDayResults.Add(BuildDayResult(1, 20m, 10m, 5m, 5m, 1, 1, 1, 2, 1));
+            state.PastDayResults.Add(BuildDayResult(2, 35m, 15m, 10m, 10m, 1, 1, 1, 3, 2));
+            state.PastDayResults.Add(BuildDayResult(3, 40m, 10m, 15m, 15m, 1, 1, 0, 6, 1));
+        }
+
+        private DaySimulationResult BuildDayResult(
+            int dayNumber,
+            decimal totalRevenue,
+            decimal coffeeSales,
+            decimal bakedSales,
+            decimal merchSales,
+            int coffeeUnits,
+            int bakedUnits,
+            int merchUnits,
+            int customersServed,
+            int customersLost)
+        {
+            var timeline = new List<SimulationTimelineEvent>();
+            AddProductEvents(timeline, ProductType.Coffee, coffeeUnits, coffeeSales);
+            AddProductEvents(timeline, ProductType.BakedGoods, bakedUnits, bakedSales);
+            AddProductEvents(timeline, ProductType.ThemedMerch, merchUnits, merchSales);
+
+            return new DaySimulationResult
+            {
+                DayNumber = dayNumber,
+                WeekNumber = 1,
+                DayName = DayOfWeek.Monday.ToString(),
+                Economy = new DayEconomySummary { TotalRevenue = totalRevenue },
+                Customers = new DayCustomerSummary
+                {
+                    CoffeeSold = coffeeUnits,
+                    BakedGoodsSold = bakedUnits,
+                    MerchSold = merchUnits,
+                    CustomersServed = customersServed,
+                    CustomersLeftUnhappy = customersLost
+                },
+                Timeline = timeline
+            };
+        }
+
+        private void AddProductEvents(List<SimulationTimelineEvent> timeline, ProductType product, int units, decimal totalRevenue)
+        {
+            if (units <= 0 || totalRevenue <= 0m)
+            {
+                return;
+            }
+
+            var unitValue = decimal.Round(totalRevenue / units, 2, MidpointRounding.AwayFromZero);
+            decimal runningRevenue = 0m;
+            for (int i = 0; i < units; i++)
+            {
+                bool isLast = i == units - 1;
+                var eventValue = isLast ? totalRevenue - runningRevenue : unitValue;
+                runningRevenue += eventValue;
+                timeline.Add(new SimulationTimelineEvent
+                {
+                    EventType = SimulationTimelineEventType.ServiceCompleted,
+                    Product = product,
+                    MoneyDelta = eventValue
+                });
+            }
         }
     }
 }

@@ -861,6 +861,16 @@ namespace BirdCafe.Shared
         }
 
         /// <summary>
+        /// Builds the unified "Cost of Care Report" modal payload for the selected time filter.
+        /// </summary>
+        /// <param name="timeFilter">The report scope selector (Today, This Week, or All Time).</param>
+        /// <returns>A single view model containing all tab data for the Cost of Care modal.</returns>
+        public CostOfCareReportViewModel GetCostOfCareReportViewModel(CostOfCareReportTimeFilter timeFilter)
+        {
+            return _controller.Reporting.GenerateCostOfCareReport(timeFilter);
+        }
+
+        /// <summary>
         /// Builds weekly report data for the completed week.
         /// </summary>
         public WeeklyReportViewModel GetWeeklyReport()
