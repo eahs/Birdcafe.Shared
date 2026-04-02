@@ -113,6 +113,104 @@ namespace BirdCafe.Shared.Tests
         }
 
         [Test]
+        public void EquipCostume_FailsOutsideEveningPhase()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            _controller.SetPhaseForTests(GamePhase.DayLoop);
+
+            var result = _controller.PetStore.EquipCostume(bird.Id, PetStoreCatalog.CostumeBandanaId);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("InvalidPhase", result.ErrorCode);
+        }
+
+        [Test]
+        public void EquipCostume_FailsForMissingBird()
+        {
+            var result = _controller.PetStore.EquipCostume("missing-bird", PetStoreCatalog.CostumeBandanaId);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("InvalidBird", result.ErrorCode);
+        }
+
+        [Test]
+        public void EquipCostume_FailsForUnownedCostume()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+
+            var result = _controller.PetStore.EquipCostume(bird.Id, PetStoreCatalog.CostumeBandanaId);
+
+            Assert.IsFalse(result.IsSuccess);
+            Assert.AreEqual("CostumeNotOwned", result.ErrorCode);
+        }
+
+        [Test]
+        public void EquipCostume_SucceedsForOwnedCostume()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
+
+            var result = _controller.PetStore.EquipCostume(bird.Id, PetStoreCatalog.CostumeBandanaId);
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual(PetStoreCatalog.CostumeBandanaId, bird.CostumeId);
+        }
+
+        [Test]
+        public void EquipCostume_WithNull_RemovesCostume()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
+            Assert.IsTrue(_controller.PetStore.EquipCostume(bird.Id, PetStoreCatalog.CostumeBandanaId).IsSuccess);
+
+            var result = _controller.PetStore.EquipCostume(bird.Id, null);
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.IsNull(bird.CostumeId);
+        }
+
+        [Test]
+        public void EquipCostume_DoesNotConsumeOwnedCostumeQuantity()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
+            var ownedBeforeEquip = _controller.CurrentState.PetStore.OwnedCostumeQuantities[PetStoreCatalog.CostumeBandanaId];
+
+            var equipResult = _controller.PetStore.EquipCostume(bird.Id, PetStoreCatalog.CostumeBandanaId);
+            var unequipResult = _controller.PetStore.EquipCostume(bird.Id, null);
+
+            Assert.IsTrue(equipResult.IsSuccess);
+            Assert.IsTrue(unequipResult.IsSuccess);
+            Assert.AreEqual(ownedBeforeEquip, _controller.CurrentState.PetStore.OwnedCostumeQuantities[PetStoreCatalog.CostumeBandanaId]);
+        }
+
+        [Test]
+        public void EquipCostume_AllowsRewardOnlyOwnedCostume()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            _controller.CurrentState.PetStore.OwnedCostumeQuantities["Costume_GoldenVest"] = 1;
+
+            var result = _controller.PetStore.EquipCostume(bird.Id, "Costume_GoldenVest");
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual("Costume_GoldenVest", bird.CostumeId);
+        }
+
+        [Test]
+        public void EquipCostume_ReequippingSameCostumeIsSafe()
+        {
+            var bird = _controller.CurrentState.Birds.First();
+            Assert.IsTrue(_controller.PetStore.BuySupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume).IsSuccess);
+            Assert.IsTrue(_controller.PetStore.EquipCostume(bird.Id, PetStoreCatalog.CostumeBandanaId).IsSuccess);
+
+            var result = _controller.PetStore.EquipCostume(bird.Id, PetStoreCatalog.CostumeBandanaId);
+
+            Assert.IsTrue(result.IsSuccess);
+            Assert.AreEqual(PetStoreCatalog.CostumeBandanaId, bird.CostumeId);
+            Assert.AreEqual(1, _controller.CurrentState.PetStore.OwnedCostumeQuantities[PetStoreCatalog.CostumeBandanaId]);
+        }
+
+        [Test]
         public void SpecialEggToyOffer_UsesCorrectSupplyType()
         {
             var game = BirdCafeGame.Instance;
@@ -123,6 +221,37 @@ namespace BirdCafe.Shared.Tests
             var offer = game.GetPetStoreSupplyOffers().Single(o => o.ItemId == PetStoreCatalog.SpecialEggToyItemId);
 
             Assert.AreEqual(PetStoreSupplyType.SpecialEggToy, offer.SupplyType);
+        }
+
+        [Test]
+        public void GetPetStoreSupplyOffers_OwnedCostumeProjectsBuyableFalse()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("Tester", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
+            Assert.IsTrue(game.BuyPetStoreSupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume));
+
+            var offer = game.GetPetStoreSupplyOffers().Single(o => o.ItemId == PetStoreCatalog.CostumeBandanaId);
+
+            Assert.AreEqual(1, offer.OwnedQuantity);
+            Assert.IsFalse(offer.Buyable);
+        }
+
+        [Test]
+        public void GetPetStoreSupplyOffers_OwnedCostumeProjectsIsAffordableFalseEvenWhenMoneyIsSufficient()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("Tester", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
+            Assert.IsTrue(game.BuyPetStoreSupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume));
+
+            var offer = game.GetPetStoreSupplyOffers().Single(o => o.ItemId == PetStoreCatalog.CostumeBandanaId);
+
+            Assert.IsFalse(offer.IsAffordable);
         }
 
         [Test]
@@ -174,6 +303,25 @@ namespace BirdCafe.Shared.Tests
             Assert.IsTrue(game.BuyPetStoreBird("budgie"));
             var careVm = game.GetCareDashboard();
             Assert.IsTrue(careVm.Birds.Any(b => b.Name.Contains("Buddy")));
+        }
+
+        [Test]
+        public void EquipBirdCostume_FacadeEquipsOwnedCostume_AndCareDashboardIncludesCostumeId()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("Tester", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
+            Assert.IsTrue(game.BuyPetStoreSupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume));
+
+            var birdId = game.Controller.CurrentState.Birds.First().Id;
+            var equipResult = game.EquipBirdCostume(birdId, PetStoreCatalog.CostumeBandanaId);
+            var careVm = game.GetCareDashboard();
+            var birdVm = careVm.Birds.First(b => b.Id == birdId);
+
+            Assert.IsTrue(equipResult);
+            Assert.AreEqual(PetStoreCatalog.CostumeBandanaId, birdVm.CostumeId);
         }
 
         [Test]
