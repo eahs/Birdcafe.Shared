@@ -16,8 +16,10 @@ namespace BirdCafe.Shared.Engine.Managers
         private const string InvalidPhaseCode = "InvalidPhase";
         private const string InvalidItemCode = "InvalidItem";
         private const string InvalidBirdFoodTypeCode = "InvalidBirdFoodType";
+        private const string InvalidBirdCode = "InvalidBird";
         private const string InsufficientFundsCode = "InsufficientFunds";
         private const string InvalidQuantityCode = "InvalidQuantity";
+        private const string CostumeNotOwnedCode = "CostumeNotOwned";
 
         private readonly BirdCafeController _controller;
 
@@ -143,6 +145,41 @@ namespace BirdCafe.Shared.Engine.Managers
             state.PetStore.EggRewardHistory.Add(reward);
 
             return EngineResult.Success(reward);
+        }
+
+        /// <summary>
+        /// Equips or unequips a costume on a specific bird.
+        /// </summary>
+        /// <param name="birdId">Target bird identifier.</param>
+        /// <param name="costumeId">
+        /// Costume item id to equip, or null to unequip.
+        /// Ownership is treated as an unlock and is not consumed.
+        /// </param>
+        public EngineResult EquipCostume(string birdId, string costumeId)
+        {
+            if (_controller.CurrentPhase != GamePhase.EveningLoop)
+                return EngineResult.Failure(InvalidPhaseCode, "Pete's Pet Store is only open in the evening.");
+
+            var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
+            if (bird == null)
+                return EngineResult.Failure(InvalidBirdCode, "That bird does not exist.");
+
+            if (costumeId == null)
+            {
+                bird.CostumeId = null;
+                return EngineResult.Success();
+            }
+
+            var costume = PetStoreCatalog.FindSupplyOffer(costumeId, PetStoreSupplyType.Costume);
+            if (costume == null || costume.SupplyType != PetStoreSupplyType.Costume)
+                return EngineResult.Failure(InvalidItemCode, "That costume is unavailable.");
+
+            bool isOwned = _controller.CurrentState.PetStore.OwnedCostumeQuantities.TryGetValue(costumeId, out var ownedQuantity) && ownedQuantity > 0;
+            if (!isOwned)
+                return EngineResult.Failure(CostumeNotOwnedCode, "You do not own that costume yet.");
+
+            bird.CostumeId = costumeId;
+            return EngineResult.Success();
         }
 
         private void ApplySupplyPurchase(PetStoreSupplyDefinition supply, int quantity)

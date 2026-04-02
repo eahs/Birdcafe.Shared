@@ -404,6 +404,13 @@ namespace BirdCafe.Shared
 
             foreach (var supply in PetStoreCatalog.GetSupplyOffers())
             {
+                var ownedQuantity = GetOwnedSupplyQuantity(store, supply);
+                var projectedBuyable = supply.Buyable;
+                if (supply.SupplyType == PetStoreSupplyType.Costume && ownedQuantity > 0)
+                {
+                    projectedBuyable = false;
+                }
+
                 offers.Add(new PetStoreSupplyOfferViewModel
                 {
                     ItemId = supply.ItemId,
@@ -411,10 +418,10 @@ namespace BirdCafe.Shared
                     CategoryText = supply.CategoryText,
                     SupplyType = supply.SupplyType,
                     Price = supply.Price,
-                    OwnedQuantity = GetOwnedSupplyQuantity(store, supply),
+                    OwnedQuantity = ownedQuantity,
                     EffectText = supply.EffectText,
-                    IsAffordable = money >= supply.Price,
-                    Buyable = supply.Buyable
+                    IsAffordable = projectedBuyable && money >= supply.Price,
+                    Buyable = projectedBuyable
                 });
             }
 
@@ -470,6 +477,21 @@ namespace BirdCafe.Shared
             }
 
             OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            return true;
+        }
+
+        /// <summary>
+        /// Equips a costume on a bird, or unequips when <paramref name="costumeId"/> is null.
+        /// </summary>
+        public bool EquipBirdCostume(string birdId, string costumeId)
+        {
+            var result = _controller.PetStore.EquipCostume(birdId, costumeId);
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return false;
+            }
+
             return true;
         }
 
@@ -935,6 +957,7 @@ namespace BirdCafe.Shared
                 Energy = (int)b.Energy,
                 Health = (int)b.Health,
                 Trust = (int)b.Trust,
+                CostumeId = b.CostumeId,
                 PreferredFoodsText = b.PreferredFoods.Count == 0 ? "None" : string.Join(", ", b.PreferredFoods),
                 FriendshipCount = b.FriendBirdIds.Count,
                 IsSick = b.IsSick,

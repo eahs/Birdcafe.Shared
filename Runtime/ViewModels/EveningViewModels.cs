@@ -228,6 +228,11 @@ namespace BirdCafe.Shared.ViewModels
         public int Trust { get; set; }
 
         /// <summary>
+        /// Equipped costume item id, or null when no costume is equipped.
+        /// </summary>
+        public string CostumeId { get; set; }
+
+        /// <summary>
         /// Display-friendly preferred food list for this bird.
         /// </summary>
         public string PreferredFoodsText { get; set; }
