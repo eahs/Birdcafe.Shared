@@ -15,6 +15,16 @@ namespace BirdCafe.Shared.ViewModels
         public string BirdId { get; set; }
 
         /// <summary>
+        /// Bird species id used for appearance set resolution.
+        /// </summary>
+        public string SpeciesId { get; set; }
+
+        /// <summary>
+        /// Equipped costume id, or null when no costume is equipped.
+        /// </summary>
+        public string CostumeId { get; set; }
+
+        /// <summary>
         /// Current high-level visual mood.
         /// </summary>
         public BirdAnimationMood CurrentMood { get; set; }
