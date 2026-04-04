@@ -259,6 +259,65 @@ namespace BirdCafe.Shared.Tests
             Assert.AreEqual("BirdNotFound", trigger.ErrorCode);
         }
 
+        [Test]
+        public void FacadeBirdAnimationState_ProjectsSpeciesId_AndNullCostumeId()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("AnimSpecies", "Cafe");
+
+            var bird = game.Controller.CurrentState.Birds.First();
+            var vm = game.GetBirdAnimationState(bird.Id);
+
+            Assert.NotNull(vm);
+            Assert.AreEqual(bird.Id, vm.BirdId);
+            Assert.AreEqual(bird.SpeciesId, vm.SpeciesId);
+            Assert.IsNull(vm.CostumeId);
+            Assert.AreEqual(BirdVisualStateMachine.ToExternalKey(vm.CurrentVisualState), vm.CurrentVisualStateKey);
+        }
+
+        [Test]
+        public void FacadeBirdAnimationState_ReflectsCostumeAfterEquipFlow()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("AnimCostume", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
+
+            var bird = game.Controller.CurrentState.Birds.First();
+            Assert.IsTrue(game.BuyPetStoreSupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume));
+            Assert.IsTrue(game.EquipBirdCostume(bird.Id, PetStoreCatalog.CostumeBandanaId));
+
+            var vm = game.GetBirdAnimationState(bird.Id);
+
+            Assert.NotNull(vm);
+            Assert.AreEqual(PetStoreCatalog.CostumeBandanaId, vm.CostumeId);
+            Assert.AreEqual(bird.SpeciesId, vm.SpeciesId);
+            Assert.AreEqual(BirdVisualStateMachine.ToExternalKey(vm.CurrentVisualState), vm.CurrentVisualStateKey);
+        }
+
+        [Test]
+        public void FacadeGetAllBirdAnimationStates_ProjectsSpeciesAndCostume()
+        {
+            var game = BirdCafeGame.Instance;
+            game.StartNewGame("AnimAll", "Cafe");
+            game.StartSimulationPlayback();
+            game.FinishSimulation();
+            game.Controller.CurrentState.Economy.CurrentBalance = 5000m;
+
+            var bird = game.Controller.CurrentState.Birds.First();
+            Assert.IsTrue(game.BuyPetStoreSupply(PetStoreCatalog.CostumeBandanaId, PetStoreSupplyType.Costume));
+            Assert.IsTrue(game.EquipBirdCostume(bird.Id, PetStoreCatalog.CostumeBandanaId));
+
+            var allStates = game.GetAllBirdAnimationStates();
+            var mappedBird = allStates.First(s => s.BirdId == bird.Id);
+
+            Assert.AreEqual(game.Controller.CurrentState.Birds.Count, allStates.Count);
+            Assert.AreEqual(bird.SpeciesId, mappedBird.SpeciesId);
+            Assert.AreEqual(PetStoreCatalog.CostumeBandanaId, mappedBird.CostumeId);
+            Assert.AreEqual(BirdVisualStateMachine.ToExternalKey(mappedBird.CurrentVisualState), mappedBird.CurrentVisualStateKey);
+        }
+
         private static BirdCafeController BuildControllerWithKnownVisualSeed()
         {
             var controller = new BirdCafeController();

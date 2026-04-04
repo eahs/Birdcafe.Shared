@@ -1037,9 +1037,13 @@ namespace BirdCafe.Shared
 
         private BirdAnimationStateViewModel MapBirdAnimationState(BirdVisualRuntimeState runtime)
         {
+            var bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == runtime.BirdId);
+
             return new BirdAnimationStateViewModel
             {
                 BirdId = runtime.BirdId,
+                SpeciesId = bird?.SpeciesId,
+                CostumeId = bird?.CostumeId,
                 CurrentMood = runtime.CurrentMood,
                 CurrentVisualState = runtime.CurrentVisualState,
                 CurrentVisualStateKey = BirdVisualStateMachine.ToExternalKey(runtime.CurrentVisualState),
