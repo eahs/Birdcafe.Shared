@@ -636,6 +636,12 @@ namespace BirdCafe.Shared
                 FireToast(result.UserMessage);
                 return false;
             }
+
+            if (actionId == CareActionIds.Feed)
+            {
+                _controller.BirdVisualStates.TriggerBirdAnimationEvent(birdId, BirdAnimationEventIds.TreatGiven);
+            }
+
             OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
             return true;
         }
@@ -651,6 +657,70 @@ namespace BirdCafe.Shared
                 FireToast(result.UserMessage);
                 return false;
             }
+            return true;
+        }
+
+        // =================================================================================
+        // BIRD VISUAL MOOD / STATE
+        // =================================================================================
+
+        /// <summary>
+        /// Gets the current shared animation state for one bird.
+        /// </summary>
+        public BirdAnimationStateViewModel GetBirdAnimationState(string birdId)
+        {
+            var result = _controller.BirdVisualStates.GetBirdAnimationState(birdId);
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return null;
+            }
+
+            return MapBirdAnimationState((BirdVisualRuntimeState)result.Payload);
+        }
+
+        /// <summary>
+        /// Gets current shared animation states for all birds.
+        /// </summary>
+        public List<BirdAnimationStateViewModel> GetAllBirdAnimationStates()
+        {
+            var result = _controller.BirdVisualStates.GetAllBirdAnimationStates();
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return new List<BirdAnimationStateViewModel>();
+            }
+
+            return ((List<BirdVisualRuntimeState>)result.Payload).Select(MapBirdAnimationState).ToList();
+        }
+
+        /// <summary>
+        /// Advances one bird's animation state using deterministic mood-driven transitions.
+        /// </summary>
+        public bool AdvanceBirdAnimationState(string birdId)
+        {
+            var result = _controller.BirdVisualStates.AdvanceBirdAnimationState(birdId);
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Queues a temporary one-shot bird animation event to be consumed on next advance.
+        /// </summary>
+        public bool TriggerBirdAnimationEvent(string birdId, string eventId)
+        {
+            var result = _controller.BirdVisualStates.TriggerBirdAnimationEvent(birdId, eventId);
+            if (!result.IsSuccess)
+            {
+                FireToast(result.UserMessage);
+                return false;
+            }
+
             return true;
         }
 
@@ -962,6 +1032,18 @@ namespace BirdCafe.Shared
                 FriendshipCount = b.FriendBirdIds.Count,
                 IsSick = b.IsSick,
                 WillRestTomorrow = b.AssignedDayOffNextDay
+            };
+        }
+
+        private BirdAnimationStateViewModel MapBirdAnimationState(BirdVisualRuntimeState runtime)
+        {
+            return new BirdAnimationStateViewModel
+            {
+                BirdId = runtime.BirdId,
+                CurrentMood = runtime.CurrentMood,
+                CurrentVisualState = runtime.CurrentVisualState,
+                CurrentVisualStateKey = BirdVisualStateMachine.ToExternalKey(runtime.CurrentVisualState),
+                PendingOneShotEventId = runtime.PendingOneShotEventId
             };
         }
 

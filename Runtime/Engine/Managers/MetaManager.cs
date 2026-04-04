@@ -67,6 +67,7 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // Inject the new save state into the controller.
             _controller.SetState(save);
+            _controller.BirdVisualStates.EnsureRuntimeStateForAllBirds();
 
             // Set the game phase to DayLoop so the day intro can start.
             _controller.SetPhase(GamePhase.DayLoop);
@@ -87,6 +88,7 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // Replace the current state.
             _controller.SetState(saveFile);
+            _controller.BirdVisualStates.EnsureRuntimeStateForAllBirds();
 
             // For simplicity, we always resume at the start of the DayLoop phase.
             _controller.SetPhase(GamePhase.DayLoop);
