@@ -356,4 +356,63 @@ namespace BirdCafe.Shared.Enums
         UniqueToy = 1,
         RareCostume = 2
     }
+
+    /// <summary>
+    /// High-level visual mood used by shared animation-state logic.
+    /// </summary>
+    [Serializable]
+    public enum BirdAnimationMood
+    {
+        Happy = 0,
+        Excited = 1,
+        Sleepy = 2,
+        Hungry = 3,
+        Sick = 4,
+        Neutral = 5
+    }
+
+    /// <summary>
+    /// Internal visual state enum mapped to stable external animation keys.
+    /// </summary>
+    [Serializable]
+    public enum BirdVisualState
+    {
+        IdleNeutral = 0,
+        IdleLook = 1,
+        IdleHappy = 2,
+        IdleShift = 3,
+        IdleSleepy = 4,
+        IdleSleep = 5,
+        EmoExcited = 6,
+        EmoCurious = 7,
+        EmoSurprised = 8,
+        EmoProud = 9,
+        EmoSad = 10,
+        EmoAngry = 11,
+        EmoLove = 12,
+        ActAcceptTreat = 13,
+        ActChirpSing = 14,
+        ActGiftReceived = 15
+    }
+
+    /// <summary>
+    /// Stable one-shot event ids used by UI clients to request immediate animation moments.
+    /// </summary>
+    public static class BirdAnimationEventIds
+    {
+        /// <summary>
+        /// One-shot used for treat-given interactions.
+        /// </summary>
+        public const string TreatGiven = "TreatGiven";
+
+        /// <summary>
+        /// One-shot used for gift-received interactions.
+        /// </summary>
+        public const string GiftReceived = "GiftReceived";
+
+        /// <summary>
+        /// One-shot used for song/chirp prompt interactions.
+        /// </summary>
+        public const string SongPrompt = "SongPrompt";
+    }
 }
