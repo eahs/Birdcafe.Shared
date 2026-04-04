@@ -52,6 +52,11 @@ namespace BirdCafe.Shared.Engine
         public PetStoreManager PetStore { get; private set; }
 
         /// <summary>
+        /// Manager responsible for bird visual mood/state runtime behavior.
+        /// </summary>
+        public BirdVisualStateManager BirdVisualStates { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BirdCafeController"/> class.
         /// Sets up all the sub-managers with a reference to this controller.
         /// </summary>
@@ -64,6 +69,7 @@ namespace BirdCafe.Shared.Engine
             Planning = new PlanningManager(this);
             Reporting = new ReportingManager(this);
             PetStore = new PetStoreManager(this);
+            BirdVisualStates = new BirdVisualStateManager(this);
 
             Meta.StartNewGame("FBLA Judge", "FBLA Cafe");
         }

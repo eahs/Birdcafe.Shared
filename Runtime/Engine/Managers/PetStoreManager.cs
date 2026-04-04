@@ -78,6 +78,7 @@ namespace BirdCafe.Shared.Engine.Managers
 
             state.Birds.Add(createdBird);
             state.CurrentDayState.CurrentPlan.BirdIdsWorking.Add(createdBird.Id);
+            _controller.BirdVisualStates.EnsureRuntimeState(createdBird);
 
             return EngineResult.Success(createdBird);
         }

@@ -92,6 +92,12 @@ namespace BirdCafe.Shared
         /// </summary>
         public List<Bird> Birds { get; set; } = new List<Bird>();
 
+        /// <summary>
+        /// Persistent runtime visual-state records keyed by bird id.
+        /// Backfilled on load for older saves that predate this subsystem.
+        /// </summary>
+        public List<BirdVisualRuntimeState> BirdVisualStates { get; set; } = new List<BirdVisualRuntimeState>();
+
         // History
 
         /// <summary>
