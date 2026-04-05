@@ -78,6 +78,7 @@ Runtime/Engine/EngineResult.cs
 Runtime/Engine/EngineResult.cs.meta
 Runtime/Engine/Managers.meta
 Runtime/Engine/Managers/BirdVisualStateManager.cs
+Runtime/Engine/Managers/BirdVisualStateManager.cs.meta
 Runtime/Engine/Managers/CareManager.cs
 Runtime/Engine/Managers/CareManager.cs.meta
 Runtime/Engine/Managers/MetaManager.cs
@@ -94,7 +95,9 @@ Runtime/Engine/Utils.meta
 Runtime/Engine/Utils/BirdFactory.cs
 Runtime/Engine/Utils/BirdFactory.cs.meta
 Runtime/Engine/Utils/BirdMoodResolver.cs
+Runtime/Engine/Utils/BirdMoodResolver.cs.meta
 Runtime/Engine/Utils/BirdVisualStateMachine.cs
+Runtime/Engine/Utils/BirdVisualStateMachine.cs.meta
 Runtime/Engine/Utils/ChatData.cs
 Runtime/Engine/Utils/ChatData.cs.meta
 Runtime/Engine/Utils/EconomyHelper.cs
@@ -113,6 +116,7 @@ Runtime/Models/Birds/Bird.cs.meta
 Runtime/Models/Birds/BirdComponents.cs
 Runtime/Models/Birds/BirdComponents.cs.meta
 Runtime/Models/Birds/BirdVisualRuntimeState.cs
+Runtime/Models/Birds/BirdVisualRuntimeState.cs.meta
 Runtime/Models/Birds/PetStoreCatalogModels.cs
 Runtime/Models/Birds/PetStoreCatalogModels.cs.meta
 Runtime/Models/Cafe.meta
@@ -142,6 +146,7 @@ Runtime/Models/Simulation/Summaries.cs
 Runtime/Models/Simulation/Summaries.cs.meta
 Runtime/ViewModels.meta
 Runtime/ViewModels/BirdAnimationViewModels.cs
+Runtime/ViewModels/BirdAnimationViewModels.cs.meta
 Runtime/ViewModels/ChatViewModels.cs
 Runtime/ViewModels/ChatViewModels.cs.meta
 Runtime/ViewModels/EveningViewModels.cs
@@ -2962,6 +2967,11 @@ namespace BirdCafe.Shared.Engine.Managers
 }
 </file>
 
+<file path="Runtime/Engine/Managers/BirdVisualStateManager.cs.meta">
+fileFormatVersion: 2
+guid: da2fd456ed59b784b823ffc1df8ab9ee
+</file>
+
 <file path="Runtime/Engine/Managers/PetStoreManager.cs.meta">
 fileFormatVersion: 2
 guid: 029c4bb5c8eb56645b38189fb7dc4c98
@@ -3028,6 +3038,11 @@ namespace BirdCafe.Shared.Engine.Utils
         }
     }
 }
+</file>
+
+<file path="Runtime/Engine/Utils/BirdMoodResolver.cs.meta">
+fileFormatVersion: 2
+guid: 915aa300e13f1854bac2f06db7937555
 </file>
 
 <file path="Runtime/Engine/Utils/BirdVisualStateMachine.cs">
@@ -3314,6 +3329,11 @@ namespace BirdCafe.Shared.Engine.Utils
 }
 </file>
 
+<file path="Runtime/Engine/Utils/BirdVisualStateMachine.cs.meta">
+fileFormatVersion: 2
+guid: a9a280f352a47d547ae83f416ebddf71
+</file>
+
 <file path="Runtime/Engine/Utils/PetStoreCatalog.cs.meta">
 fileFormatVersion: 2
 guid: bc9a3157e235b2f4496788b4ca924555
@@ -3367,6 +3387,11 @@ namespace BirdCafe.Shared.Models.Birds
         public int StepCounter { get; set; }
     }
 }
+</file>
+
+<file path="Runtime/Models/Birds/BirdVisualRuntimeState.cs.meta">
+fileFormatVersion: 2
+guid: e5883d57d4e00d744b37196f537cca99
 </file>
 
 <file path="Runtime/Models/Birds/PetStoreCatalogModels.cs.meta">
@@ -3453,6 +3478,11 @@ namespace BirdCafe.Shared.Models.Reporting
 <file path="Runtime/Models/Reporting/ExpenseReportRequest.cs.meta">
 fileFormatVersion: 2
 guid: eafea2124c737624e878453e78a40917
+</file>
+
+<file path="Runtime/ViewModels/BirdAnimationViewModels.cs.meta">
+fileFormatVersion: 2
+guid: f3f01cc7cd1ff7c45a79264ada05dd09
 </file>
 
 <file path="Tests/BirdCafe.Shared.Tests/BirdCafe.Shared.Tests.asmdef">
@@ -14715,7 +14745,7 @@ namespace BirdCafe.Shared
 <file path="package.json">
 {
   "name": "com.birdcafe.shared",
-  "version": "0.4.8",
+  "version": "0.5.1",
   "displayName": "Bird Cafe Shared Library",
   "description": "Shared data models and pure C# logic for Bird Cafe. Contains no Unity engine dependencies.",
   "unity": "2022.3",

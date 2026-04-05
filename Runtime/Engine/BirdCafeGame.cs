@@ -59,7 +59,7 @@ namespace BirdCafe.Shared
         /// <summary>
         /// Raised when the observable money balance changes.
         /// </summary>
-        public event Action<decimal> OnMoneyChanged;
+        public event Action<decimal, decimal> OnMoneyChanged;
         /// <summary>
         /// Raised to request contextual help popup content.
         /// </summary>
@@ -453,6 +453,7 @@ namespace BirdCafe.Shared
         /// </summary>
         public bool BuyPetStoreBird(string speciesId)
         {
+            var oldAmount = _controller.CurrentState.Economy.CurrentBalance;
             var result = _controller.PetStore.BuyBird(speciesId);
             if (!result.IsSuccess)
             {
@@ -460,7 +461,11 @@ namespace BirdCafe.Shared
                 return false;
             }
 
-            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            var newAmount = _controller.CurrentState.Economy.CurrentBalance;
+
+            if (newAmount != oldAmount)
+                OnMoneyChanged?.Invoke(oldAmount, newAmount);
+
             return true;
         }
 
@@ -469,6 +474,7 @@ namespace BirdCafe.Shared
         /// </summary>
         public bool BuyPetStoreSupply(string itemId, PetStoreSupplyType supplyType)
         {
+            var oldAmount = _controller.CurrentState.Economy.CurrentBalance;
             var result = _controller.PetStore.BuySupply(itemId, supplyType);
             if (!result.IsSuccess)
             {
@@ -476,7 +482,11 @@ namespace BirdCafe.Shared
                 return false;
             }
 
-            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            var newAmount = _controller.CurrentState.Economy.CurrentBalance;
+
+            if (newAmount != oldAmount)
+                OnMoneyChanged?.Invoke(oldAmount, newAmount);
+
             return true;
         }
 
@@ -629,6 +639,7 @@ namespace BirdCafe.Shared
         /// </summary>
         public bool PerformCare(string birdId, string actionId)
         {
+            var oldAmount = _controller.CurrentState.Economy.CurrentBalance;
             var result = _controller.Care.PerformCareAction(birdId, actionId);
 
             if (!result.IsSuccess)
@@ -642,7 +653,11 @@ namespace BirdCafe.Shared
                 _controller.BirdVisualStates.TriggerBirdAnimationEvent(birdId, BirdAnimationEventIds.TreatGiven);
             }
 
-            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            var newAmount = _controller.CurrentState.Economy.CurrentBalance;
+
+            if (newAmount != oldAmount)
+                OnMoneyChanged?.Invoke(oldAmount, newAmount);
+
             return true;
         }
 
@@ -894,6 +909,7 @@ namespace BirdCafe.Shared
         /// </summary>
         public bool FinalizeDay()
         {
+            var oldAmount = _controller.CurrentState.Economy.CurrentBalance;
             var res = _controller.Planning.FinalizeDay();
             if (!res.IsSuccess)
             {
@@ -902,7 +918,10 @@ namespace BirdCafe.Shared
             }
 
             _cachedSimResult = null;
-            OnMoneyChanged?.Invoke(_controller.CurrentState.Economy.CurrentBalance);
+            var newAmount = _controller.CurrentState.Economy.CurrentBalance;
+
+            if (newAmount != oldAmount)
+                OnMoneyChanged?.Invoke(oldAmount, newAmount);
 
             if (_controller.CurrentPhase == GamePhase.Reporting)
             {
@@ -1056,8 +1075,15 @@ namespace BirdCafe.Shared
         /// </summary>
         public void AddMoney(int v)
         {
+            var oldAmount = _controller.CurrentState.Economy.CurrentBalance;
+
             Console.WriteLine($"Adding ${v} to balance.");
             _controller.CurrentState.Economy.CurrentBalance += v;
+
+            var newAmount = _controller.CurrentState.Economy.CurrentBalance;
+
+            if (newAmount != oldAmount)
+                OnMoneyChanged?.Invoke(oldAmount, newAmount);
         }
 
         /// <summary>

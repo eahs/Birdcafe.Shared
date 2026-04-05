@@ -51,7 +51,7 @@ namespace BirdCafe.ConsoleApp
                 // After chat loop finishes, we just let the main loop redraw the current screen state
             };
 
-            BirdCafeGame.Instance.OnMoneyChanged += (amount) =>
+            BirdCafeGame.Instance.OnMoneyChanged += (oldAmount, newAmount) =>
             {
                 // In a console app, we can't easily update a header in real-time 
                 // without clearing screen, so we ignore this for now or log it.
