@@ -18,11 +18,6 @@ namespace BirdCafe.Shared.ViewModels
         public string BirdId { get; set; }
 
         /// <summary>
-        /// Gets or sets the screen that should be restored after the minigame ends.
-        /// </summary>
-        public GameScreen ReturnScreen { get; set; }
-
-        /// <summary>
         /// Gets or sets a value indicating whether this minigame was launched from care flow.
         /// </summary>
         public bool WasStartedFromCare { get; set; }
@@ -62,11 +57,6 @@ namespace BirdCafe.Shared.ViewModels
         /// Gets or sets the score reported by the minigame.
         /// </summary>
         public int Score { get; set; }
-
-        /// <summary>
-        /// Gets or sets a convenience success flag for UI clients.
-        /// </summary>
-        public bool WasSuccessful { get; set; }
 
         /// <summary>
         /// Gets or sets the player-facing completion message.

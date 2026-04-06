@@ -2,6 +2,7 @@ using BirdCafe.Shared;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.ViewModels;
 using NUnit.Framework;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BirdCafe.Shared.Tests
@@ -91,7 +92,20 @@ namespace BirdCafe.Shared.Tests
         }
 
         [Test]
-        public void CompleteCurrentMinigame_Success_AppliesPlayRewardExactlyOnce()
+        public void SetDefaultCareMinigame_TimingBarGame_IsUsedByPlayCareLaunch()
+        {
+            Assert.IsTrue(_game.SetDefaultCareMinigame(MinigameId.TimingBarGame));
+
+            var started = _game.TryStartCareMinigame(_birdId, CareActionIds.Play);
+
+            Assert.IsTrue(started);
+            var session = _game.GetCurrentMinigameSession();
+            Assert.NotNull(session);
+            Assert.AreEqual(MinigameId.TimingBarGame, session.Minigame);
+        }
+
+        [Test]
+        public void CompleteCurrentMinigame_SuccessStatus_AppliesPlayRewardExactlyOnce()
         {
             var bird = _game.Controller.CurrentState.Birds.First(b => b.Id == _birdId);
             bird.Mood = 10;
@@ -104,12 +118,10 @@ namespace BirdCafe.Shared.Tests
             var beforeMood = bird.Mood;
             var beforeEnergy = bird.Energy;
             var beforeStress = bird.Stress;
-            var returnScreen = _game.GetCurrentMinigameSession().ReturnScreen;
 
             var completed = _game.CompleteCurrentMinigame(new MinigameCompletionViewModel
             {
                 Status = MinigameCompletionStatus.Success,
-                WasSuccessful = true,
                 Score = 100,
                 ResultMessage = "Success"
             });
@@ -120,7 +132,7 @@ namespace BirdCafe.Shared.Tests
             Assert.AreEqual(beforeStress - 10f, bird.Stress);
             Assert.IsFalse(_game.HasActiveMinigame());
             Assert.IsNull(_game.GetCurrentMinigameSession());
-            Assert.AreEqual(returnScreen, _game.CurrentScreen);
+            Assert.AreEqual(GameScreen.EveningCare, _game.CurrentScreen);
         }
 
         [Test]
@@ -132,12 +144,10 @@ namespace BirdCafe.Shared.Tests
             bird.Stress = 50;
 
             Assert.IsTrue(_game.TryStartCareMinigame(_birdId, CareActionIds.Play));
-            var returnScreen = _game.GetCurrentMinigameSession().ReturnScreen;
 
             var completed = _game.CompleteCurrentMinigame(new MinigameCompletionViewModel
             {
                 Status = MinigameCompletionStatus.Failure,
-                WasSuccessful = false,
                 Score = 5,
                 ResultMessage = "Failed"
             });
@@ -147,7 +157,7 @@ namespace BirdCafe.Shared.Tests
             Assert.AreEqual(50f, bird.Energy);
             Assert.AreEqual(50f, bird.Stress);
             Assert.IsFalse(_game.HasActiveMinigame());
-            Assert.AreEqual(returnScreen, _game.CurrentScreen);
+            Assert.AreEqual(GameScreen.EveningCare, _game.CurrentScreen);
         }
 
         [Test]
@@ -159,7 +169,6 @@ namespace BirdCafe.Shared.Tests
             bird.Stress = 50;
 
             Assert.IsTrue(_game.TryStartCareMinigame(_birdId, CareActionIds.Play));
-            var returnScreen = _game.GetCurrentMinigameSession().ReturnScreen;
 
             var cancelled = _game.CancelCurrentMinigame();
 
@@ -168,7 +177,81 @@ namespace BirdCafe.Shared.Tests
             Assert.AreEqual(50f, bird.Energy);
             Assert.AreEqual(50f, bird.Stress);
             Assert.IsFalse(_game.HasActiveMinigame());
-            Assert.AreEqual(returnScreen, _game.CurrentScreen);
+            Assert.AreEqual(GameScreen.EveningCare, _game.CurrentScreen);
+        }
+
+        [Test]
+        public void CompleteCurrentMinigame_SuccessWhenRewardFails_StillExitsMinigameFlow()
+        {
+            var bird = _game.Controller.CurrentState.Birds.First(b => b.Id == _birdId);
+            bird.Mood = 10;
+            bird.Energy = 50;
+            bird.Stress = 50;
+
+            Assert.IsTrue(_game.TryStartCareMinigame(_birdId, CareActionIds.Play));
+            _game.Controller.SetPhaseForTests(GamePhase.DayLoop);
+
+            var toasts = new List<string>();
+            void HandleToast(string message) => toasts.Add(message);
+            _game.OnToastMessage += HandleToast;
+
+            try
+            {
+                var completed = _game.CompleteCurrentMinigame(new MinigameCompletionViewModel
+                {
+                    Status = MinigameCompletionStatus.Success,
+                    Score = 100,
+                    ResultMessage = "Success"
+                });
+
+                Assert.IsTrue(completed);
+                Assert.IsFalse(_game.HasActiveMinigame());
+                Assert.AreEqual(GameScreen.EveningCare, _game.CurrentScreen);
+                Assert.AreEqual(10f, bird.Mood);
+                Assert.AreEqual(50f, bird.Energy);
+                Assert.AreEqual(50f, bird.Stress);
+                Assert.IsTrue(toasts.Any(t => t.Contains("reward could not be granted")));
+            }
+            finally
+            {
+                _game.OnToastMessage -= HandleToast;
+            }
+        }
+
+        [Test]
+        public void StartNewGame_ClearsAnyActiveMinigameSession()
+        {
+            Assert.IsTrue(_game.TryStartMinigame(MinigameId.Flappy, _birdId));
+            Assert.IsTrue(_game.HasActiveMinigame());
+
+            _game.StartNewGame("MiniTester2", "Cafe2");
+
+            Assert.IsFalse(_game.HasActiveMinigame());
+            Assert.IsNull(_game.GetCurrentMinigameSession());
+        }
+
+        [Test]
+        public void LoadGame_ClearsAnyActiveMinigameSession()
+        {
+            Assert.IsTrue(_game.TryStartMinigame(MinigameId.Flappy, _birdId));
+            Assert.IsTrue(_game.HasActiveMinigame());
+
+            _game.LoadGame("slot-1");
+
+            Assert.IsFalse(_game.HasActiveMinigame());
+            Assert.IsNull(_game.GetCurrentMinigameSession());
+        }
+
+        [Test]
+        public void ReturnToMainMenu_ClearsAnyActiveMinigameSession()
+        {
+            Assert.IsTrue(_game.TryStartMinigame(MinigameId.Flappy, _birdId));
+            Assert.IsTrue(_game.HasActiveMinigame());
+
+            _game.ReturnToMainMenu();
+
+            Assert.IsFalse(_game.HasActiveMinigame());
+            Assert.IsNull(_game.GetCurrentMinigameSession());
         }
 
         [Test]
@@ -178,8 +261,7 @@ namespace BirdCafe.Shared.Tests
 
             var completed = _game.CompleteCurrentMinigame(new MinigameCompletionViewModel
             {
-                Status = MinigameCompletionStatus.Success,
-                WasSuccessful = true
+                Status = MinigameCompletionStatus.Success
             });
 
             Assert.IsFalse(completed);
