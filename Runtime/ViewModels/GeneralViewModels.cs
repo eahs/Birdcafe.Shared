@@ -67,6 +67,11 @@ namespace BirdCafe.Shared.ViewModels
         GameOver,
 
         /// <summary>
+        /// Shared minigame surface. The active minigame identity is tracked in minigame session data.
+        /// </summary>
+        Minigame,
+
+        /// <summary>
         /// The Oracle Chat interface.
         /// </summary>
         Chat

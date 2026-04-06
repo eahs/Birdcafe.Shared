@@ -220,6 +220,47 @@ namespace BirdCafe.Shared.Enums
         public const string Play = "Play";
     }
 
+
+
+    /// <summary>
+    /// Identifies the minigame currently being played.
+    /// </summary>
+    [Serializable]
+    public enum MinigameId
+    {
+        /// <summary>
+        /// Side-scrolling tap-to-fly minigame.
+        /// </summary>
+        Flappy = 0,
+
+        /// <summary>
+        /// Precision timing minigame.
+        /// </summary>
+        TimingBarGame = 1
+    }
+
+    /// <summary>
+    /// Represents the outcome reported when a minigame session ends.
+    /// </summary>
+    [Serializable]
+    public enum MinigameCompletionStatus
+    {
+        /// <summary>
+        /// The player completed the minigame successfully.
+        /// </summary>
+        Success = 0,
+
+        /// <summary>
+        /// The player attempted the minigame but did not succeed.
+        /// </summary>
+        Failure = 1,
+
+        /// <summary>
+        /// The minigame was exited before completion.
+        /// </summary>
+        Cancelled = 2
+    }
+
     /// <summary>
     /// Types of events strictly for the visual timeline playback.
     /// </summary>
