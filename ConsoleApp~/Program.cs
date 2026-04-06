@@ -170,7 +170,6 @@ namespace BirdCafe.ConsoleApp
                     game.CompleteCurrentMinigame(new MinigameCompletionViewModel
                     {
                         Status = MinigameCompletionStatus.Success,
-                        WasSuccessful = true,
                         Score = 100,
                         ResultMessage = "Console placeholder success."
                     });
@@ -179,7 +178,6 @@ namespace BirdCafe.ConsoleApp
                     game.CompleteCurrentMinigame(new MinigameCompletionViewModel
                     {
                         Status = MinigameCompletionStatus.Failure,
-                        WasSuccessful = false,
                         Score = 0,
                         ResultMessage = "Console placeholder failure."
                     });
