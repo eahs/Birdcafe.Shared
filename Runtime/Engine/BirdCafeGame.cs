@@ -709,20 +709,7 @@ namespace BirdCafe.Shared
         /// <returns>True when the session starts successfully; otherwise false.</returns>
         public bool TryStartMinigame(MinigameId minigameId, string birdId)
         {
-            if (!IsMinigameStartAllowed(birdId))
-            {
-                return false;
-            }
-
-            _activeMinigameSession = BuildMinigameSession(
-                minigameId,
-                birdId,
-                _currentScreen,
-                wasStartedFromCare: false,
-                pendingRewardActionId: null);
-
-            TransitionTo(GameScreen.Minigame);
-            return true;
+            return TryStartMinigameInternal(minigameId, birdId, wasStartedFromCare: false, pendingRewardActionId: null);
         }
 
         /// <summary>
@@ -739,21 +726,8 @@ namespace BirdCafe.Shared
                 return false;
             }
 
-            if (!IsMinigameStartAllowed(birdId))
-            {
-                return false;
-            }
-
             var minigameId = ResolveDefaultCareMinigame(actionId);
-            _activeMinigameSession = BuildMinigameSession(
-                minigameId,
-                birdId,
-                _currentScreen,
-                wasStartedFromCare: true,
-                pendingRewardActionId: actionId);
-
-            TransitionTo(GameScreen.Minigame);
-            return true;
+            return TryStartMinigameInternal(minigameId, birdId, wasStartedFromCare: true, pendingRewardActionId: actionId);
         }
 
         /// <summary>
@@ -1181,14 +1155,38 @@ namespace BirdCafe.Shared
                 return false;
             }
 
-            var birdExists = _controller.CurrentState.Birds.Any(b => b.Id == birdId);
-            if (!birdExists)
+            if (!TryResolveBird(birdId, out _))
             {
                 FireToast("Bird ID not found.");
                 return false;
             }
 
             return true;
+        }
+
+        private bool TryStartMinigameInternal(MinigameId minigameId, string birdId, bool wasStartedFromCare, string pendingRewardActionId)
+        {
+            if (!IsMinigameStartAllowed(birdId))
+            {
+                return false;
+            }
+
+            var returnScreen = _currentScreen;
+            _activeMinigameSession = BuildMinigameSession(
+                minigameId,
+                birdId,
+                returnScreen,
+                wasStartedFromCare,
+                pendingRewardActionId);
+
+            TransitionTo(GameScreen.Minigame);
+            return true;
+        }
+
+        private bool TryResolveBird(string birdId, out Bird bird)
+        {
+            bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
+            return bird != null;
         }
 
         private MinigameSessionViewModel BuildMinigameSession(
@@ -1243,9 +1241,14 @@ namespace BirdCafe.Shared
         {
             // Preserve return target before clearing the session object so restoration remains deterministic.
             var returnScreen = _activeMinigameSession.ReturnScreen;
-            _activeMinigameSession = null;
+            ClearActiveMinigameSession();
             TransitionTo(returnScreen);
             return true;
+        }
+
+        private void ClearActiveMinigameSession()
+        {
+            _activeMinigameSession = null;
         }
 
         private static MinigameSessionViewModel CloneSession(MinigameSessionViewModel session)
