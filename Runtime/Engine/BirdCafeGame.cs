@@ -29,6 +29,9 @@ namespace BirdCafe.Shared
         private readonly BirdCafeController _controller;
         private GameScreen _currentScreen = GameScreen.MainMenu;
         private DaySimulationResult _cachedSimResult;
+        private MinigameSessionViewModel _activeMinigameSession;
+        private GameScreen _activeMinigameReturnScreen;
+        private MinigameId _defaultCareMinigame = MinigameId.Flappy;
 
         // --- NEW CHAT STATE ---
         /// <summary>
@@ -93,6 +96,7 @@ namespace BirdCafe.Shared
         /// </summary>
         public void StartNewGame(string playerName, string cafeName)
         {
+            ClearTransientFacadeState();
             var result = _controller.Meta.StartNewGame(playerName, cafeName);
             if (!result.IsSuccess)
             {
@@ -107,6 +111,7 @@ namespace BirdCafe.Shared
         /// </summary>
         public void LoadGame(string saveId)
         {
+            ClearTransientFacadeState();
             TransitionTo(GameScreen.DayIntro);
         }
 
@@ -676,6 +681,125 @@ namespace BirdCafe.Shared
         }
 
         // =================================================================================
+        // MINIGAMES
+        // =================================================================================
+
+        /// <summary>
+        /// Returns whether a minigame session is currently active.
+        /// </summary>
+        public bool HasActiveMinigame()
+        {
+            return _activeMinigameSession != null;
+        }
+
+        /// <summary>
+        /// Returns the currently active minigame session, or null when no session is active.
+        /// </summary>
+        public MinigameSessionViewModel GetCurrentMinigameSession()
+        {
+            if (_activeMinigameSession == null)
+            {
+                return null;
+            }
+
+            return CloneSession(_activeMinigameSession);
+        }
+
+        /// <summary>
+        /// Attempts to start a minigame session for a specific bird.
+        /// </summary>
+        /// <param name="minigameId">The minigame to launch.</param>
+        /// <param name="birdId">The bird tied to the minigame session.</param>
+        /// <returns>True when the session starts successfully; otherwise false.</returns>
+        public bool TryStartMinigame(MinigameId minigameId, string birdId)
+        {
+            return TryStartMinigameInternal(minigameId, birdId, wasStartedFromCare: false, pendingRewardActionId: null);
+        }
+
+        /// <summary>
+        /// Attempts to start a care-driven minigame and defer care reward application until success.
+        /// </summary>
+        /// <param name="birdId">The bird id for the care action.</param>
+        /// <param name="actionId">The care action id requesting minigame gating.</param>
+        /// <returns>True when the minigame session starts successfully; otherwise false.</returns>
+        public bool TryStartCareMinigame(string birdId, string actionId)
+        {
+            if (!string.Equals(actionId, CareActionIds.Play, StringComparison.Ordinal))
+            {
+                FireToast("Only Play currently supports minigame flow.");
+                return false;
+            }
+
+            var minigameId = ResolveDefaultCareMinigame(actionId);
+            return TryStartMinigameInternal(minigameId, birdId, wasStartedFromCare: true, pendingRewardActionId: actionId);
+        }
+
+        /// <summary>
+        /// Sets which minigame should launch for play-care minigame flow.
+        /// </summary>
+        /// <param name="minigameId">The minigame id to use for future play-care launches.</param>
+        /// <returns>True when the minigame id is supported by the current care flow; otherwise false.</returns>
+        public bool SetDefaultCareMinigame(MinigameId minigameId)
+        {
+            if (!IsSupportedCareMinigame(minigameId))
+            {
+                FireToast("The selected minigame is not supported for care flow.");
+                return false;
+            }
+
+            _defaultCareMinigame = minigameId;
+            return true;
+        }
+
+        /// <summary>
+        /// Completes the currently active minigame and applies any pending reward on success.
+        /// </summary>
+        /// <param name="completion">Completion payload reported by the UI.</param>
+        /// <returns>True when completion is accepted; otherwise false.</returns>
+        public bool CompleteCurrentMinigame(MinigameCompletionViewModel completion)
+        {
+            if (_activeMinigameSession == null)
+            {
+                FireToast("No active minigame session.");
+                return false;
+            }
+
+            if (completion == null)
+            {
+                FireToast("Invalid minigame completion payload.");
+                return false;
+            }
+
+            bool rewardApplied = true;
+            if (completion.Status == MinigameCompletionStatus.Success)
+            {
+                rewardApplied = ApplyPendingMinigameReward(_activeMinigameSession);
+                if (!rewardApplied)
+                {
+                    FireToast("Minigame reward could not be granted.");
+                }
+            }
+
+            ReturnFromMinigame();
+            return true;
+        }
+
+        /// <summary>
+        /// Cancels the currently active minigame session without applying rewards.
+        /// </summary>
+        /// <returns>True when a session is cancelled; otherwise false.</returns>
+        public bool CancelCurrentMinigame()
+        {
+            if (_activeMinigameSession == null)
+            {
+                FireToast("No active minigame session.");
+                return false;
+            }
+
+            return ReturnFromMinigame();
+        }
+
+        // =================================================================================
         // BIRD VISUAL MOOD / STATE
         // =================================================================================
 
@@ -1018,6 +1142,7 @@ namespace BirdCafe.Shared
         /// </summary>
         public void ReturnToMainMenu()
         {
+            ClearTransientFacadeState();
             TransitionTo(GameScreen.MainMenu);
         }
 
@@ -1027,6 +1152,187 @@ namespace BirdCafe.Shared
         {
             _currentScreen = screen;
             OnScreenChanged?.Invoke(screen);
+        }
+
+        private bool IsMinigameStartAllowed(MinigameId minigameId, string birdId)
+        {
+            if (_activeMinigameSession != null)
+            {
+                FireToast("A minigame is already active.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(birdId))
+            {
+                FireToast("Bird is required to start a minigame.");
+                return false;
+            }
+
+            if (!IsMinigameAllowedForCurrentPhase(minigameId))
+            {
+                FireToast("This minigame is not available in the current phase.");
+                return false;
+            }
+
+            if (!TryResolveBird(birdId, out _))
+            {
+                FireToast("Bird ID not found.");
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool TryStartMinigameInternal(MinigameId minigameId, string birdId, bool wasStartedFromCare, string pendingRewardActionId)
+        {
+            if (!IsMinigameStartAllowed(minigameId, birdId))
+            {
+                return false;
+            }
+
+            _activeMinigameReturnScreen = _currentScreen;
+            _activeMinigameSession = BuildMinigameSession(
+                minigameId,
+                birdId,
+                wasStartedFromCare,
+                pendingRewardActionId);
+
+            TransitionTo(GameScreen.Minigame);
+            return true;
+        }
+
+        private bool TryResolveBird(string birdId, out Bird bird)
+        {
+            bird = _controller.CurrentState.Birds.FirstOrDefault(b => b.Id == birdId);
+            return bird != null;
+        }
+
+        private MinigameSessionViewModel BuildMinigameSession(
+            MinigameId minigameId,
+            string birdId,
+            bool wasStartedFromCare,
+            string pendingRewardActionId)
+        {
+            return new MinigameSessionViewModel
+            {
+                Minigame = minigameId,
+                BirdId = birdId,
+                WasStartedFromCare = wasStartedFromCare,
+                PendingRewardActionId = pendingRewardActionId,
+                Title = BuildMinigameTitle(minigameId),
+                Instructions = BuildMinigameInstructions(minigameId),
+                AllowCancel = true
+            };
+        }
+
+        private MinigameId ResolveDefaultCareMinigame(string actionId)
+        {
+            if (string.Equals(actionId, CareActionIds.Play, StringComparison.Ordinal))
+            {
+                return _defaultCareMinigame;
+            }
+
+            return _defaultCareMinigame;
+        }
+
+        private bool ApplyPendingMinigameReward(MinigameSessionViewModel session)
+        {
+            if (session == null || string.IsNullOrEmpty(session.PendingRewardActionId))
+            {
+                return true;
+            }
+
+            // Route reward through the existing care facade path so all domain, economy,
+            // visual hooks, and validation continue to run from one authoritative place.
+            return PerformCare(session.BirdId, session.PendingRewardActionId);
+        }
+
+        private bool ReturnFromMinigame()
+        {
+            // Preserve return target before clearing the session object so restoration remains deterministic.
+            var returnScreen = _activeMinigameReturnScreen;
+            ClearActiveMinigameSession();
+            TransitionTo(returnScreen);
+            return true;
+        }
+
+        private void ClearActiveMinigameSession()
+        {
+            _activeMinigameSession = null;
+            _activeMinigameReturnScreen = GameScreen.MainMenu;
+        }
+
+        private static MinigameSessionViewModel CloneSession(MinigameSessionViewModel session)
+        {
+            if (session == null)
+            {
+                return null;
+            }
+
+            return new MinigameSessionViewModel
+            {
+                Minigame = session.Minigame,
+                BirdId = session.BirdId,
+                WasStartedFromCare = session.WasStartedFromCare,
+                PendingRewardActionId = session.PendingRewardActionId,
+                Title = session.Title,
+                Instructions = session.Instructions,
+                AllowCancel = session.AllowCancel
+            };
+        }
+
+        private static string BuildMinigameTitle(MinigameId minigameId)
+        {
+            switch (minigameId)
+            {
+                case MinigameId.TimingBarGame:
+                    return "Timing Bar";
+                case MinigameId.Flappy:
+                default:
+                    return "Flappy Bird Training";
+            }
+        }
+
+        private static string BuildMinigameInstructions(MinigameId minigameId)
+        {
+            switch (minigameId)
+            {
+                case MinigameId.TimingBarGame:
+                    return "Stop the marker in the target zone.";
+                case MinigameId.Flappy:
+                default:
+                    return "Keep flying and avoid obstacles to win.";
+            }
+        }
+
+        private bool IsMinigameAllowedForCurrentPhase(MinigameId minigameId)
+        {
+            switch (minigameId)
+            {
+                case MinigameId.Flappy:
+                case MinigameId.TimingBarGame:
+                    return _controller.CurrentPhase == GamePhase.EveningLoop;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool IsSupportedCareMinigame(MinigameId minigameId)
+        {
+            switch (minigameId)
+            {
+                case MinigameId.Flappy:
+                case MinigameId.TimingBarGame:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private void ClearTransientFacadeState()
+        {
+            _cachedSimResult = null;
+            ClearActiveMinigameSession();
         }
 
         private void FireToast(string message)
