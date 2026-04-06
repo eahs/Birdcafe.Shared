@@ -1,5 +1,6 @@
 
 using BirdCafe.Shared;
+using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.ViewModels;
 using System;
 
@@ -135,6 +136,56 @@ namespace BirdCafe.ConsoleApp
                     // Restore previous screen state logic manually or by just relying on game controller state
                     // (Since Chat isn't a "GamePhase" in the engine controller, the engine is likely still in DayLoop/Evening etc)
                     // We just loop back.
+                    break;
+                case GameScreen.Minigame:
+                    ShowMinigamePlaceholder();
+                    break;
+            }
+        }
+
+        private static void ShowMinigamePlaceholder()
+        {
+            Console.Clear();
+            var game = BirdCafeGame.Instance;
+            var session = game.GetCurrentMinigameSession();
+
+            if (session == null)
+            {
+                Console.WriteLine("No active minigame session was found.");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+                return;
+            }
+
+            Console.WriteLine($"=== MINIGAME: {session.Minigame} ===");
+            Console.WriteLine(session.Title);
+            Console.WriteLine(session.Instructions);
+            Console.WriteLine();
+            Console.WriteLine("Press [S] to report success, [F] to report failure, [C] to cancel.");
+
+            var key = Console.ReadKey(true).Key;
+            switch (key)
+            {
+                case ConsoleKey.S:
+                    game.CompleteCurrentMinigame(new MinigameCompletionViewModel
+                    {
+                        Status = MinigameCompletionStatus.Success,
+                        WasSuccessful = true,
+                        Score = 100,
+                        ResultMessage = "Console placeholder success."
+                    });
+                    break;
+                case ConsoleKey.F:
+                    game.CompleteCurrentMinigame(new MinigameCompletionViewModel
+                    {
+                        Status = MinigameCompletionStatus.Failure,
+                        WasSuccessful = false,
+                        Score = 0,
+                        ResultMessage = "Console placeholder failure."
+                    });
+                    break;
+                default:
+                    game.CancelCurrentMinigame();
                     break;
             }
         }
