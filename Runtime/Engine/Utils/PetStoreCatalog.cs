@@ -245,7 +245,7 @@ namespace BirdCafe.Shared.Engine.Utils
         /// </remarks>
         public static string BuildBirdName(string speciesName, int dayNumber, int existingBirdCount)
         {
-            return $"{speciesName} #{dayNumber}-{existingBirdCount + 1}";
+            return $"{speciesName}";
         }
 
         /// <summary>

@@ -386,8 +386,12 @@ namespace BirdCafe.Shared
         /// </summary>
         public List<PetStoreBirdOfferViewModel> GetPetStoreBirdOffers()
         {
+            var state = _controller.CurrentState;
             var money = _controller.CurrentState.Economy.CurrentBalance;
-            return PetStoreCatalog.BirdOffers.Select(o => new PetStoreBirdOfferViewModel
+
+            var ownedBirdSpecies = state.Birds.Select(x => x.SpeciesId);
+
+            return PetStoreCatalog.BirdOffers.Where(x => !ownedBirdSpecies.Contains(x.SpeciesId)).Select(o => new PetStoreBirdOfferViewModel
             {
                 SpeciesId = o.SpeciesId,
                 Name = o.DisplayName,
@@ -470,6 +474,8 @@ namespace BirdCafe.Shared
 
             if (newAmount != oldAmount)
                 OnMoneyChanged?.Invoke(oldAmount, newAmount);
+
+            FireToast("Congrats on your new feathery friend! Don't forget you're gonna need supplies.");
 
             return true;
         }
