@@ -151,6 +151,66 @@ namespace BirdCafe.Shared.Tests
             Assert.Greater(withFriendRevenue, noFriendRevenue);
         }
 
+
+        [Test]
+        public void RunDaySimulation_ServiceCompletedTimelinePopularity_MatchesCustomerTransactionsForMultiItemOrders()
+        {
+            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
+
+            // Force deterministic multi-item demand and keep service throughput reliable.
+            _controller.CurrentState.CurrentDayState.CurrentPlan.DaySeed = 12345;
+            _controller.CurrentState.Config.ChanceForSecondaryItem = 1f;
+            _controller.CurrentState.Config.BaseCustomersPerDay = 2;
+            _controller.CurrentState.Config.PopularityToCustomerFactor = 0f;
+            _controller.CurrentState.Config.CustomerPatienceSeconds = 10000f;
+
+            // Ensure inventory never blocks fulfillment for this regression scenario.
+            _controller.CurrentState.Cafe.Inventory.Coffee.QuantityOnHand = 200;
+            _controller.CurrentState.Cafe.Inventory.BakedGoods.QuantityOnHand = 200;
+            _controller.CurrentState.Cafe.Inventory.ThemedMerch.QuantityOnHand = 200;
+
+            var runResult = _controller.Simulation.RunDaySimulation();
+            Assert.IsTrue(runResult.IsSuccess, "Simulation should succeed");
+
+            var dayResult = runResult.Payload as Models.Simulation.DaySimulationResult;
+            Assert.IsNotNull(dayResult, "Simulation payload should be a day result");
+
+            var servedCustomers = dayResult.CustomerTransactions
+                .Where(t => t.Outcome == CustomerOutcome.Served)
+                .ToList();
+
+            Assert.IsNotEmpty(servedCustomers, "Expected at least one served customer");
+
+            var serviceCompletedEvents = dayResult.Timeline
+                .Where(e => e.EventType == SimulationTimelineEventType.ServiceCompleted && e.CustomerId.HasValue)
+                .ToList();
+
+            Assert.IsTrue(
+                servedCustomers.Any(c => serviceCompletedEvents.Count(e => e.CustomerId == c.CustomerId) > 1),
+                "Expected at least one served customer to have more than one ServiceCompleted event.");
+
+            const float tolerance = 0.00001f;
+            foreach (var servedCustomer in servedCustomers)
+            {
+                float timelinePopularityDelta = serviceCompletedEvents
+                    .Where(e => e.CustomerId == servedCustomer.CustomerId)
+                    .Sum(e => e.PopularityDelta);
+
+                Assert.That(
+                    timelinePopularityDelta,
+                    Is.EqualTo(servedCustomer.PopularityDelta).Within(tolerance),
+                    $"Timeline popularity mismatch for served customer {servedCustomer.CustomerId}.");
+            }
+
+            float totalTimelinePopularityDelta = serviceCompletedEvents.Sum(e => e.PopularityDelta);
+            float totalServedTransactionPopularityDelta = servedCustomers.Sum(c => c.PopularityDelta);
+
+            Assert.That(
+                totalTimelinePopularityDelta,
+                Is.EqualTo(totalServedTransactionPopularityDelta).Within(tolerance),
+                "Total successful ServiceCompleted timeline popularity should match served transaction popularity total.");
+        }
+
         [Test]
         public void TrustAndFriendshipRevenueBonuses_AreDeterministicForSameSeed()
         {
