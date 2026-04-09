@@ -325,8 +325,12 @@ namespace BirdCafe.Shared.Engine.Managers
 
             // Process each item sold.
             decimal totalRevenue = 0;
-            foreach (var item in servedItems)
+            float friendlinessBonus = (bird.Friendliness / 100f) + (state.PetStore.TotalBirdBuffStacks * 0.02f);
+            float basePerItemPopularityDelta = 1f / servedItems.Count;
+
+            for (int i = 0; i < servedItems.Count; i++)
             {
+                var item = servedItems[i];
                 decimal basePrice = GetProductPrice(state, item);
                 decimal adjustedPrice = ApplyBirdRevenueBonuses(state, bird, basePrice);
                 totalRevenue += adjustedPrice;
@@ -337,7 +341,12 @@ namespace BirdCafe.Shared.Engine.Managers
                 // Update aggregate counts.
                 UpdateProductSales(result.Customers, item);
 
-                float friendlinessBonus = (bird.Friendliness / 100f) + (state.PetStore.TotalBirdBuffStacks * 0.02f);
+                // Split the base popularity gain across all sold items, then apply friendliness once.
+                float popularityDelta = basePerItemPopularityDelta;
+                if (i == servedItems.Count - 1)
+                {
+                    popularityDelta += friendlinessBonus;
+                }
 
                 // Log completion event for this specific item.
                 result.Timeline.Add(new SimulationTimelineEvent
@@ -348,12 +357,12 @@ namespace BirdCafe.Shared.Engine.Managers
                     BirdId = bird.Id,
                     Product = item,
                     MoneyDelta = adjustedPrice,
-                    PopularityDelta = (1f / servedItems.Count) + friendlinessBonus // Split base popularity gain and add bird-based charm bonus.
+                    PopularityDelta = popularityDelta
                 });
             }
 
             cust.Revenue = totalRevenue;
-            cust.PopularityDelta = 1 + (bird.Friendliness / 100f) + (state.PetStore.TotalBirdBuffStacks * 0.02f);
+            cust.PopularityDelta = 1 + friendlinessBonus;
             result.Customers.CustomersServed++;
 
             result.CustomerTransactions.Add(cust);
