@@ -475,7 +475,7 @@ namespace BirdCafe.Shared
             if (newAmount != oldAmount)
                 OnMoneyChanged?.Invoke(oldAmount, newAmount);
 
-            FireToast("Congrats on your new feathery friend! Don't forget you're gonna need supplies.");
+            //FireToast("Congrats on your new feathery friend! Don't forget you're gonna need supplies.");
 
             return true;
         }
