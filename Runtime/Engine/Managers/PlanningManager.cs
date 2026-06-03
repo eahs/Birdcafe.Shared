@@ -165,14 +165,14 @@ namespace BirdCafe.Shared.Engine.Managers
 
         private void TransitionPhase(GameSave state)
         {
-            if (state.CurrentDayName == DayOfWeek.Sunday && state.CurrentDayNumber > 1)
+           /* if (state.CurrentDayName == DayOfWeek.Sunday && state.CurrentDayNumber > 1)
             {
                 _controller.SetPhase(GamePhase.Reporting);
             }
             else
-            {
+            { */
                 _controller.SetPhase(GamePhase.DayLoop);
-            }
+            //}
         }
     }
 }

@@ -275,7 +275,7 @@ namespace BirdCafe.Shared.ViewModels
         public decimal Cost { get; set; }
 
         /// <summary>
-        /// Logic-driven flag indicating if the player has enough money.
+        /// Checks player's money to see if action is affordable.
         /// UI should disable the button if this is false.
         /// </summary>
         public bool IsAffordable { get; set; }

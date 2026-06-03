@@ -1053,15 +1053,8 @@ namespace BirdCafe.Shared
             if (newAmount != oldAmount)
                 OnMoneyChanged?.Invoke(oldAmount, newAmount);
 
-            if (_controller.CurrentPhase == GamePhase.Reporting)
-            {
-                if (_controller.Reporting.CheckGameOver()) TransitionTo(GameScreen.GameOver);
-                else TransitionTo(GameScreen.WeeklySummary);
-            }
-            else
-            {
-                TransitionTo(GameScreen.DayIntro);
-            }
+            TransitionTo(GameScreen.DayIntro);
+            
 
             return true;
         }
