@@ -37,7 +37,15 @@ namespace BirdCafe.Shared.Engine.Utils
             [BirdVisualState.EmoLove] = "emo_love",
             [BirdVisualState.ActAcceptTreat] = "act_accept_treat",
             [BirdVisualState.ActChirpSing] = "act_chirp_sing",
-            [BirdVisualState.ActGiftReceived] = "act_gift_received"
+            [BirdVisualState.ActGiftReceived] = "act_gift_received",
+            [BirdVisualState.EmoHungry] = "emo_hungry",
+            [BirdVisualState.ActPeckSearch] = "act_peck_search",
+            [BirdVisualState.ActHungryPacing] = "act_hungry_pacing",
+            [BirdVisualState.EmoHungryWeakChirp] = "emo_hungry_weak_chirp",
+            [BirdVisualState.IdleSick] = "idle_sick",
+            [BirdVisualState.EmoSickShiver] = "emo_sick_shiver",
+            [BirdVisualState.EmoSickWobble] = "emo_sick_wobble",
+            [BirdVisualState.ActSickCough] = "act_sick_cough"
         };
 
         private static readonly Dictionary<BirdAnimationMood, Dictionary<BirdVisualState, List<WeightedTransition>>> TransitionTable =
@@ -136,9 +144,9 @@ namespace BirdCafe.Shared.Engine.Utils
                 case BirdAnimationMood.Sleepy:
                     return BirdVisualState.IdleSleepy;
                 case BirdAnimationMood.Hungry:
-                    return BirdVisualState.IdleNeutral;
+                    return BirdVisualState.EmoHungry;
                 case BirdAnimationMood.Sick:
-                    return BirdVisualState.IdleSleepy;
+                    return BirdVisualState.IdleSick;
                 default:
                     return BirdVisualState.IdleNeutral;
             }
@@ -223,20 +231,28 @@ namespace BirdCafe.Shared.Engine.Utils
                 },
                 [BirdAnimationMood.Hungry] = new Dictionary<BirdVisualState, List<WeightedTransition>>
                 {
-                    [BirdVisualState.IdleNeutral] = Row((BirdVisualState.IdleNeutral, 30), (BirdVisualState.IdleLook, 20), (BirdVisualState.EmoSad, 20), (BirdVisualState.EmoCurious, 15), (BirdVisualState.ActAcceptTreat, 15)),
-                    [BirdVisualState.IdleLook] = Row((BirdVisualState.IdleLook, 25), (BirdVisualState.IdleNeutral, 25), (BirdVisualState.EmoCurious, 20), (BirdVisualState.EmoSad, 15), (BirdVisualState.ActAcceptTreat, 15)),
-                    [BirdVisualState.EmoSad] = Row((BirdVisualState.EmoSad, 35), (BirdVisualState.IdleNeutral, 25), (BirdVisualState.IdleLook, 15), (BirdVisualState.ActAcceptTreat, 15), (BirdVisualState.ActChirpSing, 10)),
-                    [BirdVisualState.EmoCurious] = Row((BirdVisualState.ActAcceptTreat, 30), (BirdVisualState.IdleLook, 25), (BirdVisualState.IdleNeutral, 20), (BirdVisualState.EmoSad, 15), (BirdVisualState.ActChirpSing, 10)),
-                    [BirdVisualState.ActAcceptTreat] = Row((BirdVisualState.IdleNeutral, 35), (BirdVisualState.IdleLook, 20), (BirdVisualState.EmoCurious, 15), (BirdVisualState.ActAcceptTreat, 15), (BirdVisualState.EmoSad, 15)),
-                    [BirdVisualState.ActChirpSing] = Row((BirdVisualState.ActAcceptTreat, 25), (BirdVisualState.IdleLook, 25), (BirdVisualState.IdleNeutral, 20), (BirdVisualState.EmoSad, 20), (BirdVisualState.ActChirpSing, 10))
+                    [BirdVisualState.EmoHungry] = Row((BirdVisualState.EmoHungry, 25), (BirdVisualState.ActPeckSearch, 20), (BirdVisualState.ActHungryPacing, 18), (BirdVisualState.EmoHungryWeakChirp, 15), (BirdVisualState.IdleNeutral, 6), (BirdVisualState.IdleLook, 5), (BirdVisualState.EmoSad, 4), (BirdVisualState.EmoCurious, 3), (BirdVisualState.ActAcceptTreat, 3), (BirdVisualState.ActChirpSing, 1)),
+                    [BirdVisualState.ActPeckSearch] = Row((BirdVisualState.EmoHungry, 18), (BirdVisualState.ActPeckSearch, 28), (BirdVisualState.ActHungryPacing, 15), (BirdVisualState.EmoHungryWeakChirp, 10), (BirdVisualState.IdleNeutral, 8), (BirdVisualState.IdleLook, 6), (BirdVisualState.EmoSad, 3), (BirdVisualState.EmoCurious, 5), (BirdVisualState.ActAcceptTreat, 5), (BirdVisualState.ActChirpSing, 2)),
+                    [BirdVisualState.ActHungryPacing] = Row((BirdVisualState.EmoHungry, 20), (BirdVisualState.ActPeckSearch, 18), (BirdVisualState.ActHungryPacing, 28), (BirdVisualState.EmoHungryWeakChirp, 12), (BirdVisualState.IdleNeutral, 6), (BirdVisualState.IdleLook, 5), (BirdVisualState.EmoSad, 4), (BirdVisualState.EmoCurious, 3), (BirdVisualState.ActAcceptTreat, 3), (BirdVisualState.ActChirpSing, 1)),
+                    [BirdVisualState.EmoHungryWeakChirp] = Row((BirdVisualState.EmoHungry, 25), (BirdVisualState.ActPeckSearch, 18), (BirdVisualState.ActHungryPacing, 12), (BirdVisualState.EmoHungryWeakChirp, 20), (BirdVisualState.IdleNeutral, 7), (BirdVisualState.IdleLook, 5), (BirdVisualState.EmoSad, 5), (BirdVisualState.EmoCurious, 3), (BirdVisualState.ActAcceptTreat, 4), (BirdVisualState.ActChirpSing, 1)),
+                    [BirdVisualState.IdleNeutral] = Row((BirdVisualState.EmoHungry, 25), (BirdVisualState.ActPeckSearch, 18), (BirdVisualState.ActHungryPacing, 15), (BirdVisualState.EmoHungryWeakChirp, 12), (BirdVisualState.IdleNeutral, 10), (BirdVisualState.IdleLook, 7), (BirdVisualState.EmoSad, 5), (BirdVisualState.EmoCurious, 3), (BirdVisualState.ActAcceptTreat, 4), (BirdVisualState.ActChirpSing, 1)),
+                    [BirdVisualState.IdleLook] = Row((BirdVisualState.EmoHungry, 22), (BirdVisualState.ActPeckSearch, 20), (BirdVisualState.ActHungryPacing, 15), (BirdVisualState.EmoHungryWeakChirp, 10), (BirdVisualState.IdleNeutral, 8), (BirdVisualState.IdleLook, 10), (BirdVisualState.EmoSad, 4), (BirdVisualState.EmoCurious, 5), (BirdVisualState.ActAcceptTreat, 4), (BirdVisualState.ActChirpSing, 2)),
+                    [BirdVisualState.EmoSad] = Row((BirdVisualState.EmoHungry, 24), (BirdVisualState.ActPeckSearch, 15), (BirdVisualState.ActHungryPacing, 14), (BirdVisualState.EmoHungryWeakChirp, 17), (BirdVisualState.IdleNeutral, 7), (BirdVisualState.IdleLook, 5), (BirdVisualState.EmoSad, 10), (BirdVisualState.EmoCurious, 3), (BirdVisualState.ActAcceptTreat, 3), (BirdVisualState.ActChirpSing, 2)),
+                    [BirdVisualState.EmoCurious] = Row((BirdVisualState.EmoHungry, 20), (BirdVisualState.ActPeckSearch, 25), (BirdVisualState.ActHungryPacing, 12), (BirdVisualState.EmoHungryWeakChirp, 10), (BirdVisualState.IdleNeutral, 6), (BirdVisualState.IdleLook, 8), (BirdVisualState.EmoSad, 3), (BirdVisualState.EmoCurious, 8), (BirdVisualState.ActAcceptTreat, 6), (BirdVisualState.ActChirpSing, 2)),
+                    [BirdVisualState.ActAcceptTreat] = Row((BirdVisualState.EmoHungry, 20), (BirdVisualState.ActPeckSearch, 18), (BirdVisualState.ActHungryPacing, 12), (BirdVisualState.EmoHungryWeakChirp, 10), (BirdVisualState.IdleNeutral, 8), (BirdVisualState.IdleLook, 5), (BirdVisualState.EmoSad, 3), (BirdVisualState.EmoCurious, 4), (BirdVisualState.ActAcceptTreat, 15), (BirdVisualState.ActChirpSing, 5)),
+                    [BirdVisualState.ActChirpSing] = Row((BirdVisualState.EmoHungry, 20), (BirdVisualState.ActPeckSearch, 15), (BirdVisualState.ActHungryPacing, 12), (BirdVisualState.EmoHungryWeakChirp, 18), (BirdVisualState.IdleNeutral, 7), (BirdVisualState.IdleLook, 6), (BirdVisualState.EmoSad, 5), (BirdVisualState.EmoCurious, 3), (BirdVisualState.ActAcceptTreat, 4), (BirdVisualState.ActChirpSing, 10))
                 },
                 [BirdAnimationMood.Sick] = new Dictionary<BirdVisualState, List<WeightedTransition>>
                 {
-                    [BirdVisualState.IdleSleepy] = Row((BirdVisualState.IdleSleepy, 40), (BirdVisualState.IdleSleep, 30), (BirdVisualState.EmoSad, 20), (BirdVisualState.IdleNeutral, 10)),
-                    [BirdVisualState.IdleSleep] = Row((BirdVisualState.IdleSleep, 60), (BirdVisualState.IdleSleepy, 20), (BirdVisualState.EmoSad, 10), (BirdVisualState.IdleNeutral, 10)),
-                    [BirdVisualState.EmoSad] = Row((BirdVisualState.EmoSad, 40), (BirdVisualState.IdleSleepy, 25), (BirdVisualState.IdleNeutral, 20), (BirdVisualState.IdleSleep, 10), (BirdVisualState.IdleLook, 5)),
-                    [BirdVisualState.IdleNeutral] = Row((BirdVisualState.IdleNeutral, 25), (BirdVisualState.IdleSleepy, 35), (BirdVisualState.EmoSad, 20), (BirdVisualState.IdleLook, 10), (BirdVisualState.IdleSleep, 10)),
-                    [BirdVisualState.IdleLook] = Row((BirdVisualState.IdleNeutral, 30), (BirdVisualState.IdleSleepy, 30), (BirdVisualState.EmoSad, 25), (BirdVisualState.IdleLook, 10), (BirdVisualState.IdleSleep, 5))
+                    [BirdVisualState.IdleSick] = Row((BirdVisualState.IdleSick, 30), (BirdVisualState.EmoSickShiver, 22), (BirdVisualState.EmoSickWobble, 14), (BirdVisualState.ActSickCough, 10), (BirdVisualState.IdleSleepy, 10), (BirdVisualState.IdleSleep, 6), (BirdVisualState.EmoSad, 5), (BirdVisualState.IdleNeutral, 2), (BirdVisualState.IdleLook, 1)),
+                    [BirdVisualState.EmoSickShiver] = Row((BirdVisualState.IdleSick, 28), (BirdVisualState.EmoSickShiver, 25), (BirdVisualState.EmoSickWobble, 15), (BirdVisualState.ActSickCough, 12), (BirdVisualState.IdleSleepy, 8), (BirdVisualState.IdleSleep, 5), (BirdVisualState.EmoSad, 4), (BirdVisualState.IdleNeutral, 2), (BirdVisualState.IdleLook, 1)),
+                    [BirdVisualState.EmoSickWobble] = Row((BirdVisualState.IdleSick, 30), (BirdVisualState.EmoSickShiver, 18), (BirdVisualState.EmoSickWobble, 20), (BirdVisualState.ActSickCough, 12), (BirdVisualState.IdleSleepy, 8), (BirdVisualState.IdleSleep, 4), (BirdVisualState.EmoSad, 5), (BirdVisualState.IdleNeutral, 2), (BirdVisualState.IdleLook, 1)),
+                    [BirdVisualState.ActSickCough] = Row((BirdVisualState.IdleSick, 35), (BirdVisualState.EmoSickShiver, 20), (BirdVisualState.EmoSickWobble, 12), (BirdVisualState.ActSickCough, 8), (BirdVisualState.IdleSleepy, 10), (BirdVisualState.IdleSleep, 6), (BirdVisualState.EmoSad, 5), (BirdVisualState.IdleNeutral, 3), (BirdVisualState.IdleLook, 1)),
+                    [BirdVisualState.IdleSleepy] = Row((BirdVisualState.IdleSick, 30), (BirdVisualState.EmoSickShiver, 20), (BirdVisualState.EmoSickWobble, 12), (BirdVisualState.ActSickCough, 8), (BirdVisualState.IdleSleepy, 12), (BirdVisualState.IdleSleep, 8), (BirdVisualState.EmoSad, 6), (BirdVisualState.IdleNeutral, 3), (BirdVisualState.IdleLook, 1)),
+                    [BirdVisualState.IdleSleep] = Row((BirdVisualState.IdleSick, 28), (BirdVisualState.EmoSickShiver, 18), (BirdVisualState.EmoSickWobble, 10), (BirdVisualState.ActSickCough, 6), (BirdVisualState.IdleSleepy, 10), (BirdVisualState.IdleSleep, 18), (BirdVisualState.EmoSad, 5), (BirdVisualState.IdleNeutral, 4), (BirdVisualState.IdleLook, 1)),
+                    [BirdVisualState.EmoSad] = Row((BirdVisualState.IdleSick, 28), (BirdVisualState.EmoSickShiver, 18), (BirdVisualState.EmoSickWobble, 15), (BirdVisualState.ActSickCough, 9), (BirdVisualState.IdleSleepy, 8), (BirdVisualState.IdleSleep, 5), (BirdVisualState.EmoSad, 12), (BirdVisualState.IdleNeutral, 4), (BirdVisualState.IdleLook, 1)),
+                    [BirdVisualState.IdleNeutral] = Row((BirdVisualState.IdleSick, 30), (BirdVisualState.EmoSickShiver, 20), (BirdVisualState.EmoSickWobble, 12), (BirdVisualState.ActSickCough, 8), (BirdVisualState.IdleSleepy, 9), (BirdVisualState.IdleSleep, 5), (BirdVisualState.EmoSad, 4), (BirdVisualState.IdleNeutral, 10), (BirdVisualState.IdleLook, 2)),
+                    [BirdVisualState.IdleLook] = Row((BirdVisualState.IdleSick, 28), (BirdVisualState.EmoSickShiver, 18), (BirdVisualState.EmoSickWobble, 15), (BirdVisualState.ActSickCough, 9), (BirdVisualState.IdleSleepy, 7), (BirdVisualState.IdleSleep, 4), (BirdVisualState.EmoSad, 1), (BirdVisualState.IdleNeutral, 8), (BirdVisualState.IdleLook, 10))
                 },
                 [BirdAnimationMood.Neutral] = new Dictionary<BirdVisualState, List<WeightedTransition>>
                 {
