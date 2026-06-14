@@ -433,7 +433,17 @@ namespace BirdCafe.Shared.Enums
         EmoLove = 12,
         ActAcceptTreat = 13,
         ActChirpSing = 14,
-        ActGiftReceived = 15
+        ActGiftReceived = 15,
+
+        EmoHungry = 16,
+        ActPeckSearch = 17,
+        ActHungryPacing = 18,
+        EmoHungryWeakChirp = 19,
+
+        IdleSick = 20,
+        EmoSickShiver = 21,
+        EmoSickWobble = 22,
+        ActSickCough = 23
     }
 
     /// <summary>
