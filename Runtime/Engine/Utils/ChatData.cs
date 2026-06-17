@@ -69,26 +69,26 @@ namespace BirdCafe.Shared.Engine.Utils
 
             // Refactored to link to Species Hub to save space
             Add("Custom_Species",
-                "Absolutely! A <color=#FF0000>Cardinal</color> might be energetic, while an <color=#555555>Owl</color> is wise but sleepy. Choosing the right species changes your cafe's vibe.",
+                "Absolutely! Different birds have different tendencies, and wil prefer different foods! Figuring out what those preferences are up to you though!",
                 "Show me specific bird types...", "Species_Hub",
                 "What about visuals?", "Custom_Visuals",
                 "Do they have special skills?", "Custom_Skills",
                 "Back to customization.", "Custom_Intro");
 
             Add("Species_Hub", "Select a species to learn more:",
-                 "Sparrow Info", "Lore_Sparrow",
-                 "Bluejay Info", "Lore_Bluejay",
-                 "Robin Info", "Lore_Robin",
-                 "Owl Info", "Lore_Owl",
+                 "Budgie Info", "Lore_Budgie",
+                 "Cockatiel Info", "Lore_Cockatiel",
+                 "Lorikeet Info", "Lore_Lorikeet",
+                 "Kingfisher Info", "Lore_Kingfisher",
                  "Back to Species", "Custom_Species");
 
             Add("Custom_Visuals",
-                "You can dye their feathers! Primary and secondary colors. Want a <color=#00FF00>neon green</color> sparrow? Go for it. Customers love unique birds.",
-                "Does color affect popularity?", "Custom_ColorPop",
+                "You can buy and dress your birds up with costumes! These costumes can instantly gather more attention towards your birds.",
+                "Do costumes affect popularity?", "Custom_Costumes",
                 "What about hats?", "Custom_Accessory",
                 "Back to species info.", "Custom_Species");
 
-            Add("Custom_ColorPop",
+            Add("Custom_Costumes",
                 "Directly? No. But a cool looking bird makes <i>you</i> happy, and a happy Boss makes better decisions!",
                 "Fair point. Accessories?", "Custom_Accessory",
                 "Okay, let's talk names.", "Custom_Names",
@@ -101,7 +101,7 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Back to visuals.", "Custom_Visuals");
 
             Add("Custom_Unlock",
-                "You unlock items by leveling up your cafe Popularity or surviving many weeks. Keep playing!",
+                "Costumes are buyable from Pete's Pet Store! Save up for one and you unlock it for all of your birds!",
                 "Cool. What about skills?", "Custom_Skills",
                 "Let's talk money.", "Money_Intro",
                 "Back to accessories.", "Custom_Accessory");
@@ -142,7 +142,7 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Back to Intro.", "Custom_Intro");
 
             Add("Custom_Rename",
-                "Yes! You can rename your birds in the evening menu. Identity theft is not a crime for birds.",
+                "Yes! You can rename your birds in the customize menu. Identity theft is not a crime for birds.",
                 "Good to know.", "Custom_Names",
                 "Back to names.", "Custom_Names");
 
@@ -378,10 +378,10 @@ namespace BirdCafe.Shared.Engine.Utils
                 "Back to Lore.", "Lore_Intro");
 
             // --- BIRD SPECIFICS (Leaves) ---
-            Add("Lore_Sparrow", "Sparrows are the backbone of the workforce. Reliable, standard stats, loves seeds.", "Neat", "Species_Hub", "Back", "Species_Hub");
-            Add("Lore_Bluejay", "Bluejays are loud! High Friendliness but they get Stressed easily by crowds.", "Neat", "Species_Hub", "Back", "Species_Hub");
-            Add("Lore_Robin", "Robins are early birds. High Energy recovery, but lower base Productivity.", "Neat", "Species_Hub", "Back", "Species_Hub");
-            Add("Lore_Owl", "Owls work best at night... wait, we aren't open at night. They are just sleepy but very Wise (High XP gain).", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Budgie", "Budgies are a common pet bird! They have average stats, and are low maintenance.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Cockatiel", "Cockatiels are known for their crests on their heads, making them very noticeable in crowds. They are sure to improve the vibes of your cafe!", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Lorikeet", "Lorikeets have thousands of little hairs on their tongue! It might not help with your cafe, but they are also highly productive.", "Neat", "Species_Hub", "Back", "Species_Hub");
+            Add("Lore_Kingfisher", "The pinnacle of bird evolution. Kingfishers have evolved to be incredibly energy efficient, even in your cafe!", "Neat", "Species_Hub", "Back", "Species_Hub");
         }
 
         /// <summary>
