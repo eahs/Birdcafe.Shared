@@ -69,7 +69,7 @@ namespace BirdCafe.Shared.Engine.Utils
 
             // Refactored to link to Species Hub to save space
             Add("Custom_Species",
-                "Absolutely! Different birds have different tendencies, and wil prefer different foods! Figuring out what those preferences are up to you though!",
+                "Absolutely! Different birds have different tendencies, and will prefer different foods! Figuring out what those preferences are up to you though!",
                 "Show me specific bird types...", "Species_Hub",
                 "What about visuals?", "Custom_Visuals",
                 "Do they have special skills?", "Custom_Skills",
