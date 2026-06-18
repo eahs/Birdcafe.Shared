@@ -4,6 +4,7 @@ using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Simulation;
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 
 namespace BirdCafe.Shared.Engine.Managers
 {
@@ -103,7 +104,9 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <returns>A list of save slot view models.</returns>
         public List<ViewModels.SaveSlotViewModel> GetAvailableSaves()
         {
-            return new List<ViewModels.SaveSlotViewModel>();
+            List<ViewModels.SaveSlotViewModel> slots = new List<ViewModels.SaveSlotViewModel>();
+
+            return slots;
         }
     }
 }

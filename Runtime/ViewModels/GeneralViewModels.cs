@@ -102,5 +102,10 @@ namespace BirdCafe.Shared.ViewModels
         /// Current week reached.
         /// </summary>
         public int WeekNumber { get; set; }
+
+        /// <summary>
+        /// Game save data
+        /// </summary>
+        public GameSave GameSave { get; set; }
     }
 }
