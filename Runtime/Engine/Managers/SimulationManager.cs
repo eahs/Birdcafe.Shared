@@ -443,7 +443,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 }
 
                 // Check if they get sick.
-                RollForSickness(bird, summary, config, rng);
+                RollForSickness(bird, summary, config, rng, state.CurrentDayNumber);
 
                 // Snapshot final stats.
                 summary.MoodAtEnd = bird.Mood;
@@ -455,7 +455,7 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <summary>
         /// Determines if a bird gets sick based on chance and stats.
         /// </summary>
-        private void RollForSickness(Bird bird, DayBirdSummary summary, GameConfiguration config, Random rng)
+        private void RollForSickness(Bird bird, DayBirdSummary summary, GameConfiguration config, Random rng, int day)
         {
             float chance = config.BaselineSicknessChance;
 
@@ -464,7 +464,7 @@ namespace BirdCafe.Shared.Engine.Managers
             if (bird.Energy < 10) chance *= config.LowEnergySicknessMultiplier;
 
             // Roll the dice.
-            if (rng.NextDouble() < chance)
+            if (rng.NextDouble() < chance && day != 1)
             {
                 bird.IsSick = true;
                 summary.BecameSick = true;

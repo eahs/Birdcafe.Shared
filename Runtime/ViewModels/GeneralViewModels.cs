@@ -94,16 +94,6 @@ namespace BirdCafe.Shared.ViewModels
         public string PlayerName { get; set; }
 
         /// <summary>
-        /// Current day reached.
-        /// </summary>
-        public int DayNumber { get; set; }
-
-        /// <summary>
-        /// Current week reached.
-        /// </summary>
-        public int WeekNumber { get; set; }
-
-        /// <summary>
         /// Game save data
         /// </summary>
         public GameSave GameSave { get; set; }

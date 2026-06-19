@@ -2,8 +2,11 @@
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Simulation;
+using BirdCafe.Shared.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace BirdCafe.Shared.Engine.Managers
@@ -98,13 +101,55 @@ namespace BirdCafe.Shared.Engine.Managers
         }
 
         /// <summary>
+        /// Saves game into selected slot.
+        /// If inputted slot is outside of range, defaults to 0.
+        public void SaveGame(int slot)
+        {
+            string fileName;
+            string jsonString;
+            switch (slot)
+            {
+                case 2:
+                    fileName = "gamesave2.json";
+                    break;
+                case 1:
+                    fileName = "gamesave1.json";
+                    break;
+                default:
+                    fileName = "gamesave0.json";
+                    break;
+
+            }
+            jsonString = JsonSerializer.Serialize(_controller.CurrentState);
+            File.WriteAllText(fileName, jsonString);
+        }
+       
+        /// <summary>
         /// Mock method to return available save slots.
         /// Currently returns an empty list as saving to disk is not implemented.
         /// </summary>
         /// <returns>A list of save slot view models.</returns>
         public List<ViewModels.SaveSlotViewModel> GetAvailableSaves()
         {
+            string path;
+            string jsonString;
+            GameSave save;
             List<ViewModels.SaveSlotViewModel> slots = new List<ViewModels.SaveSlotViewModel>();
+            string[] fileNames = new string[] {"gamesave0.json", "gamesave1.json", "gamesave2.json"};
+            foreach (string fileName in fileNames)
+            {
+                path = fileName;
+                jsonString = File.ReadAllText(path);
+                save = JsonSerializer.Deserialize<GameSave>(jsonString);
+                SaveSlotViewModel vm = new SaveSlotViewModel
+                {
+                    Id = path.Substring(8,9),
+                    PlayerName = save.Profile.DisplayName,
+                    GameSave = save
+                };
+                slots.Add(vm);
+            }
+
 
             return slots;
         }
