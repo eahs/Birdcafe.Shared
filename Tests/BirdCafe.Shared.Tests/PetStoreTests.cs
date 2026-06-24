@@ -1,7 +1,6 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
-using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Economy;
 using NUnit.Framework;
 using System.Linq;

@@ -1,14 +1,11 @@
 
 using BirdCafe.Shared;
-using BirdCafe.Shared.Engine.Managers;
-using BirdCafe.Shared.Models.Economy;
-using BirdCafe.Shared.Enums;
-using System;
-using System.Dynamic;
-using System.Linq;
-using BirdCafe.Shared.Models.Birds;
-using System.Collections.Generic;
 using BirdCafe.Shared.Engine.Utils;
+using BirdCafe.Shared.Enums;
+using BirdCafe.Shared.Models.Birds;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace BirdCafe.ConsoleApp.Screens
 {
@@ -46,11 +43,11 @@ namespace BirdCafe.ConsoleApp.Screens
                 else if (key == '2') { BirdCafeGame.Instance.GoToCare(); stayOnScreen = false; }
                 else if (key == '3') { BirdCafeGame.Instance.GoToPlanning(); stayOnScreen = false; }
                 else if (key == '4') { BirdCafeGame.Instance.GoToPetStore(); stayOnScreen = false; }
-                else if (key == '5') 
-                { 
+                else if (key == '5')
+                {
                     if (BirdCafeGame.Instance.FinalizeDay())
                     {
-                        stayOnScreen = false; 
+                        stayOnScreen = false;
                     }
                 }
             }
@@ -92,7 +89,7 @@ namespace BirdCafe.ConsoleApp.Screens
             while (true)
             {
                 var k = Console.ReadKey(true);
-                if (char.ToUpper(k.KeyChar) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Daily Summary"); return; } 
+                if (char.ToUpper(k.KeyChar) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Daily Summary"); return; }
                 if (char.ToUpper(k.KeyChar) == 'C') { BirdCafeGame.Instance.FireChatPopup(); return; }
                 break; // Any other key continues
             }
@@ -148,7 +145,7 @@ namespace BirdCafe.ConsoleApp.Screens
             {
                 Console.WriteLine("Displaying Current Inventories:");
                 ShowInventory();
-            } 
+            }
             if (input.ToUpper() == "B")
             {
                 BirdCafeGame.Instance.GoToHub();
@@ -207,34 +204,34 @@ namespace BirdCafe.ConsoleApp.Screens
 
             Console.Clear();
             var vm = BirdCafeGame.Instance.GetInventory();
-            
+
             Console.WriteLine("=== CURRENT INVENTORY ===");
             Console.WriteLine("\n-- Bird Food --");
             foreach (var food in vm.OwnedFood)
             {
-                
+
                 Console.WriteLine($"{food.Name}: {food.OwnedQuantity} units");
             }
 
             Console.WriteLine("\n-- Toys --");
             foreach (var toy in vm.OwnedToys)
             {
-                
+
                 Console.WriteLine($"{toy.Name}: {toy.OwnedQuantity} owned");
             }
 
             Console.WriteLine("\n-- Costumes --");
             foreach (var costume in vm.OwnedCostumes)
             {
-            
+
                 List<PetStoreSupplyDefinition> catalog = PetStoreCatalog.SupplyOffers;
                 foreach (PetStoreSupplyDefinition item in catalog)
                 {
-                   
+
                 }
                 Console.WriteLine($"{costume.Name}: {costume.OwnedQuantity} owned");
             }
-            
+
             Console.WriteLine("\nPress any key to return...");
             Console.ReadKey();
         }
@@ -312,7 +309,7 @@ namespace BirdCafe.ConsoleApp.Screens
             if (char.ToUpper(key) == 'H') { BirdCafeGame.Instance.FireHelpPopup("Planning"); return true; }
             if (char.ToUpper(key) == 'C') { BirdCafeGame.Instance.FireChatPopup(); return true; }
 
-            if (char.ToUpper(key) == 'B') 
+            if (char.ToUpper(key) == 'B')
             {
                 BirdCafeGame.Instance.GoToHub();
                 return false;
@@ -410,7 +407,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 Console.Clear();
                 var offers = BirdCafeGame.Instance.GetPetStoreSupplyOffers();
                 Console.WriteLine("=== PETE'S PET STORE / BUY SUPPLIES ===");
-            
+
                 string currentCategory = null;
                 for (int i = 0; i < offers.Count; i++)
                 {

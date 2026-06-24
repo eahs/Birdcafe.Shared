@@ -1,8 +1,8 @@
 using BirdCafe.Shared.Engine;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Economy;
-using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.Models.Reporting;
+using BirdCafe.Shared.Models.Simulation;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;

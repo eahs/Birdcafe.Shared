@@ -49,7 +49,7 @@ namespace BirdCafe.Shared.Engine.Managers
             return EngineResult.Success();
         }
 
-        
+
         /// <summary>
         /// Toggles a bird's working status in the daily roster.
         /// </summary>
@@ -165,13 +165,13 @@ namespace BirdCafe.Shared.Engine.Managers
 
         private void TransitionPhase(GameSave state)
         {
-           /* if (state.CurrentDayName == DayOfWeek.Sunday && state.CurrentDayNumber > 1)
-            {
-                _controller.SetPhase(GamePhase.Reporting);
-            }
-            else
-            { */
-                _controller.SetPhase(GamePhase.DayLoop);
+            /* if (state.CurrentDayName == DayOfWeek.Sunday && state.CurrentDayNumber > 1)
+             {
+                 _controller.SetPhase(GamePhase.Reporting);
+             }
+             else
+             { */
+            _controller.SetPhase(GamePhase.DayLoop);
             //}
         }
     }

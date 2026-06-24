@@ -47,7 +47,7 @@ namespace BirdCafe.ConsoleApp
                 // but for now the chat exits back to the current game state via flow logic or we handle it here.
                 // Actually, the easiest way for Console is to just manually invoke the screen
                 // then redraw the current screen when done.
-                
+
                 Screens.ChatScreens.ShowChatScreen();
                 // After chat loop finishes, we just let the main loop redraw the current screen state
             };

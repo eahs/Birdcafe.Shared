@@ -1,4 +1,3 @@
-using BirdCafe.Shared;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.ViewModels;
 using NUnit.Framework;

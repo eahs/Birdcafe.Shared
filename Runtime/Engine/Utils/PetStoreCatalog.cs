@@ -150,7 +150,7 @@ namespace BirdCafe.Shared.Engine.Utils
                 ExpenseCategory = ExpenseCategory.ToysAndActivities,
                 Buyable = true
             },
-            
+
             new PetStoreSupplyDefinition
             {
                 ItemId = CostumeBandanaId,
@@ -160,9 +160,9 @@ namespace BirdCafe.Shared.Engine.Utils
                 Price = BandanaPrice,
                 EffectText = "Owned costume unlock.",
                 ExpenseCategory = ExpenseCategory.UpgradesAndCustomization,
-                Buyable = true  
+                Buyable = true
             },
-            
+
             new PetStoreSupplyDefinition
             {
                 ItemId = CostumeRoyalCapeId,

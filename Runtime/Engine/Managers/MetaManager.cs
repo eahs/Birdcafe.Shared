@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 
 namespace BirdCafe.Shared.Engine.Managers
 {
@@ -103,6 +102,7 @@ namespace BirdCafe.Shared.Engine.Managers
         /// <summary>
         /// Saves game into selected slot.
         /// If inputted slot is outside of range, defaults to 0.
+        /// </summary>
         public void SaveGame(int slot)
         {
             string fileName;
@@ -123,7 +123,7 @@ namespace BirdCafe.Shared.Engine.Managers
             jsonString = JsonSerializer.Serialize(_controller.CurrentState);
             File.WriteAllText(fileName, jsonString);
         }
-       
+
         /// <summary>
         /// Mock method to return available save slots.
         /// Currently returns an empty list as saving to disk is not implemented.
@@ -135,7 +135,7 @@ namespace BirdCafe.Shared.Engine.Managers
             string jsonString;
             GameSave save;
             List<ViewModels.SaveSlotViewModel> slots = new List<ViewModels.SaveSlotViewModel>();
-            string[] fileNames = new string[] {"gamesave0.json", "gamesave1.json", "gamesave2.json"};
+            string[] fileNames = new string[] { "gamesave0.json", "gamesave1.json", "gamesave2.json" };
             foreach (string fileName in fileNames)
             {
                 path = fileName;
@@ -143,7 +143,7 @@ namespace BirdCafe.Shared.Engine.Managers
                 save = JsonSerializer.Deserialize<GameSave>(jsonString);
                 SaveSlotViewModel vm = new SaveSlotViewModel
                 {
-                    Id = path.Substring(8,9),
+                    Id = path.Substring(8, 9),
                     PlayerName = save.Profile.DisplayName,
                     GameSave = save
                 };

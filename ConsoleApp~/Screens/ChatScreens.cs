@@ -1,6 +1,5 @@
 
 using BirdCafe.Shared;
-using BirdCafe.Shared.ViewModels;
 using System;
 using System.Text.RegularExpressions;
 
@@ -24,7 +23,7 @@ namespace BirdCafe.ConsoleApp.Screens
                 // Simple parser to strip TMP tags for Console display
                 string cleanText = StripTags(node.OracleText);
                 Console.WriteLine("\nORACLE: " + cleanText + "\n");
-                
+
                 Console.WriteLine("-----------------------------------------");
                 for (int i = 0; i < node.Options.Count; i++)
                 {
@@ -35,7 +34,7 @@ namespace BirdCafe.ConsoleApp.Screens
 
                 Console.Write("\nChoose an option (or Q to Force Quit Chat): ");
                 var key = Console.ReadKey(true);
-                
+
                 if (char.ToUpper(key.KeyChar) == 'Q')
                 {
                     stayingInChat = false;

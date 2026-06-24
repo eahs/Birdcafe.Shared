@@ -1,6 +1,6 @@
 using BirdCafe.Shared.ViewModels;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
 namespace BirdCafe.Shared.Engine.Utils
 {

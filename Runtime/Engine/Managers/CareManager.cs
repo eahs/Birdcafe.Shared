@@ -1,10 +1,10 @@
+using BirdCafe.Shared.Engine.Utils;
 using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Birds;
 using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Models.Meta;
 using System;
 using System.Linq;
-using BirdCafe.Shared.Engine.Utils;
 
 namespace BirdCafe.Shared.Engine.Managers
 {
@@ -123,7 +123,8 @@ namespace BirdCafe.Shared.Engine.Managers
             bird.IncreaseTrust(trustGain);
 
             var consumedSupply = PetStoreCatalog.FindSupplyOffer(selectedFoodType.Value.ToString(), PetStoreSupplyType.BirdFood);
-            state.Economy.Ledger.Add(new LedgerEntry {
+            state.Economy.Ledger.Add(new LedgerEntry
+            {
                 DayNumber = state.CurrentDayNumber,
                 WeekNumber = state.CurrentWeekNumber,
                 Amount = 0m,

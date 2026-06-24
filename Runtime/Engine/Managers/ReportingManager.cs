@@ -1,9 +1,7 @@
-using BirdCafe.Shared;
-using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Engine.Utils;
+using BirdCafe.Shared.Enums;
 using BirdCafe.Shared.Models.Economy;
 using BirdCafe.Shared.Models.Reporting;
-using BirdCafe.Shared.Models.Simulation;
 using BirdCafe.Shared.ViewModels;
 using System;
 using System.Collections.Generic;
