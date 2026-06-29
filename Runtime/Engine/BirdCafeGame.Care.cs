@@ -55,22 +55,15 @@ namespace BirdCafe.Shared
                 // Feeding consumes stored inventory rather than charging money at action time.
                 new CareActionViewModel
                 {
-                    ActionId = CareActionIds.Feed,
-                    Label = "Feed (Use Stored Food)",
-                    Cost = 0,
-                    IsAffordable = foodInStorage > 0
+                    ActionId = CareActionIds.Feed, Label = "Feed (Use Stored Food)", Cost = 0, IsAffordable = foodInStorage > 0
                 },
                 new CareActionViewModel
                 {
-                    ActionId = CareActionIds.Play,
-                    Label = "Play (Mood)",
-                    Cost = config.BaselinePlayCost
+                    ActionId = CareActionIds.Play, Label = "Play (Mood)", Cost = config.BaselinePlayCost
                 },
                 new CareActionViewModel
                 {
-                    ActionId = CareActionIds.Vet,
-                    Label = "Vet Visit",
-                    Cost = config.BaselineVetCost
+                    ActionId = CareActionIds.Vet, Label = "Vet Visit", Cost = config.BaselineVetCost
                 }
             };
 

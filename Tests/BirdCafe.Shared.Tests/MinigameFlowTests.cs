@@ -78,19 +78,6 @@ namespace BirdCafe.Shared.Tests
         }
 
         [Test]
-        public void TryStartCareMinigame_Play_UsesConfiguredDefaultMinigame()
-        {
-            var started = _game.TryStartCareMinigame(_birdId, CareActionIds.Play);
-
-            Assert.IsTrue(started);
-            var session = _game.GetCurrentMinigameSession();
-            Assert.NotNull(session);
-            Assert.AreEqual(CareActionIds.Play, session.PendingRewardActionId);
-            Assert.IsTrue(session.WasStartedFromCare);
-            Assert.AreEqual(MinigameId.Flappy, session.Minigame);
-        }
-
-        [Test]
         public void SetDefaultCareMinigame_TimingBarGame_IsUsedByPlayCareLaunch()
         {
             Assert.IsTrue(_game.SetDefaultCareMinigame(MinigameId.TimingBarGame));

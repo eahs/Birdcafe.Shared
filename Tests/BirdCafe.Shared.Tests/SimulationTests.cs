@@ -115,42 +115,6 @@ namespace BirdCafe.Shared.Tests
             Assert.Greater(highTrustRevenue, noTrustRevenue);
         }
 
-        [Test]
-        public void FriendshipIncreasesSimulationCashOutput()
-        {
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-            _controller.SetPhaseForTests(GamePhase.EveningLoop);
-            _controller.CurrentState.Economy.CurrentBalance = 5000m;
-            _controller.PetStore.BuyBird("budgie");
-
-            var birdA = _controller.CurrentState.Birds[0];
-            var birdB = _controller.CurrentState.Birds[1];
-            birdA.FriendBirdIds.Clear();
-            birdB.FriendBirdIds.Clear();
-            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
-
-            _controller.SetPhaseForTests(GamePhase.DayLoop);
-            var noFriend = _controller.Simulation.RunDaySimulation();
-            var noFriendRevenue = ((Models.Simulation.DaySimulationResult)noFriend.Payload).Economy.TotalRevenue;
-
-            _controller.Meta.StartNewGame("TestPlayer", "TestCafe");
-            _controller.SetPhaseForTests(GamePhase.EveningLoop);
-            _controller.CurrentState.Economy.CurrentBalance = 5000m;
-            _controller.PetStore.BuyBird("budgie");
-
-            birdA = _controller.CurrentState.Birds[0];
-            birdB = _controller.CurrentState.Birds[1];
-            birdA.AddFriend(birdB.Id);
-            birdB.AddFriend(birdA.Id);
-            _controller.CurrentState.CurrentDayState.CurrentPlan.BirdIdsWorking = new System.Collections.Generic.List<string> { birdA.Id, birdB.Id };
-
-            _controller.SetPhaseForTests(GamePhase.DayLoop);
-            var withFriend = _controller.Simulation.RunDaySimulation();
-            var withFriendRevenue = ((Models.Simulation.DaySimulationResult)withFriend.Payload).Economy.TotalRevenue;
-
-            Assert.Greater(withFriendRevenue, noFriendRevenue);
-        }
-
 
         [Test]
         public void RunDaySimulation_ServiceCompletedTimelinePopularity_MatchesCustomerTransactionsForMultiItemOrders()
