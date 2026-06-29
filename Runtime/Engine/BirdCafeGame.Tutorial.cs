@@ -25,7 +25,7 @@ namespace BirdCafe.Shared
                     new TutorialStep
                     {
                         Title = "Step 1: Start the work day",
-                        Description = "We gave you starter coffee. Open the cafe and let your birds serve customers."
+                        Description = "We gave you starter coffee. Open the cafe and let your birds entertain customers."
                     },
                     new TutorialStep
                     {
